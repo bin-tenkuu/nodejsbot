@@ -2,7 +2,7 @@
   "name": "nodejsbot",
   "version": "1.0.0",
   "description": "demo",
-  "main": "index.js",
+  "main": "test.js",
   "dependencies": {
     "cq-websocket": "^2.1.1",
     "express": "^4.17.1",
@@ -20,9 +20,7 @@
   "scripts": {
     "run": "node index.js",
     "testinspect": "node --inspect",
-    "runPlugin": "node PluginLoader.js",
-    "test": "node test.js",
-    "ftptest": "node src/ftptest.js"
+    "test": "node test.js"
   },
   "keywords": [
     "demo"
