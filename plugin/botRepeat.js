@@ -1,9 +1,19 @@
 let Plugin = require("../Plugin");
+const utils = require('../src/utils');
 const Repeat = require("../src/repeat");
+
+function success(ret) {
+  console.log(`${utils.now()} 发送成功`, ret.data);
+}
+
+function fail(reason) {
+  console.log(`${utils.now()} 发送失败`, reason);
+}
 
 class BotRepeat extends Plugin {
   constructor() {
     super({
+      id: "CQBotRepeat",
       name: "QQ机器人-复读",
       description: "测试用",
       version: 0.1
@@ -15,7 +25,7 @@ class BotRepeat extends Plugin {
     return super.install().then(() => {
       let bot = global.bot;
       if (!bot) {
-        throw "出错";
+        throw "CQBot 未加载";
       } else {
         bot.on("message.group", this.repeat)
       }

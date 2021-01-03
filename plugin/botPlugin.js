@@ -46,7 +46,7 @@ class CQBotPlugin extends Plugin {
     let plugins = loader.plugins;
     let matches;
     switch (true) {
-      case (/^\/插件列表/.test(message)):
+      case (/^-插件列表/.test(message)):
         let s = plugins.map((value, index) => {
           return `${index}. ${value}`
         }).join("\n");
@@ -55,8 +55,8 @@ class CQBotPlugin extends Plugin {
           message: CQ.text(s)
         })
         break;
-      case (/^\/插件(开启)|(关闭)/.test(message)):
-        let open = /^\/插件开启/.test(message);
+      case (/^-插件(开启)|(关闭)/.test(message)):
+        let open = /^-插件开启/.test(message);
         console.log(open)
         matches = message.match(/\d+(?=\s)?/g);
         if (matches == null) {

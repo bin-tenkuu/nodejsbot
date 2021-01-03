@@ -67,7 +67,7 @@ class HttpOption extends Plugin {
     res.end("开始退出");
     let loader = global.PluginLoader;
     loader.handle(false, ...loader.plugins).then(() => {
-      console.log("全部卸载完成");
+      console.log(">>>>>>>>>> 全部卸载完成 <<<<<<<<<<");
     }).then(() => {
       delayExit();
     });
