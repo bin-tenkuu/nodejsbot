@@ -15,6 +15,6 @@ loader.toggle(null, loader).then(() => {
   return loader.refreshPlugin();
 }).then(() => {
   console.log(`${utils.now()} `, loader.plugins);
-  return loader.handle(true, "HttpOption", /*"CQBot"*/);
+  return loader.handle(true, "HttpOption", "CQBot", "CQBotPlugin");
 });
 

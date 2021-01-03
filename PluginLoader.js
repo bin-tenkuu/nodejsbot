@@ -64,6 +64,7 @@ class PluginLoader extends Plugin {
             }
           } else {
             header[newer.id] = newer;
+            console.log(`${utils.now()} ${newer.id} 添加新插件:${newer.version}`)
           }
         } else {
           console.log(`${utils.now()} Plugin.isPrototypeOf(${mod.name}) === false`)
@@ -91,7 +92,7 @@ class PluginLoader extends Plugin {
    * **注**:当安装失败时会自动卸载
    * @param {boolean}bool 为`true`时安装选定插件,为`false`时卸载选定插件
    * @param {string}pluginKey 选定插件的id
-   * @return {PromiseLike<*>}
+   * @return {Promise<*>}
    */
   handle(bool, ...pluginKey) {
     let header = this.header;
@@ -152,24 +153,25 @@ class PluginLoader extends Plugin {
    * 切换插件方法
    * @param {Plugin}older 旧插件
    * @param {Plugin}newer 新插件
+   * @param {boolean?}back 为true时,代表本次操作已为回滚操作,不会再次回滚
    */
-  toggle(older, newer) {
+  toggle(older, newer, back = false) {
     let promise = Promise.resolve();
     let o = older instanceof Plugin;
     let n = newer instanceof Plugin;
-    if (o) {
+    if (o && older.installed) {
       promise = promise.then(() => {
         return older.uninstall().then(() => {
           console.log(`${utils.now()} ${older.id}卸载成功`);
         })
       }).catch(err => {
+        older.error = err
         if (n) {
           console.log(`${utils.now()} ${older.id}卸载失败`);
           console.error(err);
         } else {
           console.log(`${utils.now()} ${older.id}卸载失败,删除实例`);
           console.error(err);
-          delete this.header[newer.id];
         }
       })
       if (n) {
@@ -182,7 +184,7 @@ class PluginLoader extends Plugin {
         })
       }
     }
-    if (n) {
+    if (n && !newer.installed && newer.error == null) {
       promise = promise.then(() => {
         return newer.install().then(() => {
           if (o) {
@@ -193,18 +195,28 @@ class PluginLoader extends Plugin {
           this.header[newer.id] = newer;
         })
       }).catch(err => {
-        if (o) {
+        newer.error = err;
+        if (o && !back) {
           console.log(`${utils.now()} ${newer.id}安装失败,回退版本`);
           console.error(err);
-          return this.toggle(null, older)
+          return this.toggle(newer, older, true)
         } else {
-          console.log(`${utils.now()} ${newer.id}安装失败,删除实例`);
+          console.log(`${utils.now()} ${newer.id}安装失败,无旧版本`);
           console.error(err);
-          delete this.header[newer.id];
+          return this.toggle(newer, null)
         }
       })
     }
     return promise;
+  }
+
+  /**
+   * s
+   * @param {string}pluginKey
+   * @return {(boolean)[]}
+   */
+  hasInstall(...pluginKey) {
+    return pluginKey.map(key => this.header[key].installed)
   }
 
   /**

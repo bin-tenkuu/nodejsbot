@@ -96,7 +96,7 @@ class Plugin {
 
   /**
    * 设置错误
-   * @param {string}error
+   * @param {*}error
    */
   set error(error) {
     this._state = "error";
@@ -105,7 +105,7 @@ class Plugin {
 
   /**
    * 有错误时,返回错误,否则返回 `null`
-   * @return {string}
+   * @return {*}
    */
   get error() {
     return this._state === "error" ? this._error : null;

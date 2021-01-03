@@ -30,13 +30,13 @@ class CQBot extends Plugin {
 
   install() {
     return super.install().then(() => {
-      global.bot = this;
       this.header = utils.openCQWebSocket(cqws);
       this.header.on("socket.connect", (type) => {
         if (type === "/api") {
           this.header.send("send_private_msg", admin("已上线")).then(success, fail);
         }
       });
+      global.bot = this.header;
       return new Promise((resolve, reject) => {
         this.header.once("socket.connect", () => resolve());
         this.header.once("socket.failed", (_, attempts) => reject(attempts));
@@ -63,10 +63,6 @@ class CQBot extends Plugin {
     });
   }
 
-  // upgrade(_this) {
-  //   return super.upgrade(_this).then(()=>{
-  //   });
-  // }
 }
 
 module.exports = CQBot;
