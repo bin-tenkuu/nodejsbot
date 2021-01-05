@@ -78,7 +78,7 @@ class HttpOption extends Plugin {
     global.PluginLoader.refreshPlugin().then();
   }
 
-  httpOpen(req, res) {
+  httpOpen() {
     return global.PluginLoader.handle(true, "CQBot").then()
   }
 
@@ -86,7 +86,7 @@ class HttpOption extends Plugin {
     return global.PluginLoader.handle(false, "CQBot").then();
   }
 
-  pluginList(req, res) {
+  pluginList() {
     // let header = global.PluginLoader.header;
     // let n = {};
     // for (let key in header) {
@@ -98,7 +98,8 @@ class HttpOption extends Plugin {
   httpUpgradeLoader(req, res) {
     res.write("开始更新插件加载器");
     let PluginLoader = require("../PluginLoader");
-    PluginLoader = PluginLoader.cleanCache(require.resolve("../PluginLoader"));
+    PluginLoader.cleanCache(require.resolve("../PluginLoader"));
+    PluginLoader = require("../PluginLoader");
     return PluginLoader.upgradeSelf().then(() => {
       res.write("更新完成");
     })

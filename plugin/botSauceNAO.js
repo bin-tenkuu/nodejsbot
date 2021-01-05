@@ -8,7 +8,7 @@ class CQBotSauceNAO extends Plugin {
     super({
       name: "QQ私聊搜图",
       description: "QQ私聊SauceNAO搜图",
-      version: 0.1,
+      version: 0.2,
       require: ["CQBot"]
     });
     this.header = (event, context, tags) => {
@@ -31,8 +31,6 @@ class CQBotSauceNAO extends Plugin {
   }
 
   search(event, context, tags) {
-    console.log("收到消息", context, tags);
-
     let bot = global.bot;
     for (let tag of tags) {
       if (tag.tagName !== "image") {

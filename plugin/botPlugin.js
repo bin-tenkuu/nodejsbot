@@ -42,7 +42,7 @@ class CQBotPlugin extends Plugin {
       return;
     }
     let message = context.message;
-    console.log(message);
+    // console.log(message);
 
     let loader = global.PluginLoader;
     let plugins = loader.plugins;

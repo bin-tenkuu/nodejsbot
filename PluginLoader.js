@@ -44,7 +44,8 @@ class PluginLoader extends Plugin {
       let p = Promise.resolve();
       for (let file of files) {
         let path = `./plugin/${file}`;
-        let mod = PluginLoader.cleanCache(require.resolve(path));
+        PluginLoader.cleanCache(require.resolve(path));
+        let mod = require(path);
         if (Plugin.isPrototypeOf(mod)) {
           /**
            * @type Plugin
@@ -138,14 +139,13 @@ class PluginLoader extends Plugin {
   static cleanCache(modulePath) {
     let module = require.cache[modulePath];
     if (module == null) {
-      return require(modulePath);
+      return;
     }
     if (module.parent) {
       let children = module.parent.children;
       children.splice(children.indexOf(module), 1)
     }
     require.cache[modulePath] = null;
-    return require(modulePath);
   }
 
 
