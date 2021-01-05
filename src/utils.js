@@ -1,5 +1,5 @@
-const http = require("http");
 const {CQWebSocket, CQWebSocketOption, APIResponse, CQRequestOptions} = require("cq-websocket");
+const {adminId} = require("../config/config.json");
 
 
 /**
@@ -21,27 +21,6 @@ function delayExit(time) {
   }, time || 2000);
 }
 
-/**
- * 简易的开启本地服务器结束进程
- * @param {function():Promise<*>|function():PromiseLike<*>} call 结束前需要调用的方法
- * @return {Server}
- */
-function httpStop(call) {
-  let server = http.createServer((req, res) => {
-    res.setHeader("Content-type", "text/html; charset=utf-8");
-    if (req.url === '/exit') {
-      res.end("已关闭");
-      call().then(() => {
-        server.close();
-        delayExit();
-      });
-    } else {
-      res.end();
-    }
-  }).listen(40000);
-  console.log("快速结束已启动,点击 http://127.0.0.1:40000/exit 结束进程");
-  return server;
-}
 
 /**
  * 通过参数新建CQ实例
@@ -85,10 +64,27 @@ function openCQWebSocket(opt) {
   return bot;
 }
 
+function admin(message, user_id = adminId) {
+  return {
+    user_id: user_id,
+    message: message
+  }
+}
+
+function success(ret) {
+  console.log(`${now()} 发送成功`, ret.data);
+}
+
+function fail(reason) {
+  console.log(`${now()} 发送失败`, reason);
+}
+
 
 module.exports = {
   now,
   delayExit,
-  httpStop,
   openCQWebSocket,
+  admin,
+  success,
+  fail,
 }

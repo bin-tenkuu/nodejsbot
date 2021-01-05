@@ -9,7 +9,8 @@ class Plugin {
    * id:string,
    * name:string,
    * description:string,
-   * version:number
+   * version:number,
+   * require:string[]
    * }|*} json 必要参数,即使不写也会有默认参数
    * @param {*?} header 可选参数,不写那就没
    */
@@ -18,7 +19,8 @@ class Plugin {
       id = this.constructor.name,
       name = id,
       description = "",
-      version = 0
+      version = 0,
+      require = []
     } = json;
     /**
      * 插件ID
@@ -41,13 +43,14 @@ class Plugin {
      */
     this.version = version;
     /**
-     * @type {*}
+     * 前置插件IDs
+     * @type {string[]}
      */
-    this.header = header;
+    this.require = require;
     /**
      * @type {*}
      */
-    this.body = {};
+    this.header = header;
     this._state = "created";
   }
 

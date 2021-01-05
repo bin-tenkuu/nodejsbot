@@ -153,7 +153,7 @@ class PluginLoader extends Plugin {
    * 切换插件方法
    * @param {Plugin}older 旧插件
    * @param {Plugin}newer 新插件
-   * @param {boolean?}back 为true时,代表本次操作已为回滚操作,不会再次回滚
+   * @param {boolean?}back=false 为true时,代表本次操作已为回滚操作,不会再次回滚
    */
   toggle(older, newer, back = false) {
     let promise = Promise.resolve();
@@ -185,6 +185,18 @@ class PluginLoader extends Plugin {
       }
     }
     if (n && !newer.installed && newer.error == null) {
+      for (let key of newer.require) {
+        let reqPlugin = this.header[key];
+        if (reqPlugin == null) {
+          promise = promise.then(() => {
+            throw `${key} 插件未找到`
+          })
+          break;
+        }
+        if (!reqPlugin.installed && reqPlugin.error == null) {
+          promise = promise.then(() => this.toggle(null, reqPlugin))
+        }
+      }
       promise = promise.then(() => {
         return newer.install().then(() => {
           if (o) {

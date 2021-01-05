@@ -1,30 +1,32 @@
 let Plugin = require("../Plugin");
 let CQ = require("../src/CQ");
 const {adminId} = require("../config/config.json");
+let {success, fail} = require("../src/utils");
 
 class CQBotPlugin extends Plugin {
   constructor() {
     super({
       name: "QQBot插件系统",
       description: "QQBot插件系统,QQ管理员命令启用或停用对应插件",
-      version: 0.8
+      version: 0.8,
+      require: ["CQBot"]
     });
+    this.header = (event, context, tags) => {
+      this.onmessage(event, context, tags);
+    }
   }
 
   install() {
     return super.install().then(() => {
-      return global.PluginLoader.handle(true, "CQBot");
-    }).then(() => {
-      return global.bot.on("message.private", this.onmessage)
+      return global.bot.on("message.private", this.header)
     });
   }
 
   uninstall() {
     return super.uninstall().then(() => {
-      if (global.bot == null) {
-        return;
+      if (global.bot) {
+        global.bot.off("message.private", this.header)
       }
-      global.bot.off("message.private", this.onmessage)
     })
   }
 
@@ -44,20 +46,20 @@ class CQBotPlugin extends Plugin {
 
     let loader = global.PluginLoader;
     let plugins = loader.plugins;
+    let bot = global.bot;
     let matches;
     switch (true) {
-      case (/^-插件列表/.test(message)):
-        let s = plugins.map((value, index) => {
-          return `${index}. ${value}`
+      case (/^插件列表/.test(message)):
+        let s = loader.hasInstall(...plugins).map((bool, i) => {
+          return `${i}. ${bool}<-${plugins[i]}`
         }).join("\n");
-        global.bot.send("send_private_msg", {
+        bot.send("send_private_msg", {
           user_id: adminId,
           message: CQ.text(s)
-        })
+        }).then(success, fail)
         break;
-      case (/^-插件(开启)|(关闭)/.test(message)):
-        let open = /^-插件开启/.test(message);
-        console.log(open)
+      case (/^插件(开)|(关)/.test(message)):
+        let open = /^插件开/.test(message);
         matches = message.match(/\d+(?=\s)?/g);
         if (matches == null) {
           return;
@@ -65,15 +67,19 @@ class CQBotPlugin extends Plugin {
         matches = matches.map(match => plugins[+match])
 
         loader.handle(open, ...matches).then(() => {
-          let text = "对应插件状态:\n" + loader.hasInstall(matches).join("\n");
-          global.bot.send("send_private_msg", {
+          let text = "对应插件状态:\n" + loader.hasInstall(...matches).map((bool, i) => {
+            return `${bool}<-${matches[i]}`
+          }).join("\n");
+          bot.send("send_private_msg", {
             user_id: adminId,
             message: CQ.text(text)
-          })
+          }).then(success, fail)
+        }).catch((err) => {
+          console.log(matches)
+          console.error(err)
         })
         break;
     }
-
   }
 }
 

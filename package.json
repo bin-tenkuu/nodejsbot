@@ -19,8 +19,7 @@
   },
   "scripts": {
     "run": "node index.js",
-    "testinspect": "node --inspect",
-    "test": "node test.js"
+    "test": "node --inspect"
   },
   "keywords": [
     "demo"
