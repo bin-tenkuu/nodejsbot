@@ -65,7 +65,7 @@ class CQReply extends CQTag {
    * @return {CQTag}
    */
   function text(text) {
-    return new CQ.CQText(text);
+    return new CQ.CQText(escape(text, true));
   }
 
   /**
