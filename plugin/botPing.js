@@ -1,6 +1,7 @@
 let Plugin = require("../Plugin");
 let CQ = require("../src/CQ");
 let {success, fail} = require("../src/utils");
+let replaceText = require("../config/replace.json");
 
 class CQBotPing extends Plugin {
   constructor() {
@@ -31,9 +32,13 @@ class CQBotPing extends Plugin {
     let messageId = context.message_id;
     let userId = context.sender.user_id;
     /**
-     * @type {[]}
+     * @type {string}
      */
-    let cqTags = tags.filter(tag => tag.tagName === "text");
+    let cqTags = tags.filter(tag => tag.tagName === "text").map(tag => tag.text).join("");
+
+    for (let key of Object.keys(replaceText)) {
+      cqTags.replaceAll(key, replaceText[key])
+    }
 
     // stopPropagation方法阻止事件冒泡到父元素
     event.stopPropagation()
@@ -43,7 +48,7 @@ class CQBotPing extends Plugin {
       message: [
         CQ.reply(messageId),
         CQ.at(userId),
-        ...cqTags
+        CQ.text(cqTags)
       ]
     }).then(success, fail)
   }
