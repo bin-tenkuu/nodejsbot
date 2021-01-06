@@ -37,7 +37,7 @@ class CQBotPing extends Plugin {
     let cqTags = tags.filter(tag => tag.tagName === "text").map(tag => tag.text).join("");
 
     for (let key of Object.keys(replaceText)) {
-      cqTags.replaceAll(key, replaceText[key])
+      cqTags.replace(RegExp(key, "g"), replaceText[key])
     }
 
     // stopPropagation方法阻止事件冒泡到父元素
