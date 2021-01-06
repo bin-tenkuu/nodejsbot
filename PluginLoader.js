@@ -32,7 +32,9 @@ class PluginLoader extends Plugin {
   }
 
   /**
-   * 刷新插件并重载
+   * 刷新插件并重载</br>
+   * 已启用插件将会比较版本号,当版本号大于已载入插件时重载</br>
+   * 未启用插件将会强制重载,不判断版本号
    * @return {PromiseLike<*>}
    */
   refreshPlugin() {
@@ -61,11 +63,11 @@ class PluginLoader extends Plugin {
                 return this.toggle(older, newer)
               })
             } else {
-              console.log(`${utils.now()} ${newer.id} 无版本变动:${newer.version}`)
+              console.log(`${utils.now()} 无版本变动 ${newer.id}:${newer.version}`)
             }
           } else {
             header[newer.id] = newer;
-            console.log(`${utils.now()} ${newer.id} 添加新插件:${newer.version}`)
+            console.log(`${utils.now()} 重载插件 ${newer.id}:${newer.version}`)
           }
         } else {
           console.log(`${utils.now()} Plugin.isPrototypeOf(${mod.name}) === false`)
