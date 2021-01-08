@@ -9,7 +9,6 @@ class CQBotPlugin extends Plugin {
       name: "QQBot插件系统",
       description: "QQBot插件系统,QQ管理员命令启用或停用对应插件",
       version: 0.8,
-      require: ["CQBot"]
     });
     this.header = (event, context, tags) => {
       this.onmessage(event, context, tags);

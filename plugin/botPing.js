@@ -1,7 +1,6 @@
 let Plugin = require("../Plugin");
 let CQ = require("../src/CQ");
 let {success, fail} = require("../src/utils");
-let replaceText = require("../config/replace.json");
 
 class CQBotPing extends Plugin {
   constructor() {
@@ -9,7 +8,6 @@ class CQBotPing extends Plugin {
       name: "QQ群@复读",
       description: "@复读",
       version: 0.1,
-      require: ["CQBot"]
     });
   }
 
@@ -36,9 +34,10 @@ class CQBotPing extends Plugin {
      */
     let cqTags = tags.filter(tag => tag.tagName === "text").map(tag => tag.text).join("");
 
-    for (let key of Object.keys(replaceText)) {
-      cqTags.replace(RegExp(key, "g"), replaceText[key])
-    }
+    cqTags.replace(/吗/g, "")
+    cqTags.replace(/不/g, "很")
+    cqTags.replace(/你/g, "我")
+    cqTags.replace(/(?<!没)有/g, "没有")
 
     // stopPropagation方法阻止事件冒泡到父元素
     event.stopPropagation()

@@ -19,8 +19,7 @@ class Plugin {
       id = this.constructor.name,
       name = id,
       description = "",
-      version = 0,
-      require = []
+      version = 0
     } = json;
     /**
      * 插件ID
@@ -43,11 +42,6 @@ class Plugin {
      */
     this.version = version;
     /**
-     * 前置插件IDs
-     * @type {string[]}
-     */
-    this.require = require;
-    /**
      * @type {*}
      */
     this.header = header;
@@ -56,21 +50,21 @@ class Plugin {
 
   /**
    * 安装方法
-   * @return {Promise<*>|PromiseLike<*>}默认返回参数为`this`
+   * @return {Promise<*>}默认返回参数为`this`
    */
-  install() {
+  async install() {
     this._state = "installed"
-    return Promise.resolve(this)
+    return this
   }
 
   /**
    * 卸载方法<br/>
    * **注:**如非特殊情况,本方法禁止抛出异常
-   * @return {Promise<*>|PromiseLike<*>} 默认返回参数为`this`
+   * @return {Promise<*>} 默认返回参数为`this`
    */
-  uninstall() {
+  async uninstall() {
     this._state = this._state === "error" ? this._state : "uninstalled";
-    return Promise.resolve(this)
+    return this
   }
 
   /**
@@ -112,17 +106,6 @@ class Plugin {
    */
   get error() {
     return this._state === "error" ? this._error : null;
-  }
-
-  /**
-   * 插件升级方法,从老版本更新至新版本时会调用此函数,并传入老版本的对象
-   *
-   * **注**:有升级时将会先运行此方法,然后进行install
-   * @param {Plugin} _this 老版本对象
-   * @return {Promise<*>}
-   */
-  upgrade(_this) {
-    return Promise.resolve(_this)
   }
 
   toString() {

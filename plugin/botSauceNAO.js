@@ -9,7 +9,6 @@ class CQBotSauceNAO extends Plugin {
       name: "QQ私聊搜图",
       description: "QQ私聊SauceNAO搜图",
       version: 0.4,
-      require: ["CQBot"]
     });
     this.header = (event, context, tags) => {
       this.search(event, context, tags)

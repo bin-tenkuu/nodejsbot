@@ -9,7 +9,6 @@ class BotRepeat extends Plugin {
       name: "QQ机器人-复读",
       description: "测试用",
       version: 0.1,
-      require: ["CQBot"]
     });
     this.header = (event, context, tags) => {
       this.repeat(event, context, tags)

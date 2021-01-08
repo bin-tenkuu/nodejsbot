@@ -1,4 +1,3 @@
-// const Plugin = require("./Plugin");
 const PluginLoader = require("./PluginLoader");
 const utils = require("./src/utils");
 

@@ -11,39 +11,27 @@ class PluginLoader extends Plugin {
     }, {});
   }
 
-  install() {
-    return super.install().then(() => {
-      global.PluginLoader = this;
-    });
+  async install() {
+    await super.install();
+    global.PluginLoader = this;
   }
 
-  uninstall() {
-    return super.uninstall().then(() => {
-      global.PluginLoader = undefined;
-      delete global.PluginLoader;
-    });
-  }
-
-  upgrade(_this) {
-    return super.upgrade(_this).then((_this) => {
-      global.PluginLoader = this
-      this.header = _this.header;
-    });
+  async uninstall() {
+    await super.uninstall();
+    global.PluginLoader = undefined;
+    delete global.PluginLoader;
   }
 
   /**
    * 刷新插件并重载</br>
    * 已启用插件将会比较版本号,当版本号大于已载入插件时重载</br>
    * 未启用插件将会强制重载,不判断版本号
-   * @return {PromiseLike<*>}
+   * @return {Promise<*>}
    */
-  refreshPlugin() {
+  async refreshPlugin() {
     let header = this.header;
-    let promise = Promise.resolve();
-    promise = promise.then(() => {
-      return fs.readdirSync("./plugin")
-    }).then(files => {
-      let p = Promise.resolve();
+    let files = fs.readdirSync("./plugin", "utf8");
+    try {
       for (let file of files) {
         let path = `./plugin/${file}`;
         PluginLoader.cleanCache(require.resolve(path));
@@ -59,9 +47,7 @@ class PluginLoader extends Plugin {
           let older = header[newer.id];
           if (older && older.installed) {
             if (newer.version > older.version) {
-              p = p.then(() => {
-                return this.toggle(older, newer)
-              })
+              return this.toggle(older, newer)
             } else {
               console.log(`${utils.now()} 无版本变动 ${newer.id}:${newer.version}`)
             }
@@ -73,12 +59,9 @@ class PluginLoader extends Plugin {
           console.log(`${utils.now()} Plugin.isPrototypeOf(${mod.name}) === false`)
         }
       }
-      return p;
-    }).catch(err => {
-      console.log(`${utils.now()} `, err);
-    })
-
-    return promise;
+    } catch (e) {
+      console.log(`${utils.now()} `, e);
+    }
   }
 
   /**
@@ -97,9 +80,8 @@ class PluginLoader extends Plugin {
    * @param {string}pluginKey 选定插件的id
    * @return {Promise<*>}
    */
-  handle(bool, ...pluginKey) {
+  async handle(bool, ...pluginKey) {
     let header = this.header;
-    let promise = Promise.resolve();
     if (bool) {
       for (let key of pluginKey) {
         /**
@@ -109,10 +91,8 @@ class PluginLoader extends Plugin {
         if (!plugin || plugin.installed || plugin.error) {
           continue;
         }
-        promise = promise.then(() => {
-          console.log(`${utils.now()} ${key}开始安装`)
-          return this.toggle(null, plugin);
-        })
+        console.log(`${utils.now()} ${key}开始安装`)
+        await this.toggle(null, plugin);
       }
     } else {
       for (let key of pluginKey) {
@@ -124,13 +104,10 @@ class PluginLoader extends Plugin {
           console.log(`${utils.now()} ${key}未安装: ${plugin._state}`)
           continue;
         }
-        promise = promise.then(() => {
-          console.log(`${utils.now()} ${key}开始卸载`)
-          return this.toggle(plugin, null);
-        })
+        console.log(`${utils.now()} ${key}开始卸载`)
+        await this.toggle(plugin, null);
       }
     }
-    return promise;
   }
 
   /**
@@ -156,72 +133,48 @@ class PluginLoader extends Plugin {
    * @param {Plugin}older 旧插件
    * @param {Plugin}newer 新插件
    * @param {boolean?}back=false 为true时,代表本次操作已为回滚操作,不会再次回滚
+   * @return {Promise<void>}
    */
-  toggle(older, newer, back = false) {
-    let promise = Promise.resolve();
+  async toggle(older, newer, back = false) {
     let o = older instanceof Plugin;
     let n = newer instanceof Plugin;
     if (o && older.installed) {
-      promise = promise.then(() => {
-        return older.uninstall().then(() => {
-          console.log(`${utils.now()} ${older.id}卸载成功`);
-        })
-      }).catch(err => {
-        older.error = err
+      try {
+        await older.uninstall();
+        console.log(`${utils.now()} ${older.id}卸载成功`);
+      } catch (e) {
+        older.error = e
         if (n) {
           console.log(`${utils.now()} ${older.id}卸载失败`);
-          console.error(err);
+          console.error(e);
         } else {
           console.log(`${utils.now()} ${older.id}卸载失败,删除实例`);
-          console.error(err);
+          console.error(e);
         }
-      })
-      if (n) {
-        promise = promise.then(() => {
-          console.log(`${utils.now()} ${older.id}数据迁移成功`);
-          return newer.upgrade(older);
-        }).catch(err => {
-          console.log(`${utils.now()} ${older.id}数据迁移失败`);
-          console.error(err);
-        })
       }
     }
     if (n && !newer.installed && newer.error == null) {
-      for (let key of newer.require) {
-        let reqPlugin = this.header[key];
-        if (reqPlugin == null) {
-          promise = promise.then(() => {
-            throw `${key} 插件未找到`
-          })
-          break;
+      try {
+        await newer.install()
+        if (o) {
+          console.log(`${utils.now()} ${newer.id}更新完成:${older.version} -> ${newer.version}`);
+        } else {
+          console.log(`${utils.now()} ${newer.id}安装成功`);
         }
-        if (!reqPlugin.installed && reqPlugin.error == null) {
-          promise = promise.then(() => this.toggle(null, reqPlugin))
-        }
-      }
-      promise = promise.then(() => {
-        return newer.install().then(() => {
-          if (o) {
-            console.log(`${utils.now()} ${newer.id}更新完成:${older.version} -> ${newer.version}`);
-          } else {
-            console.log(`${utils.now()} ${newer.id}安装成功`);
-          }
-          this.header[newer.id] = newer;
-        })
-      }).catch(err => {
-        newer.error = err;
+        this.header[newer.id] = newer;
+      } catch (e) {
+        newer.error = e;
         if (o && !back) {
           console.log(`${utils.now()} ${newer.id}安装失败,回退版本`);
-          console.error(err);
+          console.error(e);
           return this.toggle(newer, older, true)
         } else {
           console.log(`${utils.now()} ${newer.id}安装失败,无旧版本`);
-          console.error(err);
+          console.error(e);
           return this.toggle(newer, null)
         }
-      })
+      }
     }
-    return promise;
   }
 
   /**
@@ -237,7 +190,7 @@ class PluginLoader extends Plugin {
    * 在其他脚本中调用 `PluginLoader.cleanCache()` 方法清除 `PluginLoader` 脚本缓存后调用此方法
    * @return {Promise<*>}
    */
-  static upgradeSelf() {
+  static async upgradeSelf() {
     let older = global.PluginLoader;
     let newer = new PluginLoader();
     return newer.toggle(older, newer);

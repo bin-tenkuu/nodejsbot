@@ -53,10 +53,10 @@ function openCQWebSocket(opt) {
   });
   /**
    * 发送方法,免的黄线
-   * @param {string}method
-   * @param {Record<string, any>?}params
-   * @param {number|CQRequestOptions?}options
-   * @return {Promise<APIResponse<any>>}
+   * @param {string}method a
+   * @param {Record<string, any>?}params a
+   * @param {number|CQRequestOptions?}options a
+   * @return {Promise<APIResponse<any>>} a
    */
   bot.send = (method, params, options) => bot.__call__(method, params, options)
 
