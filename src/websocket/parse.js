@@ -138,8 +138,13 @@ module.exports = {
   CQ,
   escape,
   unescape,
+  /**
+   *
+   * @param {string}msg 消息
+   * @return {CQTag[]}
+   */
   parse: (msg) => {
-    msg.split(SPLIT).map(str => {
+    return msg.split(SPLIT).map(str => {
       if (str === "") return null;
       if (CQ_TAG_REGEXP.test(str)) {
         return parseCQ(str)

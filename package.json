@@ -4,9 +4,7 @@
   "description": "demo",
   "main": "test.js",
   "dependencies": {
-    "cq-websocket": "^2.1.1",
     "express": "^4.17.1",
-    "ftp": "^0.3.10",
     "lodash.get": "^4.4.2",
     "shortid": "^2.2.16",
     "websocket": "^1.0.33"
@@ -18,12 +16,12 @@
     "node-cache": "^5.1.2",
     "request": "^2.88.2",
     "request-promise": "^4.2.6",
-    "saucenao": "0.0.2",
-    "socket.io": "^3.0.4"
+    "saucenao": "0.0.2"
   },
   "scripts": {
+    "test": "nyc test/*.js",
     "run": "node index.js",
-    "test": "node --inspect"
+    "testInspect": "node --inspect"
   },
   "keywords": [
     "demo"

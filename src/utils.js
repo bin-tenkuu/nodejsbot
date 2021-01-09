@@ -1,5 +1,5 @@
-const {CQWebSocket, CQWebSocketOption, APIResponse, CQRequestOptions} = require("cq-websocket");
 const {adminId} = require("../config/config.json");
+const {CQWebSocket} = require("./websocket");
 
 
 /**
@@ -24,7 +24,7 @@ function delayExit(time) {
 
 /**
  * 通过参数新建CQ实例
- * @param {Partial<CQWebSocketOption>}opt
+ * @param {*}opt
  * @return {CQWebSocket}
  */
 function openCQWebSocket(opt) {
@@ -32,34 +32,15 @@ function openCQWebSocket(opt) {
    * @type {CQWebSocket}
    */
   let bot = new CQWebSocket(opt);
-  bot.on("socket.connecting", (type, attempts) => {
-    console.log(`${now()} 连接中[${type}]#${attempts}`);
+  bot.on("socket.error", (evt, code, err) => {
+    console.warn(`${now()} 连接错误[${code}]: ${err}`);
   });
-  bot.on("socket.failed", (type, attempts) => {
-    console.log(`${now()} 连接失败[${type}]#${attempts}`);
+  bot.on("socket.open", () => {
+    console.log(`${now()} 连接开启`);
   });
-  bot.on("socket.error", (type, err) => {
-    console.log(`${now()} 连接错误[${type}]`);
-    console.log(err);
+  bot.on("socket.close", (evt, code, desc) => {
+    console.log(`${now()} 已关闭[${code}]: ${desc}`)
   });
-  bot.on("socket.closing", type => {
-    console.log(`${now()} 关闭中[${type}]`);
-  });
-  bot.on("socket.connect", (type, socket, attempts) => {
-    console.log(`${now()} 已连接: ${type} #${attempts}`)
-  });
-  bot.on("socket.close", (type, code, desc) => {
-    console.log(`${now()} 已关闭: ${type} (${code})#${desc}`)
-  });
-  /**
-   * 发送方法,免的黄线
-   * @param {string}method a
-   * @param {Record<string, any>?}params a
-   * @param {number|CQRequestOptions?}options a
-   * @return {Promise<APIResponse<any>>} a
-   */
-  bot.send = (method, params, options) => bot.__call__(method, params, options)
-
 
   return bot;
 }

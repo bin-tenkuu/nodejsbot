@@ -1,5 +1,5 @@
 let Plugin = require("../Plugin");
-const CQ = require("../src/CQ")
+let {parse: {CQ}} = require("../src/websocket");
 const NAO = require("../src/SauceNAOUtil");
 let {admin, success, fail} = require("../src/utils");
 

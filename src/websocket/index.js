@@ -1,5 +1,5 @@
 const parse = require("./parse");
-const CQWebSocket = require("./websocket");
+const CQWebSocket = require("./cqwebsocket");
 
 module.exports = {
   parse,

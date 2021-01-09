@@ -3,4 +3,6 @@
 /.gradle/
 /.idea/
 /config/
+/test/
+
 nodejsbot.zip

@@ -1,5 +1,5 @@
 let Plugin = require("../Plugin");
-let CQ = require("../src/CQ");
+let {parse: {CQ}} = require("../src/websocket");
 const {adminId} = require("../config/config.json");
 let {success, fail} = require("../src/utils");
 
@@ -46,9 +46,8 @@ class CQBotPlugin extends Plugin {
     let loader = global.PluginLoader;
     let plugins = loader.plugins;
     let bot = global.bot;
-    let matches;
     switch (true) {
-      case (/^插件列表/.test(message)):
+      case (/^插件列表/.test(message)): {
         let s = loader.hasInstall(...plugins).map((bool, i) => {
           return `${i}. ${bool}<-${plugins[i]}`
         }).join("\n");
@@ -57,9 +56,10 @@ class CQBotPlugin extends Plugin {
           message: CQ.text(s)
         }).then(success, fail)
         break;
-      case (/^插件(开)|(关)/.test(message)):
+      }
+      case (/^插件(开)|(关)/.test(message)): {
         let open = /^插件开/.test(message);
-        matches = message.match(/\d+(?=\s)?/g);
+        let matches = message.match(/\d+(?=\s)?/g);
         if (matches == null) {
           return;
         }
@@ -78,6 +78,7 @@ class CQBotPlugin extends Plugin {
           console.error(err)
         })
         break;
+      }
     }
   }
 }

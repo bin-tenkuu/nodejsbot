@@ -1,5 +1,4 @@
-const $get = require('lodash.get')
-const events = require("events");
+const $get = require('lodash.get');
 
 class CQEventBus {
   constructor() {
@@ -10,45 +9,37 @@ class CQEventBus {
         group: [],
         discuss: []
       },
-      event: [],
       notice: {
-        '': [],
         group_upload: [],
         group_admin: {
-          '': [],
           set: [],
           unset: []
         },
         group_decrease: {
-          '': [],
           leave: [],
           kick: [],
           kick_me: []
         },
         group_increase: {
-          '': [],
           approve: [],
           invite: []
         },
         friend_add: [],
         group_ban: {
-          '': [],
           ban: [],
           lift_ban: []
         }
       },
       request: {
-        '': [],
         friend: [],
         group: {
-          '': [],
           add: [],
           invite: []
         }
       },
       socket: {
         open: [],
-        connect: [],
+        message: [],
         error: [],
         close: []
       },
@@ -130,32 +121,44 @@ class CQEventBus {
    * @return {Promise<*>}
    */
   async handle(eventType, ...args) {
-    let hasError = false;
     if (typeof eventType === "string") {
       eventType = eventType.split(".");
     }
     let isMSG = eventType[0] === "message";
     do {
       let arr = this.get(eventType);
-      eventType.pop();
+      let event = new CQEvent();
+      // console.log(eventType);
       for (let handle of arr) {
         try {
-          if (await handle(...args) === true) {
+          await handle(event, ...args)
+          if (event.isCanceled) {
             break;
           }
         } catch (e) {
-          console.log(e);
-          hasError = true;
-          this._EventMap.socket.error.push(() => {
-            this.off(eventType, handle)
-          })
+          console.error(e);
+          this.off(eventType, handle);
         }
       }
+      eventType.pop();
     } while (isMSG && eventType.length > 0);
-    if (hasError) {
-      this._EventMap.socket.error.forEach(fn => fn())
-    }
   }
 }
+
+class CQEvent {
+  constructor() {
+    this._isCanceled = false
+  }
+
+  get isCanceled() {
+    return this._isCanceled
+  }
+
+  stopPropagation() {
+    this._isCanceled = true
+  }
+
+}
+
 
 module.exports = CQEventBus

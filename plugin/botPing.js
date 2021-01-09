@@ -1,5 +1,5 @@
 let Plugin = require("../Plugin");
-let CQ = require("../src/CQ");
+let {parse: {CQ}} = require("../src/websocket");
 let {success, fail} = require("../src/utils");
 
 class CQBotPing extends Plugin {
