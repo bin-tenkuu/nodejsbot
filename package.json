@@ -4,14 +4,12 @@
   "description": "demo",
   "main": "test.js",
   "dependencies": {
-    "express": "^4.17.1",
     "lodash.get": "^4.4.2",
     "shortid": "^2.2.16",
     "websocket": "^1.0.33"
   },
   "devDependencies": {
     "axios": "^0.21.1",
-    "deep-equal": "^2.0.5",
     "file-type": "^16.1.0",
     "node-cache": "^5.1.2",
     "request": "^2.88.2",
@@ -19,7 +17,6 @@
     "saucenao": "0.0.2"
   },
   "scripts": {
-    "test": "nyc test/*.js",
     "run": "node index.js",
     "testInspect": "node --inspect"
   },

@@ -1,3 +1,4 @@
+const tags = require('./tags');
 const {
   CQTag,
   CQAnonymous,
@@ -136,6 +137,7 @@ function unescape(str) {
  */
 module.exports = {
   CQ,
+  tags,
   escape,
   unescape,
   /**

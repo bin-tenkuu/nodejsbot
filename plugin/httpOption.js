@@ -14,7 +14,6 @@ class HttpOption extends Plugin {
     this.body = {
       "/exit": this.exit,
       "/upgrade": this.httpUpgrade,
-      "/httpUpgradePluginLoaderForce": this.httpUpgradeLoader,
       "/httpOpenBot": this.httpOpen,
       "/httpCloseBot": this.httpClose,
       "/pluginList": this.pluginList,
@@ -93,16 +92,6 @@ class HttpOption extends Plugin {
     //   n[key] = header[key].installed;
     // }
     return JSON.stringify(Object.values(global.PluginLoader.header));
-  }
-
-  httpUpgradeLoader(req, res) {
-    res.write("开始更新插件加载器");
-    let PluginLoader = require("../PluginLoader");
-    PluginLoader.cleanCache(require.resolve("../PluginLoader"));
-    PluginLoader = require("../PluginLoader");
-    return PluginLoader.upgradeSelf().then(() => {
-      res.write("更新完成");
-    })
   }
 }
 

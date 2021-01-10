@@ -30,10 +30,10 @@ class CQBot extends Plugin {
       }
 
       this.header.once("socket.open", res)
-      this.header.on("socket.open", () => {
-        console.log("已上线")
-        // this.header.send("send_private_msg", this.admin("已上线")).then(this.success, this.fail);
-      });
+      // this.header.on("socket.open", () => {
+      //   console.log("已上线")
+      //   // this.header.send("send_private_msg", this.admin("已上线")).then(this.success, this.fail);
+      // });
       this.header.once("socket.error", rej);
       this.header.connect();
     });

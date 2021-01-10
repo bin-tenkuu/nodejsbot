@@ -13,7 +13,7 @@ class CQBotPing extends Plugin {
 
   install() {
     return super.install().then(() => {
-      global.bot.on("message.group.@.me", this.ping)
+      global.bot.on("message.group", this.ping)
     })
   }
 
@@ -25,23 +25,33 @@ class CQBotPing extends Plugin {
     })
   }
 
+  /**
+   *
+   * @param event
+   * @param context
+   * @param {tags.CQTag[]}tags
+   */
   ping(event, context, tags) {
+    let bot = global.bot;
+    if (tags.filter(tag => tag["tagName"] === "at").filter(tag => tag["qq"] === bot.qq).length < 1) {
+      return
+    }
+    // stopPropagation方法阻止事件冒泡到父元素
+    event.stopPropagation();
     let groupId = context.group_id;
     let messageId = context.message_id;
     let userId = context.sender.user_id;
     /**
      * @type {string}
      */
-    let cqTags = tags.filter(tag => tag.tagName === "text").map(tag => tag.text).join("");
+    let cqTags = tags.filter(tag => tag["tagName"] === "text")
+        .map(tag => tag["text"]).join("")
+        .replace(/吗/g, "")
+        .replace(/不/g, "很")
+        .replace(/你/g, "我")
+        .replace(/(?<!没)有/g, "没有")
+        .replace(/\?？/g, "!");
 
-    cqTags.replace(/吗/g, "")
-    cqTags.replace(/不/g, "很")
-    cqTags.replace(/你/g, "我")
-    cqTags.replace(/(?<!没)有/g, "没有")
-
-    // stopPropagation方法阻止事件冒泡到父元素
-    event.stopPropagation()
-    let bot = global.bot;
     bot.send("send_group_msg", {
       group_id: groupId,
       message: [

@@ -214,6 +214,8 @@ class CQWebSocket {
           }
           case 'friend_add':
             return this._eventBus.handle([post_type, notice_type], json)
+          case 'notify':
+            return console.warn(`制作中 notify 类型`, json)
           default:
             return console.warn(`未知的 notice 类型: ${notice_type}`)
         }

@@ -28,7 +28,8 @@ class CQEventBus {
         group_ban: {
           ban: [],
           lift_ban: []
-        }
+        },
+        notify: []
       },
       request: {
         friend: [],

@@ -1,4 +1,4 @@
-const equal = require("deep-equal");
+// const equal = require("deep-equal");
 
 module.exports = class CQTag {
   /**
@@ -33,16 +33,6 @@ module.exports = class CQTag {
    */
   set modifier(val) {
     this._modifier = val
-  }
-
-  /**
-   * @param {CQTag} another
-   * @return {boolean}
-   */
-  equals(another) {
-    if (!(another instanceof CQTag)) return false
-    if (this._type !== another.tagName) return false
-    equal(this.data, another.data)
   }
 
   toJSON() {
