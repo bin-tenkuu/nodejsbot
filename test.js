@@ -1,20 +1,14 @@
-const $get = require('lodash.get')
+let {Tags: {CQTag, CQAt}} = require("./src/websocket");
 
-let a = {
-  a: {
-    "": 2,
-    "b": {
-      "": 1,
-      c: 0
-    }
-  }
-}
 
-let split = "a.b.c".split(".");
-let arr = $get(a, split);
-split.push("")
-for (; split.length > 1;
-       split.pop(), split.pop(), split.push(""), arr = $get(a, split)
-) {
-  console.log(arr)
-}
+let text = "CQ:at,qq=2506019369";
+
+let array = text.match(/^CQ:([a-z]+)(,[^,]+)*$/);
+
+let map = array[2].split(",").filter((_, i) => i > 0).map(v => v.split("="));
+let entries = Object.fromEntries(map);
+let cqTag = new CQTag(array[1], entries);
+
+let coerce = Object.setPrototypeOf(cqTag, CQAt.prototype).coerce();
+
+console.log(coerce)

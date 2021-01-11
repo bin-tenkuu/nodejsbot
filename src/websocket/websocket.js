@@ -1,7 +1,7 @@
 const WebSocket = require('websocket').w3cwebsocket
 const shortid = require('shortid')
 const EventBus = require("./event-bus");
-const {parse} = require("./parse");
+const {parse} = require("./tags");
 
 class CQWebSocket {
   constructor({
@@ -71,6 +71,12 @@ class CQWebSocket {
     this._socket.close(1000, 'Normal connection closure')
   }
 
+  /**
+   *
+   * @param {string}method
+   * @param params
+   * @return {Promise<void>}
+   */
   send(method, params) {
     return new Promise((resolve, reject) => {
       let reqId = shortid.generate()
@@ -103,12 +109,23 @@ class CQWebSocket {
   /**
    *
    * @param {number|string}user_id  对方 QQ 号
-   * @param {string}message 要发送的内容
-   * @param {boolean?}auto_escape  消息内容是否作为纯文本发送 ( 即不解析 CQ 码 ) , 只在 `message` 字段是字符串时有效
+   * @param message 要发送的内容
+   * @param {boolean?}auto_escape=false  消息内容是否作为纯文本发送 ( 即不解析 CQ 码 ) , 只在 `message` 字段是字符串时有效
    * @return {Promise<void>}
    */
-  send_private_msg(user_id, message = "", auto_escape) {
+  send_private_msg(user_id, message, auto_escape = false) {
     return this.send("send_private_msg", {user_id, message, auto_escape})
+  }
+
+  /**
+   *
+   * @param {number|string}group_id 群号
+   * @param message  要发送的内容
+   * @param {boolean?}auto_escape=false 消息内容是否作为纯文本发送 ( 即不解析 CQ 码) , 只在 `message` 字段是字符串时有效
+   * @return {Promise<void>}
+   */
+  send_group_msg(group_id, message, auto_escape = false) {
+    return this.send("send_group_msg", {group_id, message, auto_escape})
   }
 
   on(eventType, handler) {
