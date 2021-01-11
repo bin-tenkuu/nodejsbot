@@ -1,5 +1,5 @@
 let Plugin = require("../Plugin");
-let {parse: {CQ}} = require("../src/websocket");
+let {Tags: {CQ}} = require("../src/websocket");
 const NAO = require("../src/SauceNAOUtil");
 let {admin, success, fail} = require("../src/utils");
 
@@ -54,7 +54,6 @@ class CQBotSauceNAO extends Plugin {
                 CQ.image(first.thumbnail),
                 CQ.text(`相似度: ${first.similarity}%\n`),
                 CQ.text(this.decodeData(first.index_id, first.data))
-                //TODO:作者&图片源&标题
               ], userId)
           ).then(success, fail)
         } else {

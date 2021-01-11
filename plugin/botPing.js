@@ -1,5 +1,5 @@
 let Plugin = require("../Plugin");
-let {parse: {CQ}} = require("../src/websocket");
+let {Tags: {CQ}} = require("../src/websocket");
 let {success, fail} = require("../src/utils");
 
 class CQBotPing extends Plugin {
@@ -7,7 +7,7 @@ class CQBotPing extends Plugin {
     super({
       name: "QQ群@复读",
       description: "@复读",
-      version: 0.1,
+      version: 0.2,
     });
   }
 
@@ -29,7 +29,7 @@ class CQBotPing extends Plugin {
    *
    * @param event
    * @param context
-   * @param {tags.CQTag[]}tags
+   * @param {CQTag[]}tags
    */
   ping(event, context, tags) {
     let bot = global.bot;
@@ -39,7 +39,7 @@ class CQBotPing extends Plugin {
     // stopPropagation方法阻止事件冒泡到父元素
     event.stopPropagation();
     let groupId = context.group_id;
-    let messageId = context.message_id;
+    let messageId = context["message_id"];
     let userId = context.sender.user_id;
     /**
      * @type {string}
