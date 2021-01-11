@@ -39,7 +39,7 @@ class CQBot extends Plugin {
     await super.uninstall()
     global.bot = undefined;
     delete global.bot;
-    await this.header.send('send_private_msg', this.admin("即将下线")).then(this.success, this.fail)
+    await this.header.send_private_msg(adminId, "即将下线")
     return new Promise((resolve, reject) => {
       this.header.disconnect();
       this.header.once("socket.close", (evt) => resolve(evt));
@@ -48,20 +48,6 @@ class CQBot extends Plugin {
     });
   }
 
-  admin(message, user_id = adminId) {
-    return {
-      user_id: user_id,
-      message: message
-    }
-  }
-
-  success(ret) {
-    console.log(`${utils.now()} 发送成功`, ret.data);
-  }
-
-  fail(reason) {
-    console.log(`${utils.now()} 发送失败`, reason);
-  }
 }
 
 module.exports = CQBot;
