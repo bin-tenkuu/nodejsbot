@@ -1,6 +1,5 @@
 let Plugin = require("../Plugin");
 const Repeat = require("../src/repeat");
-let {success, fail} = require("../src/utils");
 
 class BotRepeat extends Plugin {
   constructor() {
@@ -47,10 +46,7 @@ class BotRepeat extends Plugin {
     }
     event.stopPropagation();
     let bot = global.bot;
-    bot.send("send_group_msg", {
-      group_id: groupId,
-      message: tags[0]
-    }).then(success, fail)
+    bot.send_group_msg(groupId, tags[0])
   }
 }
 

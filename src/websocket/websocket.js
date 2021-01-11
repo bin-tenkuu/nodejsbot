@@ -47,6 +47,14 @@ class CQWebSocket {
     this._qq = qq;
     this._accessToken = accessToken;
     this._baseUrl = baseUrl;
+
+    this.messageSuccess = (ret) => {
+      console.log(`发送成功`, ret.data);
+    }
+    this.messageFail = (reason) => {
+      console.log(`发送失败`, reason);
+    }
+
   }
 
   reconnect() {
@@ -111,10 +119,10 @@ class CQWebSocket {
    * @param {number|string}user_id  对方 QQ 号
    * @param message 要发送的内容
    * @param {boolean?}auto_escape=false  消息内容是否作为纯文本发送 ( 即不解析 CQ 码 ) , 只在 `message` 字段是字符串时有效
-   * @return {Promise<void>}
    */
   send_private_msg(user_id, message, auto_escape = false) {
-    return this.send("send_private_msg", {user_id, message, auto_escape})
+    this.send("send_private_msg", {user_id, message, auto_escape})
+        .then(this.messageSuccess, this.messageFail)
   }
 
   /**
@@ -122,10 +130,10 @@ class CQWebSocket {
    * @param {number|string}group_id 群号
    * @param message  要发送的内容
    * @param {boolean?}auto_escape=false 消息内容是否作为纯文本发送 ( 即不解析 CQ 码) , 只在 `message` 字段是字符串时有效
-   * @return {Promise<void>}
    */
   send_group_msg(group_id, message, auto_escape = false) {
-    return this.send("send_group_msg", {group_id, message, auto_escape})
+    this.send("send_group_msg", {group_id, message, auto_escape})
+        .then(this.messageSuccess, this.messageFail)
   }
 
   on(eventType, handler) {

@@ -1,6 +1,5 @@
 let Plugin = require("../Plugin");
 let {Tags: {CQ}} = require("../src/websocket");
-let {success, fail} = require("../src/utils");
 
 class CQBotPing extends Plugin {
   constructor() {
@@ -51,15 +50,11 @@ class CQBotPing extends Plugin {
         .replace(/你/g, "我")
         .replace(/(?<!没)有/g, "没有")
         .replace(/\?？/g, "!");
-
-    bot.send("send_group_msg", {
-      group_id: groupId,
-      message: [
-        CQ.reply(messageId),
-        CQ.at(userId),
-        CQ.text(cqTags)
-      ]
-    }).then(success, fail)
+    bot.send_group_msg(groupId, [
+      CQ.reply(messageId),
+      CQ.at(userId),
+      CQ.text(cqTags)
+    ])
   }
 }
 

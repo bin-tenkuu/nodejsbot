@@ -1,7 +1,6 @@
 let Plugin = require("../Plugin");
 let {Tags: {CQ}} = require("../src/websocket");
 const {adminId} = require("../config/config.json");
-let {success, fail} = require("../src/utils");
 
 class CQBotPlugin extends Plugin {
   constructor() {
@@ -51,10 +50,9 @@ class CQBotPlugin extends Plugin {
         let s = loader.hasInstall(...plugins).map((bool, i) => {
           return `${i}. ${bool}<-${plugins[i]}`
         }).join("\n");
-        bot.send("send_private_msg", {
-          user_id: adminId,
-          message: CQ.text(s)
-        }).then(success, fail)
+        bot.send_private_msg(adminId, [
+          CQ.text(s)
+        ])
         break;
       }
       case (/^插件[开关]/.test(message)): {
@@ -69,10 +67,9 @@ class CQBotPlugin extends Plugin {
           let text = "对应插件状态:\n" + loader.hasInstall(...matches).map((bool, i) => {
             return `${bool}<-${matches[i]}`
           }).join("\n");
-          bot.send("send_private_msg", {
-            user_id: adminId,
-            message: CQ.text(text)
-          }).then(success, fail)
+          bot.send_private_msg(adminId, [
+            CQ.text(text)
+          ])
         }).catch((err) => {
           console.log(matches)
           console.error(err)

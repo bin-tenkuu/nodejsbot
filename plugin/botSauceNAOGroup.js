@@ -2,12 +2,12 @@ let Plugin = require("../Plugin");
 let {Tags: {CQ}} = require("../src/websocket");
 const NAO = require("../src/SauceNAOUtil");
 
-class CQBotSauceNAO extends Plugin {
+class CQBotSauceNAOGroup extends Plugin {
   constructor() {
     super({
-      name: "QQ私聊搜图",
-      description: "QQ私聊SauceNAO搜图",
-      version: 0.4,
+      name: "QQ群聊搜图",
+      description: "QQ群聊SauceNAO搜图",
+      version: 0.1,
     });
     this.header = (event, context, tags) => {
       this.search(event, context, tags)
@@ -16,14 +16,14 @@ class CQBotSauceNAO extends Plugin {
 
   install() {
     return super.install().then(() => {
-      global.bot.on("message.private", this.header)
+      global.bot.on("message.group", this.header)
     })
   }
 
   uninstall() {
     return super.uninstall().then(() => {
       if (global.bot) {
-        global.bot.off("message.private", this.header)
+        global.bot.off("message.group", this.header)
       }
     })
   }
@@ -38,7 +38,10 @@ class CQBotSauceNAO extends Plugin {
       if (url == null) {
         continue;
       }
-      let userId = context.user_id;
+      let groupId = context["group_id"];
+      let messageId = context["message_id"];
+      let userId = context["user_id"];
+
       console.log("开始搜图");
       NAO.search(url, {
         testmode: 1,
@@ -47,24 +50,30 @@ class CQBotSauceNAO extends Plugin {
         if (result.hasResult) {
           console.log("有结果", result);
           let first = result.results[0];
-          bot.send_private_msg(userId, [
+          bot.send_group_msg(groupId, [
+            CQ.reply(messageId),
+            CQ.at(userId),
             CQ.image(first.thumbnail),
             CQ.text(`相似度: ${first.similarity}%\n`),
             CQ.text(this.decodeData(first.index_id, first.data))
-          ])
+          ]);
         } else {
           console.log("搜图无结果");
-          bot.send_private_msg(userId, [
+          bot.send_group_msg(groupId, [
+            CQ.reply(messageId),
+            CQ.at(userId),
             CQ.text(`搜图无结果`)
-          ])
+          ]);
         }
       }).catch((err) => {
         console.log("搜图出错");
         console.error(err);
-        bot.send_private_msg(userId, [
+        bot.send_group_msg(groupId, [
+          CQ.reply(messageId),
+          CQ.at(userId),
           CQ.text(`搜图出错`)
-        ])
-      })
+        ]);
+      });
 
       event.stopPropagation();
       break;
@@ -105,4 +114,4 @@ class CQBotSauceNAO extends Plugin {
   }
 }
 
-module.exports = CQBotSauceNAO;
+module.exports = CQBotSauceNAOGroup;

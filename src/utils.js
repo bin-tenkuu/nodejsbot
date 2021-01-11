@@ -41,7 +41,8 @@ function openCQWebSocket(opt) {
   bot.on("socket.close", (evt, code, desc) => {
     console.log(`${now()} 已关闭[${code}]: ${desc}`)
   });
-
+  bot.messageSuccess = ret => success(ret);
+  bot.messageFail = reason => fail(reason);
   return bot;
 }
 
