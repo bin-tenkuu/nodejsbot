@@ -7,7 +7,7 @@ class PluginLoader extends Plugin {
     super({
       name: "插件加载器",
       description: "专门用于加载插件的插件",
-      version: 0.4
+      version: 1.3
     }, {});
   }
 
@@ -31,8 +31,8 @@ class PluginLoader extends Plugin {
   async refreshPlugin() {
     let header = this.header;
     let files = fs.readdirSync("./plugin", "utf8");
-    try {
-      for (let file of files) {
+    for (let file of files) {
+      try {
         let path = `./plugin/${file}`;
         PluginLoader.cleanCache(require.resolve(path));
         let mod = require(path);
@@ -56,11 +56,11 @@ class PluginLoader extends Plugin {
             console.log(`${utils.now()} 重载插件 ${newer.id}:${newer.version}`)
           }
         } else {
-          console.log(`${utils.now()} Plugin.isPrototypeOf(${mod.name}) === false`)
+          console.log(`${utils.now()} Plugin.isPrototypeOf(${path}) === false`)
         }
+      } catch (e) {
+        console.log(`${utils.now()} `, e);
       }
-    } catch (e) {
-      console.log(`${utils.now()} `, e);
     }
   }
 
@@ -125,6 +125,7 @@ class PluginLoader extends Plugin {
       children.splice(children.indexOf(module), 1)
     }
     require.cache[modulePath] = null;
+    delete require.cache[modulePath]
   }
 
 
@@ -191,8 +192,10 @@ class PluginLoader extends Plugin {
    * @return {Promise<*>}
    */
   static async upgradeSelf() {
+    this.cleanCache(require.resolve("./PluginLoader"))
+    let loader = require("./PluginLoader");
     let older = global.PluginLoader;
-    let newer = new PluginLoader();
+    let newer = new loader();
     return newer.toggle(older, newer);
   }
 }
