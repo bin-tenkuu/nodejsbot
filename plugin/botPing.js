@@ -19,7 +19,7 @@ class CQBotPing extends Plugin {
   uninstall() {
     return super.uninstall().then(() => {
       if (global.bot) {
-        global.bot.off("message.group.@.me", this.ping)
+        global.bot.off("message.group", this.ping)
       }
     })
   }
@@ -32,8 +32,8 @@ class CQBotPing extends Plugin {
    */
   ping(event, context, tags) {
     let bot = global.bot;
-    if (tags.filter(tag => tag["tagName"] === "at").filter(tag => tag["qq"] === bot.qq).length < 1) {
-      return
+    if (!tags.some(tag => tag["tagName"] === "at" && tag["qq"] === bot.qq)) {
+      return;
     }
     // stopPropagation方法阻止事件冒泡到父元素
     event.stopPropagation();

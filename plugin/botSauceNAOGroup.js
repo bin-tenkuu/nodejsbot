@@ -30,6 +30,9 @@ class CQBotSauceNAOGroup extends Plugin {
 
   search(event, context, tags) {
     let bot = global.bot;
+    if (!tags.some(tag => tag["tagName"] === "at" && tag["qq"] === bot.qq)) {
+      return;
+    }
     for (let tag of tags) {
       if (tag.tagName !== "image") {
         continue;
@@ -48,7 +51,7 @@ class CQBotSauceNAOGroup extends Plugin {
         numres: 1,
       }).then(result => {
         if (result.hasResult) {
-          console.log("有结果", result);
+          console.log("有结果"/*, result*/);
           let first = result.results[0];
           bot.send_group_msg(groupId, [
             CQ.reply(messageId),

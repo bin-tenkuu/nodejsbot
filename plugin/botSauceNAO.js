@@ -45,7 +45,7 @@ class CQBotSauceNAO extends Plugin {
         numres: 1,
       }).then(result => {
         if (result.hasResult) {
-          console.log("有结果", result);
+          console.log("有结果"/*, result*/);
           let first = result.results[0];
           bot.send_private_msg(userId, [
             CQ.image(first.thumbnail),
