@@ -17,7 +17,7 @@ class Node {
 
 class RepeatCache {
   constructor() {
-    this.cache = new NodeCache({useClones: false, stdTTL: 60})
+    this.cache = new NodeCache({useClones: false, stdTTL: 120})
   }
 
   /**
@@ -39,11 +39,8 @@ class RepeatCache {
       this.cache.set(group, g);
     }
     g.user.add(user)
-    if (g.times === times) {
-      g.user.clear();
-      return true;
-    }
-    return false;
+    return g.times === times;
+
   }
 }
 
