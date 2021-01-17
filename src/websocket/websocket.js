@@ -1,7 +1,7 @@
 const WebSocket = require('websocket').w3cwebsocket
 const shortid = require('shortid')
 const EventBus = require("./event-bus");
-const {parse} = require("./tags");
+const {parse, CQTag} = require("./tags");
 
 class CQWebSocket {
   constructor({
@@ -136,6 +136,12 @@ class CQWebSocket {
         .then(this.messageSuccess, this.messageFail)
   }
 
+  /**
+   *
+   * @param eventType
+   * @param {function(CQEvent,any,CQTag[]):void}handler
+   * @return {CQWebSocket}
+   */
   on(eventType, handler) {
     this._eventBus.on(eventType, handler)
     return this;
@@ -239,8 +245,27 @@ class CQWebSocket {
           }
           case 'friend_add':
             return this._eventBus.handle([post_type, notice_type], json)
-          case 'notify':
-            return console.warn(`制作中 notify 类型`, json)
+          case 'group_recall':
+            return console.warn(`制作中 group_recall 类型`)
+          case 'friend_recall':
+            return console.warn(`制作中 friend_recall 类型`)
+          case 'notify': {
+            let subType = json["sub_type"];
+            switch (subType) {
+              case 'poke':
+                return console.warn(`制作中 notify.poke 类型`)
+              case 'lucky_king':
+                return console.warn(`制作中 notify.lucky_king 类型`)
+              case 'honor':
+                return console.warn(`制作中 notify.honor 类型`)
+              default:
+                return console.warn(`未知的 notify 类型: ${subType}`)
+            }
+          }
+          case 'group_card':
+            return console.warn(`制作中 group_card 类型`)
+          case 'offline_file':
+            return console.warn(`制作中 offline_file 类型`)
           default:
             return console.warn(`未知的 notice 类型: ${notice_type}`)
         }
