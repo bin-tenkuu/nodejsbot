@@ -41,9 +41,11 @@ class CQBotSauceNAOGroup extends Plugin {
       if (url == null) {
         continue;
       }
-      let groupId = context["group_id"];
-      let messageId = context["message_id"];
-      let userId = context["user_id"];
+      let {
+        group_id,
+        message_id,
+        user_id
+      } = context;
 
       console.log("开始搜图");
       NAO.search(url, {
@@ -53,27 +55,27 @@ class CQBotSauceNAOGroup extends Plugin {
         if (result.hasResult) {
           console.log("有结果"/*, result*/);
           let first = result.results[0];
-          bot.send_group_msg(groupId, [
-            CQ.reply(messageId),
-            CQ.at(userId),
+          bot.send_group_msg(group_id, [
+            CQ.reply(message_id),
+            CQ.at(user_id),
             CQ.image(first.thumbnail),
             CQ.text(`相似度: ${first.similarity}%\n`),
             CQ.text(this.decodeData(first.index_id, first.data))
           ]);
         } else {
           console.log("搜图无结果");
-          bot.send_group_msg(groupId, [
-            CQ.reply(messageId),
-            CQ.at(userId),
+          bot.send_group_msg(group_id, [
+            CQ.reply(message_id),
+            CQ.at(user_id),
             CQ.text(`搜图无结果`)
           ]);
         }
       }).catch((err) => {
         console.log("搜图出错");
         console.error(err);
-        bot.send_group_msg(groupId, [
-          CQ.reply(messageId),
-          CQ.at(userId),
+        bot.send_group_msg(group_id, [
+          CQ.reply(message_id),
+          CQ.at(user_id),
           CQ.text(`搜图出错`)
         ]);
       });
