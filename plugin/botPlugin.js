@@ -76,9 +76,26 @@ class CQBotPlugin extends Plugin {
         })
         break;
       }
-      case (/^插件信息/): {
+      case (/^插件信息/.test(message)): {
+        let matches = message.match(/\d+(?=\s)?/g);
+        if (matches == null) {
+          return;
+        }
+        matches = matches.map(match => plugins[+match]);
+        loader.getPlugins(...matches).then((plugins) => {
+          let text = plugins.map(plugin => {
+            return `插件id:${plugin.id}\n  名字:${plugin.name}\n  版本:${plugin.version}\n  描述:${plugin.description}`
+          }).join("\n\n");
+          bot.send_private_msg(adminId, [
+            CQ.text(text)
+          ])
+        }).catch((err) => {
+          console.log(matches)
+          console.error(err)
+        })
         break;
       }
+        // TODO:消息热重载其他固定代码
     }
   }
 }
