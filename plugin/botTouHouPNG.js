@@ -75,8 +75,10 @@ module.exports = class CQBotTouHou extends Plugin {
     return new Promise((resolve, reject) => {
       https.get("https://img.paulzzh.tech/touhou/random?type=json", res => {
         res.setEncoding("utf-8");
-        res.on("data", data => resolve(JSON.parse(data)))
+        let json = "";
+        res.on("data", data => json += data)
         res.on("error", err => reject(err))
+        res.on("end", () => resolve(json))
       })
     });
   }
