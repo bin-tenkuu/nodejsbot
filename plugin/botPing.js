@@ -6,20 +6,23 @@ class CQBotPing extends Plugin {
     super({
       name: "QQ群@复读",
       description: "@复读",
-      version: 0.2,
+      version: 0.5,
     });
+    this.header = (event, context, tags) => {
+      this.ping(event, context, tags);
+    }
   }
 
   install() {
     return super.install().then(() => {
-      global.bot.on("message.group", this.ping)
+      global.bot.on("message.group", this.header)
     })
   }
 
   uninstall() {
     return super.uninstall().then(() => {
       if (global.bot) {
-        global.bot.off("message.group", this.ping)
+        global.bot.off("message.group", this.header)
       }
     })
   }
@@ -32,6 +35,11 @@ class CQBotPing extends Plugin {
    */
   ping(event, context, tags) {
     let bot = global.bot;
+    // 可能有其他组件
+    if (tags.some(tag => tag["tagName"] !== "at" && tag["tagName"] !== "text")) {
+      return;
+    }
+    // 没有@自己
     if (!tags.some(tag => tag["tagName"] === "at" && tag["qq"] === bot.qq)) {
       return;
     }
