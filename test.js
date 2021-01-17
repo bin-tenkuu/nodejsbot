@@ -1,14 +1,16 @@
-let {Tags: {CQTag, CQAt}} = require("./src/websocket");
+const FormData = require('form-data')
+const https = require("https");
 
+let form = new FormData()
 
-let text = "CQ:at,qq=2506019369";
-
-let array = text.match(/^CQ:([a-z]+)(,[^,]+)*$/);
-
-let map = array[2].split(",").filter((_, i) => i > 0).map(v => v.split("="));
-let entries = Object.fromEntries(map);
-let cqTag = new CQTag(array[1], entries);
-
-let coerce = Object.setPrototypeOf(cqTag, CQAt.prototype).coerce();
-
-console.log(coerce)
+form.append("type", "json");
+(async () => {
+  let json = await new Promise((resolve, reject) => {
+    https.get("https://img.paulzzh.tech/touhou/random?type=json&tag=mokou", res => {
+      res.setEncoding("utf-8");
+      res.on("data", data => resolve(JSON.parse(data)))
+      res.on("error", err => reject(err))
+    })
+  });
+  console.log(json);
+})();

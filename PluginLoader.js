@@ -179,12 +179,21 @@ class PluginLoader extends Plugin {
   }
 
   /**
-   * s
+   * 是否安装
    * @param {string}pluginKey
    * @return {(boolean)[]}
    */
   hasInstall(...pluginKey) {
     return pluginKey.map(key => this.header[key].installed)
+  }
+
+  /**
+   * 具体插件
+   * @param {string}pluginKey
+   * @return {Plugin[]}
+   */
+  getPlugins(...pluginKey) {
+    return pluginKey.map(key => this.header[key])
   }
 
   /**
