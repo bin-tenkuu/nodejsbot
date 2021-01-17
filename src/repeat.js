@@ -1,9 +1,13 @@
 const NodeCache = require("node-cache");
 
 class Node {
-  constructor(user, msg) {
+  constructor(msg) {
     this.msg = msg;
     this.user = new Set();
+  }
+
+  set users(user) {
+    this.user.add(user)
   }
 
   /**
@@ -35,12 +39,13 @@ class RepeatCache {
      */
     let g = this.cache.get(group);
     if (!g || g.msg !== msg) {
-      g = new Node(user, msg);
+      g = new Node(msg);
       this.cache.set(group, g);
     }
-    g.user.add(user)
-    return g.times === times;
+    let t = g.times === times;
+    g.users = user
 
+    return g.times === times && !t;
   }
 }
 
