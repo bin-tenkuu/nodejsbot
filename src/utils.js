@@ -1,5 +1,4 @@
-const {adminId} = require("../config/config.json");
-const {CQWebSocket} = require("./websocket");
+let CQWebSocket = require("go-cqwebsocket").CQWebSocket;
 
 
 /**
@@ -35,26 +34,19 @@ function openCQWebSocket(opt) {
   bot.on("socket.error", (evt, code, err) => {
     console.warn(`${now()} 连接错误[${code}]: ${err}`);
   });
-  bot.on("socket.open", () => {
-    console.log(`${now()} 连接开启`);
+  bot.on("socket.open", (_, type) => {
+    console.log(`${now()} 连接开启 ${type}`);
   });
   bot.on("socket.close", (evt, code, desc) => {
-    console.log(`${now()} 已关闭[${code}]: ${desc}`)
+    console.log(`${now()} 已关闭[${code}]: ${desc}`);
   });
   bot.messageSuccess = ret => success(ret);
   bot.messageFail = reason => fail(reason);
   return bot;
 }
 
-function admin(message, user_id = adminId) {
-  return {
-    user_id: user_id,
-    message: message
-  }
-}
-
 function success(ret) {
-  console.log(`${now()} 发送成功`, ret.data);
+  console.log(`${now()} 发送成功`, ret);
 }
 
 function fail(reason) {
@@ -66,7 +58,4 @@ module.exports = {
   now,
   delayExit,
   openCQWebSocket,
-  admin,
-  success,
-  fail,
-}
+};

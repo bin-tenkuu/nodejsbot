@@ -1,5 +1,5 @@
 let Plugin = require("../Plugin");
-let {Tags: {CQ}} = require("../src/websocket");
+let {CQ, escape} = require("go-cqwebsocket").Tags;
 const NAO = require("../src/SauceNAOUtil");
 
 class CQBotSauceNAOGroup extends Plugin {
@@ -10,22 +10,22 @@ class CQBotSauceNAOGroup extends Plugin {
       version: 0.1,
     });
     this.header = (event, context, tags) => {
-      this.search(event, context, tags)
-    }
+      this.search(event, context, tags);
+    };
   }
 
   install() {
     return super.install().then(() => {
-      global.bot.on("message.group", this.header)
-    })
+      global.bot.on("message.group", this.header);
+    });
   }
 
   uninstall() {
     return super.uninstall().then(() => {
       if (global.bot) {
-        global.bot.off("message.group", this.header)
+        global.bot.off("message.group", this.header);
       }
-    })
+    });
   }
 
   search(event, context, tags) {
@@ -44,7 +44,7 @@ class CQBotSauceNAOGroup extends Plugin {
       let {
         group_id,
         message_id,
-        user_id
+        user_id,
       } = context;
 
       console.log("开始搜图");
@@ -58,16 +58,16 @@ class CQBotSauceNAOGroup extends Plugin {
           bot.send_group_msg(group_id, [
             CQ.reply(message_id),
             CQ.at(user_id),
-            CQ.image(first.thumbnail),
+            CQ.image(escape(first.thumbnail, true)),
             CQ.text(`相似度: ${first.similarity}%\n`),
-            CQ.text(this.decodeData(first.index_id, first.data))
+            CQ.text(escape(this.decodeData(first.index_id, first.data), true)),
           ]);
         } else {
           console.log("搜图无结果");
           bot.send_group_msg(group_id, [
             CQ.reply(message_id),
             CQ.at(user_id),
-            CQ.text(`搜图无结果`)
+            CQ.text(`搜图无结果`),
           ]);
         }
       }).catch((err) => {
@@ -76,7 +76,7 @@ class CQBotSauceNAOGroup extends Plugin {
         bot.send_group_msg(group_id, [
           CQ.reply(message_id),
           CQ.at(user_id),
-          CQ.text(`搜图出错`)
+          CQ.text(`搜图出错`),
         ]);
       });
 
@@ -98,23 +98,23 @@ class CQBotSauceNAOGroup extends Plugin {
       case 5:
         return `图库:Pixiv\n标题:${data.title}\n画师:${data["member_name"]}\n原图:www.pixiv.net/artworks/${data["pixiv_id"]}`;
       case 19:
-        return `图库:2D市场\n上传者:${data["creator"]}原图:${url[0]}`
+        return `图库:2D市场\n上传者:${data["creator"]}原图:${url[0]}`;
       case 31:
-        return `图库:半次元插图\n标题:${data.title}\n画师:${data["member_name"]}\n原图:${url[0]}`
+        return `图库:半次元插图\n标题:${data.title}\n画师:${data["member_name"]}\n原图:${url[0]}`;
       case 34:
-        return `图库:deviantart\n标题:${data.title}\n画师:${data["author_name"]}\n原图:${url[0]}`
+        return `图库:deviantart\n标题:${data.title}\n画师:${data["author_name"]}\n原图:${url[0]}`;
       case 36:
-        return `图库:madokami\n无具体信息`
+        return `图库:madokami\n无具体信息`;
       case 37:
-        return `图库:露娜汉化\n画师:${data["author"]}\n原图`
+        return `图库:露娜汉化\n画师:${data["author"]}\n原图`;
       case 38:
         title = data["jp_name"] | data["eng_name"] | data.source;
         url = data["creator"].toString();
-        return `图库:ehentai\n标题:${title}\n创建者:${url}`
+        return `图库:ehentai\n标题:${title}\n创建者:${url}`;
       case 41:
-        return `图库:Twitter\n上传者:${data["twitter_user_handle"]}原图:${url[0]}`
+        return `图库:Twitter\n上传者:${data["twitter_user_handle"]}原图:${url[0]}`;
       default:
-        return `图库id:${index}\n具体信息未解析`
+        return `图库id:${index}\n具体信息未解析`;
     }
   }
 }

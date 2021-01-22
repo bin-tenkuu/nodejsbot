@@ -1,5 +1,5 @@
 let Plugin = require("../Plugin");
-let {Tags: {CQ}} = require("../src/websocket");
+let CQ = require("go-cqwebsocket").Tags.CQ;
 
 class CQBotPing extends Plugin {
   constructor() {
@@ -10,28 +10,28 @@ class CQBotPing extends Plugin {
     });
     this.header = (event, context, tags) => {
       this.ping(event, context, tags);
-    }
+    };
   }
 
   install() {
     return super.install().then(() => {
-      global.bot.on("message.group", this.header)
-    })
+      global.bot.on("message.group", this.header);
+    });
   }
 
   uninstall() {
     return super.uninstall().then(() => {
       if (global.bot) {
-        global.bot.off("message.group", this.header)
+        global.bot.off("message.group", this.header);
       }
-    })
+    });
   }
 
   /**
    *
    * @param event
    * @param context
-   * @param {CQTag[]}tags
+   * @param tags
    */
   ping(event, context, tags) {
     let bot = global.bot;
@@ -61,8 +61,8 @@ class CQBotPing extends Plugin {
     bot.send_group_msg(groupId, [
       CQ.reply(messageId),
       CQ.at(userId),
-      CQ.text(cqTags)
-    ])
+      CQ.text(cqTags),
+    ]);
   }
 }
 

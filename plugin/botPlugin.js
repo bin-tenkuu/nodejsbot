@@ -1,5 +1,5 @@
 let Plugin = require("../Plugin");
-let {Tags: {CQ}} = require("../src/websocket");
+let CQ = require("go-cqwebsocket").Tags.CQ;
 const {adminId} = require("../config/config.json");
 
 class CQBotPlugin extends Plugin {

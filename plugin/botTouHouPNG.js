@@ -1,5 +1,5 @@
 const https = require("https");
-let {Tags: {CQ}} = require("../src/websocket");
+let CQ = require("go-cqwebsocket").Tags.CQ;
 
 let Plugin = require("../Plugin");
 
@@ -31,43 +31,39 @@ module.exports = class CQBotTouHou extends Plugin {
   }
 
   randomPNG(event, context, tags) {
-    // 在内部则退出
-    switch (this.isRandom) {
-      case true:
-        return;
-      case false:
-        this.isRandom = true;
-    }
     let cqTag = tags.find(tag => tag["tagName"] === "text");
     if (!cqTag) {
       return;
     }
     let text = cqTag["text"];
-    if (/^东方图$/.test(text)) {
-      console.log("开始东方");
+    if (/^东方图来$/.test(text)) {
+      switch (this.isRandom) {
+        case true:
+          return;
+        case false:
+          this.isRandom = true;
+      }
+      console.log("开始东方");    // 在内部则退出
       event.stopPropagation();
       let {
         group_id,
       } = context;
       bot.send_group_msg(group_id, [
-        CQ.text("随机东方图加载中")
-      ])
+        CQ.text("随机东方图加载中"),
+      ]);
       this._paulzzhAPI().then(json => {
-        console.log(json["url"])
         bot.send_group_msg(group_id, [
-          CQ.image(json["url"])
-        ])
+          CQ.image(json["url"]),
+        ]);
       }).catch(err => {
-        console.error(err)
+        console.error(err);
         bot.send_group_msg(group_id, [
-          CQ.text(`东方图API调用错误`)
-        ])
-      })
+          CQ.text(`东方图API调用错误`),
+        ]);
+      });
       setTimeout(() => {
         this.isRandom = false;
-      }, 5000)
-    } else {
-      this.isRandom = false;
+      }, 1000);
     }
   }
 
@@ -76,9 +72,9 @@ module.exports = class CQBotTouHou extends Plugin {
       https.get("https://img.paulzzh.tech/touhou/random?type=json", res => {
         res.setEncoding("utf-8");
         let json = "";
-        res.on("data", data => json += data)
-        res.on("error", err => reject(err))
-        res.on("end", () => resolve(json))
+        res.on("data", data => json += data);
+        res.on("error", err => reject(err));
+        res.on("end", () => resolve(JSON.parse(json)));
       })
     });
   }

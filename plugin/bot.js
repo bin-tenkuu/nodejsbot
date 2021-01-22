@@ -15,6 +15,7 @@ class CQBot extends Plugin {
   async install() {
     await super.install()
     /**
+     *
      * @type {CQWebSocket}
      */
     this.header = utils.openCQWebSocket(cqws);
