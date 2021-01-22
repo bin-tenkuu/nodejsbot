@@ -44,18 +44,12 @@
       // cqws 部分参数具体参考 node库: 
       // 'cq-websocket' 中 'CQWebSocketOption'
       "cqws": {
-        "accessToken": "",
-        "enableAPI": true,
-        "enableEvent": true,
-        "protocol": "ws:",
-        "host": "",
-        "port": 0,
-        // baseUrl 参数与 (host / port) 参数中二选一
-        "baseUrl": "",
-        "qq": 0,
-        "reconnection": true,
-        "reconnectionAttempts": 10,
-        "reconnectionDelay": 5000
+          "accessToken": "",
+          "baseUrl": "ws://host:port",
+          "qq": 0,
+          "reconnection": true,
+          "reconnectionAttempts": 10,
+          "reconnectionDelay": 5000
       },
       // adminID 为管理员QQ号码,
       "adminId": 0
