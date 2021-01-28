@@ -1,5 +1,5 @@
 const https = require("https");
-let CQ = require("go-cqwebsocket").Tags.CQ;
+let {CQ, CQTag, text} = require("go-cqwebsocket").Tags;
 
 let Plugin = require("../Plugin");
 
@@ -8,65 +8,68 @@ module.exports = class CQBotTouHou extends Plugin {
     super({
       name: "东方随机图片",
       description: "随机东方图",
-      version: 0.1
+      version: 0.1,
     });
-    this.header = (event, context, tags) => {
-      this.randomPNG(event, context, tags)
-    }
+  
     this.isRandom = false;
   }
-
+  
   install() {
     return super.install().then(() => {
-      global.bot.on("message.group", this.header)
-    })
-  }
-
+      this.header = global.bot.bind("on", {
+        "message.group": (event, context, tags) => {
+          /**
+           *
+           * @type {CQTag<text>}
+           */
+          let cqTag = tags.find(tag => tag["tagName"] === "text");
+          if (!cqTag) {
+            return;
+          }
+          let txt = cqTag["text"];
+          if (/^东方图来$/.test(txt)) {
+            switch (this.isRandom) {
+              case true:
+                return;
+              case false:
+                this.isRandom = true;
+            }
+            console.log("开始东方");    // 在内部则退出
+            event.stopPropagation();
+            let {
+              group_id,
+            } = context;
+            bot.send_group_msg(group_id, [
+              CQ.text("随机东方图加载中"),
+            ]).then(bot.messageSuccess, bot.messageFail);
+            this._paulzzhAPI().then(json => {
+              bot.send_group_msg(group_id, [
+                CQ.image(json["url"]),
+              ]).then(bot.messageSuccess, bot.messageFail);
+            }).catch(err => {
+              console.error(err);
+              bot.send_group_msg(group_id, [
+                CQ.text(`东方图API调用错误`),
+              ]).then(bot.messageSuccess, bot.messageFail);
+            });
+            setTimeout(() => {
+              this.isRandom = false;
+            }, 1000);
+          }
+        },
+      });
+    });
+  };
+  
   uninstall() {
     return super.uninstall().then(() => {
       if (global.bot) {
-        global.bot.off("message.group", this.header)
+        global.bot.unbind(this.header);
       }
-    })
+    });
   }
-
-  randomPNG(event, context, tags) {
-    let cqTag = tags.find(tag => tag["tagName"] === "text");
-    if (!cqTag) {
-      return;
-    }
-    let text = cqTag["text"];
-    if (/^东方图来$/.test(text)) {
-      switch (this.isRandom) {
-        case true:
-          return;
-        case false:
-          this.isRandom = true;
-      }
-      console.log("开始东方");    // 在内部则退出
-      event.stopPropagation();
-      let {
-        group_id,
-      } = context;
-      bot.send_group_msg(group_id, [
-        CQ.text("随机东方图加载中"),
-      ]);
-      this._paulzzhAPI().then(json => {
-        bot.send_group_msg(group_id, [
-          CQ.image(json["url"]),
-        ]);
-      }).catch(err => {
-        console.error(err);
-        bot.send_group_msg(group_id, [
-          CQ.text(`东方图API调用错误`),
-        ]);
-      });
-      setTimeout(() => {
-        this.isRandom = false;
-      }, 1000);
-    }
-  }
-
+  
+  
   async _paulzzhAPI() {
     return new Promise((resolve, reject) => {
       https.get("https://img.paulzzh.tech/touhou/random?type=json", res => {
@@ -75,7 +78,7 @@ module.exports = class CQBotTouHou extends Plugin {
         res.on("data", data => json += data);
         res.on("error", err => reject(err));
         res.on("end", () => resolve(JSON.parse(json)));
-      })
+      });
     });
   }
-}
+};

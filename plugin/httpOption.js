@@ -1,7 +1,7 @@
 let Plugin = require("../Plugin");
 const http = require("http");
 const url = require("url");
-const {now, delayExit} = require('../src/utils');
+const {now, delayExit} = require("../src/utils");
 
 class HttpOption extends Plugin {
   constructor() {
@@ -9,7 +9,7 @@ class HttpOption extends Plugin {
       id: "HttpOption",
       name: "网页指令",
       description: "通过网页链接达到控制效果",
-      version: 0.6
+      version: 0.6,
     });
     this.body = {
       "/exit": this.exit,
@@ -37,14 +37,14 @@ class HttpOption extends Plugin {
             break;
           default:
             result = Object.keys(this.body).map(value => {
-              return `<a href="${value}">http://127.0.0.1:40000${value} </a>`
+              return `<a href="${value}">http://127.0.0.1:40000${value} </a>`;
             }).join(" <br/>\n");
             break;
         }
         if (result instanceof Promise) {
           result.then(() => {
             res.end();
-          })
+          });
         } else {
           res.end(result);
         }
@@ -53,13 +53,13 @@ class HttpOption extends Plugin {
       return server;
     }).then((server) => {
       this.header = server;
-    })
+    });
   }
 
   uninstall() {
     return super.uninstall().then(() => {
-      this.header.close()
-    })
+      this.header.close();
+    });
   }
 
   exit(req, res) {
@@ -78,7 +78,7 @@ class HttpOption extends Plugin {
   }
 
   httpOpen() {
-    return global.PluginLoader.handle(true, "CQBot").then()
+    return global.PluginLoader.handle(true, "CQBot").then();
   }
 
   httpClose() {

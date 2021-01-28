@@ -5,25 +5,25 @@ class Node {
     this.msg = msg;
     this.user = new Set();
   }
-
+  
   set users(user) {
-    this.user.add(user)
+    this.user.add(user);
   }
-
+  
   /**
    *
    * @return {number}
    */
   get times() {
-    return this.user.size
+    return this.user.size;
   }
 }
 
 class RepeatCache {
   constructor() {
-    this.cache = new NodeCache({useClones: false, stdTTL: 120})
+    this.cache = new NodeCache({useClones: false, stdTTL: 120});
   }
-
+  
   /**
    *
    * @param {number}group
@@ -43,9 +43,9 @@ class RepeatCache {
       this.cache.set(group, g);
     }
     let t = g.times === times;
-    g.users = user
-
-    return g.times === times && !t;
+    g.users = user;
+    
+    return !t && g.times === times;
   }
 }
 
@@ -54,4 +54,4 @@ class RepeatCache {
  *
  * @param {string} message
  */
-module.exports = RepeatCache
+module.exports = RepeatCache;

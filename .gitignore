@@ -5,5 +5,7 @@
 /config/
 /test/
 
-nodejsbot.zip
+*.zip
+*.tgz
 /test.js
+nodejsbot-1.0.0.tgz

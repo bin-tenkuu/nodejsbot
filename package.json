@@ -2,29 +2,29 @@
   "name": "nodejsbot",
   "version": "1.0.0",
   "description": "demo",
+  "engines": {
+    "node": ">=12"
+  },
   "main": "test.js",
-  "dependencies": {
-    "form-data": "^2.5.1",
-    "lodash.get": "^4.4.2",
-    "shortid": "^2.2.16",
-    "websocket": "^1.0.33"
-  },
-  "private": true,
-  "devDependencies": {
-    "file-type": "^16.1.0",
-    "go-cqwebsocket": "^1.0.0",
-    "node-cache": "^5.1.2",
-    "request": "^2.88.2",
-    "request-promise": "^4.2.6",
-    "saucenao": "0.0.2"
-  },
+  "files": [
+    "config/*",
+    "plugin/*",
+    "src/*",
+    "*.js"
+  ],
   "scripts": {
-    "run": "node index.js",
-    "testInspect": "node --inspect"
+    "run": "node index.js"
   },
   "keywords": [
     "demo"
   ],
   "author": "bin",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "go-cqwebsocket": "^1.4.10",
+    "node-cache": "^5.1.2",
+    "saucenao": "0.0.2"
+  },
+  "dependencies": {},
+  "private": true
 }

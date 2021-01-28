@@ -16,23 +16,26 @@
 // })();
 const {cqws} = require("./config/config.json");
 const utils = require("./src/utils");
-let {CQWebSocket} = require("go-cqwebsocket");
+let {CQWebSocket, CQ} = require("go-cqwebsocket");
 /**
  *
  * @type {CQWebSocket}
  */
 let bot = utils.openCQWebSocket(cqws);
 bot.connect();
-bot.once("socket.open", () => {
+bot.on("api.preSend", (event, message) => {
+  console.log(message);
+  console.log(JSON.stringify(message.params));
+});
+bot.once("socket.open", (_) => {
   setTimeout(() => {
-    console.log("发送");
-    // bot.get_msg(-543165377).then(value => {
-    //   console.log(value);
-    // });
-
-
-    setTimeout(() => {
-      bot.disconnect();
-    }, 15000);
-  }, 2000);
+    bot.send_group_msg(660996459, [
+      CQ.tts("亚亚没有牛子"),
+    ]).then(() => {
+      setTimeout(() => {
+        bot.disconnect();
+      }, 5000);
+    }, bot.messageFail);
+    
+  }, 1000);
 });

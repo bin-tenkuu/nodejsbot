@@ -27,18 +27,17 @@ function delayExit(time) {
  * @return {CQWebSocket}
  */
 function openCQWebSocket(opt) {
-  /**
-   * @type {CQWebSocket}
-   */
   let bot = new CQWebSocket(opt);
-  bot.on("socket.error", (evt, code, err) => {
-    console.warn(`${now()} 连接错误[${code}]: ${err}`);
-  });
-  bot.on("socket.open", (_, type) => {
-    console.log(`${now()} 连接开启 ${type}`);
-  });
-  bot.on("socket.close", (evt, code, desc) => {
-    console.log(`${now()} 已关闭[${code}]: ${desc}`);
+  bot.bind("on", {
+    "socket.error": (_, code, err) => {
+      console.warn(`${now()} 连接错误[${code}]: ${err}`);
+    },
+    "socket.open": (_, type) => {
+      console.log(`${now()} 连接开启 ${type}`);
+    },
+    "socket.close": (_, code, desc, type) => {
+      console.log(`${now()} 已关闭 ${type}[${code}]: ${desc}`);
+    },
   });
   bot.messageSuccess = ret => success(ret);
   bot.messageFail = reason => fail(reason);
