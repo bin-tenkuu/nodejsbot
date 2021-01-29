@@ -8,4 +8,4 @@
 *.zip
 *.tgz
 /test.js
-nodejsbot-1.0.0.tgz
+/nodejsbot-1.0.0.tgz
