@@ -5,15 +5,14 @@
   "engines": {
     "node": ">=12"
   },
-  "main": "test.js",
+  "main": "out/index.js",
   "files": [
     "config/*",
-    "plugin/*",
-    "src/*",
-    "*.js"
+    "out/*"
   ],
   "scripts": {
-    "run": "node index.js"
+    "build": "tsc",
+    "run": "node out/index.js"
   },
   "keywords": [
     "demo"
@@ -21,10 +20,11 @@
   "author": "bin",
   "license": "MIT",
   "devDependencies": {
+  },
+  "dependencies": {
     "go-cqwebsocket": "^1.4.10",
     "node-cache": "^5.1.2",
-    "saucenao": "0.0.2"
+    "axios": "^0.21.1"
   },
-  "dependencies": {},
   "private": true
 }
