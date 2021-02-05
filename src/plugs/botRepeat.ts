@@ -1,10 +1,10 @@
 import {SocketHandle} from "go-cqwebsocket/out/Interfaces";
 import {CQTag, text} from "go-cqwebsocket/out/tags";
+import {CQWebSocket} from "../../../go-cqwebsocket";
 import Plug from "../Plug";
 import RepeatCache from "../utils/repeat";
 
 class BotRepeat extends Plug {
-  private body: RepeatCache;
   private header?: SocketHandle;
   
   constructor() {
@@ -12,14 +12,13 @@ class BotRepeat extends Plug {
     this.name = "QQ机器人-复读";
     this.description = "测试用";
     this.version = 0.1;
-    
-    this.body = new RepeatCache();
   }
   
   async install() {
-    let def = await import("./bot").then(v => v.default);
+    const repeatCache = new RepeatCache();
+    let def = require("./bot").default;
     if (!def.bot) return;
-    let bot = def.bot;
+    let bot: CQWebSocket = def.bot;
     this.header = bot.bind("on", {
       "message.group": (event, context, tags) => {
         let tag: CQTag<text> = tags[0];
@@ -34,7 +33,7 @@ class BotRepeat extends Plug {
           group_id,
           user_id,
         } = context;
-        if (!this.body.check(group_id, user_id, msg, 3)) {
+        if (!repeatCache.check(group_id, user_id, msg, 3)) {
           return;
         }
         event.stopPropagation();
@@ -44,7 +43,7 @@ class BotRepeat extends Plug {
   }
   
   async uninstall() {
-    let def = await import("./bot").then(v => v.default);
+    let def = require("./bot").default;
     def.bot?.unbind(this.header);
   }
 }

@@ -1,4 +1,4 @@
-import {CQ} from "go-cqwebsocket";
+import {CQ, CQWebSocket} from "go-cqwebsocket";
 import {CQEvent} from "go-cqwebsocket/out/event-bus";
 import {PrivateMessage, SocketHandle} from "go-cqwebsocket/out/Interfaces";
 import Plug from "../Plug";
@@ -16,9 +16,9 @@ class CQBotPlugin extends Plug {
   }
   
   async install() {
-    let def = await import("./bot").then(v => v.default);
+    let def = require("./bot").default;
     if (!def.bot) return;
-    let bot = def.bot;
+    let bot: CQWebSocket = def.bot;
     this.header = bot.bind("on", {
       "message.private": (event: CQEvent, context: PrivateMessage) => {
         if (context.user_id !== adminId) {
@@ -79,7 +79,7 @@ class CQBotPlugin extends Plug {
   }
   
   async uninstall() {
-    let def = await import("./bot").then(d => d.default);
+    let def = require("./bot").default;
     def.bot?.unbind(this.header);
   }
 }

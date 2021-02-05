@@ -15,6 +15,7 @@ class CQBot extends Plug {
   
   install() {
     let bot = new CQWebSocket(cqws);
+    this.bot = bot;
     bot.bind("on", {
       "socket.error": (_, code, err) => {
         console.warn(`${Date()} 连接错误[${code}]: ${err}`);
@@ -28,7 +29,18 @@ class CQBot extends Plug {
     });
     bot.messageSuccess = ret => console.log(`${Date()} 发送成功`, ret);
     bot.messageFail = reason => console.log(`${Date()} 发送失败`, reason);
-    this.bot = bot;
+    bot.once("socket.open", (event, message) => {
+      let msg = bot.bind("onceAll", {
+        "socket.open": () => {
+          clearTimeout(timeout);
+          bot.send_private_msg(2938137849, "已上线");
+        },
+      });
+      let timeout = setTimeout(() => {
+        return msg["socket.open"]?.(event, message);
+      }, 5000);
+    });
+  
     return new Promise<void>((resolve, reject) => {
       bot.bind("onceAll", {
         "socket.open": () => resolve(),
@@ -41,7 +53,6 @@ class CQBot extends Plug {
   async uninstall() {
     if (!this.bot) return;
     let bot = this.bot;
-    this.bot = undefined;
     await bot.send_private_msg(adminId, "即将下线")
       .then(bot.messageSuccess, bot.messageFail);
     return new Promise<void>((resolve, reject) => {

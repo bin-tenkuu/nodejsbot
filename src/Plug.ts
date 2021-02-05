@@ -26,22 +26,27 @@ export default abstract class Plug {
     this.install = async () => {
       try {
         if (this._state === State.error) return;
+        if (this._state === State.installed) return;
         await this.__proto__.install();
         this._state = State.installed;
       } catch (e) {
         this._state = State.error;
         this.error = e;
+      } finally {
+        this.module.children = [];
       }
     };
     this.uninstall = async () => {
       try {
+        if (this._state === State.uninstalled) return;
         await this.__proto__.uninstall();
-        this.module.children = [];
         if (this._state === State.error) return;
         this._state = State.uninstalled;
       } catch (e) {
         this._state = State.error;
         this.error = e;
+      } finally {
+        this.module.children = [];
       }
     };
   }

@@ -1,5 +1,5 @@
-import {CQ} from "go-cqwebsocket";
-import {SocketHandle} from "../../../go-cqwebsocket/out/Interfaces";
+import {CQ, CQWebSocket} from "go-cqwebsocket";
+import {SocketHandle} from "go-cqwebsocket/out/Interfaces";
 import Plug from "../Plug";
 import {paulzzhTouHou} from "../utils/Search";
 
@@ -17,9 +17,9 @@ class CQBotTouHou extends Plug {
   }
   
   async install() {
-    let def = await import("./bot").then(v => v.default);
+    let def = require("./bot").default;
     if (!def.bot) return;
-    let bot = def.bot;
+    let bot: CQWebSocket = def.bot;
     this.header = bot.bind("on", {
       "message.group": (event, context, tags) => {
         let cqTag = tags.find(tag => tag["tagName"] === "text");
@@ -61,9 +61,8 @@ class CQBotTouHou extends Plug {
   };
   
   async uninstall() {
-    let def = await import("./bot").then(v => v.default);
-    if (!def.bot) return;
-    def.bot.unbind(this.header);
+    let def = require("./bot").default;
+    def.bot?.unbind(this.header);
   }
 }
 

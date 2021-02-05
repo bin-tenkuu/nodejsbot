@@ -1,4 +1,5 @@
 import {SocketHandle} from "go-cqwebsocket/out/Interfaces";
+import {CQWebSocket} from "../../../go-cqwebsocket";
 import Plug from "../Plug";
 
 let CQ = require("go-cqwebsocket").CQ;
@@ -14,9 +15,9 @@ class CQBotPing extends Plug {
   }
   
   async install() {
-    let def = await import("./bot").then(v => v.default);
+    let def = require("./bot").default;
     if (!def.bot) return;
-    let bot = def.bot;
+    let bot: CQWebSocket = def.bot;
     this.header = bot.bind("on", {
       "message.group": (event, context, tags) => {
         // 没有@自己
@@ -49,7 +50,7 @@ class CQBotPing extends Plug {
   }
   
   async uninstall() {
-    let def = await import("./bot").then(v => v.default);
+    let def = require("./bot").default;
     def.bot?.unbind(this.header);
   }
 }

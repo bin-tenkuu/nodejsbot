@@ -1,4 +1,4 @@
-import {CQ} from "go-cqwebsocket";
+import {CQ, CQWebSocket} from "go-cqwebsocket";
 import {SocketHandle} from "go-cqwebsocket/out/Interfaces";
 import Plug from "../Plug";
 
@@ -15,9 +15,9 @@ class CQBotSauceNAOGroup extends Plug {
   }
   
   async install() {
-    let def = await import("./bot").then(v => v.default);
+    let def = require("./bot").default;
     if (!def.bot) return;
-    let bot = def.bot;
+    let bot: CQWebSocket = def.bot;
     this.header = bot.bind("on", {
       "message.group": (event, context, tags) => {
         let cqText = tags.find(value => value.tagName === "text");
@@ -43,6 +43,7 @@ class CQBotSauceNAOGroup extends Plug {
           
           console.log("开始搜图");
           sauceNAO(url).then(result => {
+            console.log(result);
             if (result.results.length === 0) {
               console.log("搜图无结果");
               bot.send_group_msg(group_id, [
@@ -61,19 +62,19 @@ class CQBotSauceNAOGroup extends Plug {
             bot.send_group_forward_msg(group_id, [
               CQ.nodeId(message_id),
               CQ.node(nickname, user_id, [
-                CQ.image(CQ.escape(first.header.thumbnail, true)),
+                CQ.image(first.header.thumbnail),
                 CQ.text(`相似度: ${first.header.similarity}%\n`),
-                CQ.text(CQ.escape(this.decodeData(first.header.index_id, first.data), true)),
+                CQ.text(this.decodeData(first.header.index_id, first.data)),
               ]),
               CQ.node(nickname, user_id, [
-                CQ.image(CQ.escape(second.header.thumbnail, true)),
+                CQ.image(second.header.thumbnail),
                 CQ.text(`相似度: ${second.header.similarity}%\n`),
-                CQ.text(CQ.escape(this.decodeData(second.header.index_id, second.data), true)),
+                CQ.text(this.decodeData(second.header.index_id, second.data)),
               ]),
               CQ.node(nickname, user_id, [
-                CQ.image(CQ.escape(third.header.thumbnail, true)),
+                CQ.image(third.header.thumbnail),
                 CQ.text(`相似度: ${third.header.similarity}%\n`),
-                CQ.text(CQ.escape(this.decodeData(third.header.index_id, third.data), true)),
+                CQ.text(this.decodeData(third.header.index_id, third.data)),
               ]),
             ]).then(bot.messageSuccess, reason => {
               bot.messageFail(reason);
@@ -102,9 +103,8 @@ class CQBotSauceNAOGroup extends Plug {
   }
   
   async uninstall() {
-    let def = await import("./bot").then(v => v.default);
-    if (!def.bot) return;
-    def.bot.unbind(this.header);
+    let def = require("./bot").default;
+    def.bot?.unbind(this.header);
   }
   
   /**
@@ -119,8 +119,10 @@ class CQBotSauceNAOGroup extends Plug {
     switch (index) {
       case 5:
         return `图库:Pixiv\n标题:${data.title}\n画师:${data["member_name"]}\n原图:www.pixiv.net/artworks/${data["pixiv_id"]}`;
+      case 9:
+        return `图库:Danbooru\n上传者:${data["creator"]}\n角色:${data["characters"]}\n原图:${data["source"]}`;
       case 19:
-        return `图库:2D市场\n上传者:${data["creator"]}原图:${url[0]}`;
+        return `图库:2D市场\n上传者:${data["creator"]}\n原图:${url[0]}`;
       case 31:
         return `图库:半次元插图\n标题:${data.title}\n画师:${data["member_name"]}\n原图:${url[0]}`;
       case 34:
@@ -134,7 +136,7 @@ class CQBotSauceNAOGroup extends Plug {
         url = data["creator"].toString();
         return `图库:ehentai\n标题:${title}\n创建者:${url}`;
       case 41:
-        return `图库:Twitter\n上传者:${data["twitter_user_handle"]}原图:${url[0]}`;
+        return `图库:Twitter\n上传者:${data["twitter_user_handle"]}\n原图:${url[0]}`;
       default:
         return `图库id:${index}\n具体信息未解析`;
     }
