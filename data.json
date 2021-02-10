@@ -1,0 +1,45 @@
+{
+  "app": "com.tencent.miniapp_01",
+  "desc": "哔哩哔哩",
+  "view": "view_8C8E89B49BE609866298ADDFF2DBABA4",
+  "ver": "1.0.0.19",
+  "prompt": "[QQ小程序]哔哩哔哩",
+  "appID": "",
+  "sourceName": "",
+  "actionData": "",
+  "actionData_A": "",
+  "sourceUrl": "",
+  "meta": {
+    "detail_1": {
+      "appid": "1109937557",
+      "desc": "【大耳朵获嘉国人女声翻唱】内附精美pv♪",
+      "gamePoints": "",
+      "gamePointsUrl": "",
+      "host": {
+        "nick": "轮胎",
+        "uin": 1142430166
+      },
+      "icon": "http://miniapp.gtimg.cn/public/appicon/432b76be3a548fc128acaa6c1ec90131_200.jpg",
+      "preview": "pubminishare-30161.picsz.qpic.cn/29fc843f-d078-4c12-8fab-0cbc4d75080b",
+      "qqdocurl": "https://b23.tv/aHSqQJ?share_medium=android&share_source=qq&bbid=XY5107857EC8EB2501E12CDD8B80F6FC48414&ts=1612441700835",
+      "scene": 1036,
+      "shareTemplateData": {},
+      "shareTemplateId": "8C8E89B49BE609866298ADDFF2DBABA4",
+      "showLittleTail": "",
+      "title": "哔哩哔哩",
+      "url": "m.q.qq.com/a/s/a71e7afcef89de88ac1f2d6197120a77"
+    }
+  },
+  "config": {
+    "autoSize": 0,
+    "ctime": 1612441703,
+    "forward": 1,
+    "height": 0,
+    "token": "29af4ca84a2b4fb84c0009a0d5407b09",
+    "type": "normal",
+    "width": 0
+  },
+  "text": "",
+  "sourceAd": "",
+  "extra": ""
+}

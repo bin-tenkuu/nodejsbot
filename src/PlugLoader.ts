@@ -1,3 +1,4 @@
+import fs from "fs";
 import Plug from "./Plug";
 
 class PlugLoader extends Plug {
@@ -9,13 +10,30 @@ class PlugLoader extends Plug {
     this.version = 1;
   }
   
-  public install(): Promise<void> {
-    return Promise.resolve(undefined);
+  async install(): Promise<void> {
+    console.info("开始加载插件列表");
+    let plugPath = `${module.path}/plugs`;
+    let dir = fs.opendirSync("./out/plugs", {
+      encoding: "utf-8",
+      bufferSize: 8,
+    });
+    let dirent: fs.Dirent | null;
+    while (dirent = dir.readSync()) {
+      if (!dirent.isFile()) { return; }
+      let filePath = `${plugPath}/${dirent.name}`;
+      console.info(filePath);
+      let plug = require(filePath).default;
+      if (plug instanceof Plug) {
+        console.info(plug.toString());
+        continue;
+      }
+      console.error(filePath);
+    }
+    return dir.close();
   }
   
-  public uninstall(): Promise<void> {
-    return Promise.resolve(undefined);
+  async uninstall(): Promise<void> {
   }
 }
 
-exports = new PlugLoader();
+export default new PlugLoader();

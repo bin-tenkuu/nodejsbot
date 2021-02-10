@@ -9,7 +9,7 @@ class CQBotTouHou extends Plug {
   
   constructor() {
     super(module);
-    this.name = "东方随机图片";
+    this.name = "QQ群聊-东方图片";
     this.description = "随机东方图";
     this.version = 0.1;
     

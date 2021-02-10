@@ -5,17 +5,33 @@ bot.once("socket.open", (event, message) => {
   let msg = bot.bind("onceAll", {
     "socket.open": () => {
       clearTimeout(timeout);
-      bot.send_private_msg(2938137849, "已上线");
+      bot.send_private_msg(adminId, "已上线");
     },
   });
   let timeout = setTimeout(() => {
     msg["socket.open"]?.(event, message);
   }, 5000);
+  bot.once("socket.close", () => {
+    console.log("下线");
+  });
 });
-bot.on("message.private", (event, message, CQTag) => {
+
+bot.on("message.private", (event, message, tags) => {
+  console.log("收到消息");
   console.log(message.message);
-  console.log(CQTag);
-  bot.disconnect();
+  console.log(tags);
+  setTimeout(() => {
+    bot.disconnect();
+  }, 3000);
 });
+
+// bot.on("notice.group_recall", (event, message) => {
+//   bot.send_group_forward_msg(message.group_id, [
+//     CQ.nodeId(message.message_id),
+//   ]).then(bot.messageSuccess, bot.messageFail);
+//   setTimeout(() => {
+//     bot.disconnect();
+//   }, 5000);
+// });
 
 bot.connect();

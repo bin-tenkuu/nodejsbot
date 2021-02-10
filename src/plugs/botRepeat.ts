@@ -1,6 +1,6 @@
 import {SocketHandle} from "go-cqwebsocket/out/Interfaces";
 import {CQTag, text} from "go-cqwebsocket/out/tags";
-import {CQWebSocket} from "../../../go-cqwebsocket";
+import {CQWebSocket} from "go-cqwebsocket";
 import Plug from "../Plug";
 import RepeatCache from "../utils/repeat";
 
@@ -9,7 +9,7 @@ class BotRepeat extends Plug {
   
   constructor() {
     super(module);
-    this.name = "QQ机器人-复读";
+    this.name = "QQ群聊-复读";
     this.description = "测试用";
     this.version = 0.1;
   }

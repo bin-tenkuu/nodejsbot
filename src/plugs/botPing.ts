@@ -1,5 +1,5 @@
 import {SocketHandle} from "go-cqwebsocket/out/Interfaces";
-import {CQWebSocket} from "../../../go-cqwebsocket";
+import {CQWebSocket} from "go-cqwebsocket";
 import Plug from "../Plug";
 
 let CQ = require("go-cqwebsocket").CQ;
@@ -9,7 +9,7 @@ class CQBotPing extends Plug {
   
   constructor() {
     super(module);
-    this.name = "QQ群回复";
+    this.name = "QQ群聊-回复";
     this.description = "QQ群@回复";
     this.version = 0.5;
   }

@@ -33,7 +33,9 @@ class CQBot extends Plug {
       let msg = bot.bind("onceAll", {
         "socket.open": () => {
           clearTimeout(timeout);
-          bot.send_private_msg(2938137849, "已上线");
+          setTimeout(() => {
+            bot.send_private_msg(2938137849, "已上线");
+          }, 1000);
         },
       });
       let timeout = setTimeout(() => {
@@ -63,7 +65,6 @@ class CQBot extends Plug {
       bot.disconnect();
     });
   }
-  
 }
 
 export default new CQBot();

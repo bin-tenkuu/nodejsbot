@@ -25,10 +25,10 @@ class CQBotPlugin extends Plug {
           return;
         }
         let message = context.message;
-        let plugins = Object.entries(Plug.plugs);
+        let plugins = Object.values(Plug.plugs);
         switch (true) {
           case (/^插件列表/.test(message)): {
-            let s = plugins.map(([, p], i) => {
+            let s = plugins.map((p, i) => {
               return `${i}.${p.installed}<-${p.name}`;
             }).join("\n");
             bot.send_private_msg(adminId, [
@@ -43,10 +43,10 @@ class CQBotPlugin extends Plug {
               return;
             }
             Promise.all(matches.map(match => plugins[+match]).map(
-              open ? async ([, p]) => {
+              open ? async (p) => {
                 if (!p.installed) await p.install();
                 return `${p.installed}<-${p.name}`;
-              } : async ([, p]) => {
+              } : async (p) => {
                 if (p.installed) await p.uninstall();
                 return `${p.installed}<-${p.name}`;
               })).then(value => {
@@ -62,16 +62,33 @@ class CQBotPlugin extends Plug {
             if (matches == null) {
               return;
             }
-            let text = matches.map(match => plugins[+match]).map(([, p]) => {
+            let text = matches.map(match => plugins[+match]).map((p) => {
               return `插件名字:${p.name}\n  版本:${p.version}\n  描述:${p.description}`;
             }).join("\n\n");
             bot.send_private_msg(adminId, [
               CQ.text(text),
             ]).then(bot.messageSuccess, bot.messageFail);
-            break;
+            return;
+          }
+          case (/^插件刷新/.test(message)): {
+            let loader = require("../PlugLoader").default;
+            loader.uninstall().then(() => {
+              return loader.install();
+            }).then(() => {
+              bot.send_private_msg(adminId, "刷新成功")
+                .then(bot.messageSuccess, bot.messageFail);
+            });
+            return;
+          }
+          case (/^插件更新/.test(message)): {
+            let matches = message.match(/\d+(?=\s)?/g);
+            if (matches == null) {
+              return;
+            }
+            return;
           }
           default:
-            break;
+            return;
           // TODO:消息热重载其他固定代码
         }
       },
