@@ -17,7 +17,7 @@ class CQBotTouHou extends Plug {
   }
   
   async install() {
-    let def = require("./bot").default;
+    let def = require("./bot");
     if (!def.bot) return;
     let bot: CQWebSocket = def.bot;
     this.header = bot.bind("on", {
@@ -27,7 +27,7 @@ class CQBotTouHou extends Plug {
           return;
         }
         let txt = cqTag.get("text");
-        if (/^东方图来$/.test(txt)) {
+        if (/^\.东方图来$/.test(txt)) {
           switch (this.isRandom) {
             case true:
               return;
@@ -61,9 +61,9 @@ class CQBotTouHou extends Plug {
   };
   
   async uninstall() {
-    let def = require("./bot").default;
+    let def = require("./bot");
     def.bot?.unbind(this.header);
   }
 }
 
-export default new CQBotTouHou();
+export = new CQBotTouHou();

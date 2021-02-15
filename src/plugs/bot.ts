@@ -1,7 +1,6 @@
 import {CQWebSocket} from "go-cqwebsocket";
+import {adminId, cqws} from "../configs/config.json";
 import Plug from "../Plug";
-
-const {cqws, adminId} = require("../../config/config.json");
 
 class CQBot extends Plug {
   bot?: CQWebSocket;
@@ -30,17 +29,19 @@ class CQBot extends Plug {
     bot.messageSuccess = ret => console.log(`${Date()} 发送成功`, ret);
     bot.messageFail = reason => console.log(`${Date()} 发送失败`, reason);
     bot.once("socket.open", (event, message) => {
-      let msg = bot.bind("onceAll", {
-        "socket.open": () => {
-          clearTimeout(timeout);
-          setTimeout(() => {
-            bot.send_private_msg(2938137849, "已上线");
-          }, 1000);
-        },
+      setTimeout(() => {
+        let msg = bot.bind("onceAll", {
+          "socket.open": () => {
+            clearTimeout(timeout);
+            setTimeout(() => {
+              bot.send_private_msg(2938137849, "已上线");
+            }, 1000);
+          },
+        });
+        let timeout = setTimeout(() => {
+          return msg["socket.open"]?.(event, message);
+        }, 5000);
       });
-      let timeout = setTimeout(() => {
-        return msg["socket.open"]?.(event, message);
-      }, 5000);
     });
   
     return new Promise<void>((resolve, reject) => {
@@ -67,4 +68,4 @@ class CQBot extends Plug {
   }
 }
 
-export default new CQBot();
+export = new CQBot();

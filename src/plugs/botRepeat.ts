@@ -16,7 +16,7 @@ class BotRepeat extends Plug {
   
   async install() {
     const repeatCache = new RepeatCache();
-    let def = require("./bot").default;
+    let def = require("./bot");
     if (!def.bot) return;
     let bot: CQWebSocket = def.bot;
     this.header = bot.bind("on", {
@@ -26,14 +26,14 @@ class BotRepeat extends Plug {
           return;
         }
         let msg = tag.get("text");
-        if (msg.startsWith("/")) {
+        if (msg.startsWith(".")) {
           return;
         }
         let {
           group_id,
           user_id,
         } = context;
-        if (!repeatCache.check(group_id, user_id, msg, 3)) {
+        if (!repeatCache.check(group_id, user_id, msg, 4)) {
           return;
         }
         event.stopPropagation();
@@ -43,9 +43,9 @@ class BotRepeat extends Plug {
   }
   
   async uninstall() {
-    let def = require("./bot").default;
+    let def = require("./bot");
     def.bot?.unbind(this.header);
   }
 }
 
-export default new BotRepeat();
+export = new BotRepeat();

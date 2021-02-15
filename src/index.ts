@@ -2,13 +2,14 @@ import PlugLoader from "./PlugLoader";
 
 
 PlugLoader.install().then(() => {
-  return require("./plugs/httpOption").default.install();
+  return require("./plugs/httpOption").install();
 }).then(() => {
-  return require("./plugs/bot").default.install();
+  return require("./plugs/bot").install();
 }).then(() => {
-  return require("./plugs/botPlugin").default.install();
+  return require("./plugs/botCOC").install();
 }).then(() => {
   module.children = [];
 });
+
 
 

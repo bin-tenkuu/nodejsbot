@@ -69,10 +69,6 @@ export default abstract class Plug {
   }
   
   toJSON() {
-    return {
-      name: this.name,
-      version: this.version,
-      installed: this._state === State.installed,
-    };
+    return {"name": this.name, "version": this.version, "installed": this._state === State.installed};
   }
 }

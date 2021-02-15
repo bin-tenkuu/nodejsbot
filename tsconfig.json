@@ -16,6 +16,7 @@
     //     "sourceMap": true,                     /* Generates corresponding '.map' file. */
     "outDir": "./out",
     "rootDir": "./src",
+    "resolveJsonModule": true,
     // "composite": true,                     /* Enable project compilation */
     // "tsBuildInfoFile": "./",               /* Specify file to store incremental compilation information */
     "removeComments": true,

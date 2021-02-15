@@ -16,7 +16,7 @@ class CQAntiXML extends Plug {
   }
   
   async install() {
-    let def = require("./bot").default;
+    let def = require("./bot");
     if (!def.bot) return;
     let bot: CQWebSocket = def.bot;
     this.header = bot.bind("on", {
@@ -39,7 +39,7 @@ class CQAntiXML extends Plug {
   }
   
   async uninstall() {
-    let def = require("./bot").default;
+    let def = require("./bot");
     def.bot?.unbind(this.header);
   }
   
@@ -84,4 +84,4 @@ class CQAntiXML extends Plug {
   }
 }
 
-export default new CQAntiXML();
+export = new CQAntiXML();

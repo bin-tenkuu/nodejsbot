@@ -50,29 +50,29 @@ export function logFuncCall(): FunctionAnnotation {
   };
 }
 
-/*// 匿名写法
- export function logCreate(): ConstructorAnnotation {
- return <T extends Constructor>(constructor: T) => {
- return <T>class {
- constructor(...args: any[]) {
- console.log(`${Date()} ${constructor.name} new an instance`);
- return new constructor(...args);
- }
- };
- };
- }//*/
-
-// 继承写法
+// 匿名写法
 export function logCreate(): ConstructorAnnotation {
   return <T extends Constructor>(constructor: T) => {
-    return class extends constructor {
+    return <T>class {
       constructor(...args: any[]) {
         console.log(`${Date()} ${constructor.name} new an instance`);
-        super(...args);
+        return new constructor(...args);
       }
     };
   };
 }//*/
+
+/*// 继承写法
+ export function logCreate(): ConstructorAnnotation {
+ return <T extends Constructor>(constructor: T) => {
+ return class extends constructor {
+ constructor(...args: any[]) {
+ console.log(`${Date()} ${constructor.name} new an instance`);
+ super(...args);
+ }
+ };
+ };
+ }//*/
 
 export function logProp(): PropertyAnnotation {
   return function (target, propertyKey) {

@@ -24,8 +24,9 @@
     "@types/node": "^14.14.25"
   },
   "dependencies": {
+    "autobind-decorator": "^2.4.0",
     "axios": "^0.21.1",
-    "go-cqwebsocket": "^2.0.2",
+    "go-cqwebsocket": "^2.0.5",
     "node-cache": "^5.1.2",
     "reflect-metadata": "^0.1.13",
     "xmldom-ts": "^0.3.1"

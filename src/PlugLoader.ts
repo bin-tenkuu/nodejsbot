@@ -19,16 +19,17 @@ class PlugLoader extends Plug {
     });
     let dirent: fs.Dirent | null;
     while (dirent = dir.readSync()) {
-      if (!dirent.isFile()) { return; }
+      if (!dirent.isFile()) { continue; }
       let filePath = `${plugPath}/${dirent.name}`;
       console.info(filePath);
-      let plug = require(filePath).default;
+      let plug = require(filePath);
       if (plug instanceof Plug) {
         console.info(plug.toString());
         continue;
       }
       console.error(filePath);
     }
+    module.children = [];
     return dir.close();
   }
   
@@ -36,4 +37,4 @@ class PlugLoader extends Plug {
   }
 }
 
-export default new PlugLoader();
+export = new PlugLoader();

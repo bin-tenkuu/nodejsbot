@@ -4,6 +4,7 @@
 /.idea/
 /config/
 /test/
+/src/configs
 
 *.zip
 *.tgz

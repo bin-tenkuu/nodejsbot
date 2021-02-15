@@ -18,4 +18,4 @@ class test extends Plug {
   }
 }
 
-export default new test();
+export = new test();

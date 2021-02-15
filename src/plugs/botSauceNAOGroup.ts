@@ -15,13 +15,13 @@ class CQBotSauceNAOGroup extends Plug {
   }
   
   async install() {
-    let def = require("./bot").default;
+    let def = require("./bot");
     if (!def.bot) return;
     let bot: CQWebSocket = def.bot;
     this.header = bot.bind("on", {
       "message.group": (event, context, tags) => {
         let cqText = tags.find(value => value.tagName === "text");
-        if (!/^\/搜图/.exec(cqText?.get("text"))) {
+        if (!/^\.搜图/.exec(cqText?.get("text"))) {
           return;
         }
         for (let tag of tags) {
@@ -103,7 +103,7 @@ class CQBotSauceNAOGroup extends Plug {
   }
   
   async uninstall() {
-    let def = require("./bot").default;
+    let def = require("./bot");
     def.bot?.unbind(this.header);
   }
   
@@ -143,4 +143,4 @@ class CQBotSauceNAOGroup extends Plug {
   }
 }
 
-export default new CQBotSauceNAOGroup();
+export = new CQBotSauceNAOGroup();
