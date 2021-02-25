@@ -1,7 +1,7 @@
 import {CQ, CQWebSocket} from "go-cqwebsocket";
 import {CQEvent} from "go-cqwebsocket/out/event-bus";
 import {PrivateMessage, SocketHandle} from "go-cqwebsocket/out/Interfaces";
-import {adminId} from "../configs/config.json";
+import {adminId} from "../configs/config";
 import Plug from "../Plug";
 
 class CQBotPlugin extends Plug {
@@ -16,7 +16,6 @@ class CQBotPlugin extends Plug {
   
   async install() {
     let def = require("./bot");
-    if (!def.bot) return;
     let bot: CQWebSocket = def.bot;
     this.header = bot.bind("on", {
       "message.private": (event: CQEvent, context: PrivateMessage) => {
@@ -32,7 +31,7 @@ class CQBotPlugin extends Plug {
             }).join("\n");
             bot.send_private_msg(adminId, [
               CQ.text(s),
-            ]).then(bot.messageSuccess, bot.messageFail);
+            ]).catch(() => {});
             return;
           }
           case (/^插件[开关]/.test(message)): {
@@ -52,7 +51,7 @@ class CQBotPlugin extends Plug {
               let text = "对应插件状态:\n" + value.join("\n");
               bot.send_private_msg(adminId, [
                 CQ.text(text),
-              ]).then(bot.messageSuccess, bot.messageFail);
+              ]).catch(() => {});
             });
             return;
           }
@@ -66,7 +65,7 @@ class CQBotPlugin extends Plug {
             }).join("\n\n");
             bot.send_private_msg(adminId, [
               CQ.text(text),
-            ]).then(bot.messageSuccess, bot.messageFail);
+            ]).catch(() => {});
             return;
           }
           case (/^插件刷新/.test(message)): {
@@ -75,7 +74,7 @@ class CQBotPlugin extends Plug {
               return loader.install();
             }).then(() => {
               bot.send_private_msg(adminId, "刷新成功")
-                .then(bot.messageSuccess, bot.messageFail);
+                  .catch(() => {});
             });
             return;
           }
@@ -96,7 +95,7 @@ class CQBotPlugin extends Plug {
   
   async uninstall() {
     let def = require("./bot");
-    def.bot?.unbind(this.header);
+    def._bot?.unbind(this.header);
   }
 }
 

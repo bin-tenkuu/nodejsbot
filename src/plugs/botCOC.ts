@@ -15,31 +15,29 @@ class CQBotCOC extends Plug {
   
   async install() {
     let def = require("./bot");
-    if (!def.bot) return;
     let bot: CQWebSocket = def.bot;
     this.header = bot.bind("on", {
       "message.group": (event, message, tags) => {
         if (tags.length !== 1 || tags[0].tagName !== "text") {
           return;
         }
-        let dice = /^\.d +(\S.*)$/.exec((tags[0].get("text") as string))?.[1].replace(
-          / +/g,
-          "",
-        );
-        if (!dice) { return; }
-        if (/[^+\-*d0-9]/.test(dice)) {
-          bot.send_group_msg(message.group_id, "/d错误参数").then(bot.messageSuccess, bot.messageFail);
+        let dice = /^\.d +([^ ]+)/.exec((tags[0].get("text") as string))?.[1];
+        if (!dice) {
           return;
         }
-        dice = CQBotCOC.dice(dice);
-        bot.send_group_msg(message.group_id, dice).then(bot.messageSuccess, bot.messageFail);
+        event.stopPropagation();
+        if (/[^+\-*d0-9]/.test(dice)) {
+          bot.send_group_msg(message.group_id, "/d错误参数").catch(() => {});
+          return;
+        }
+        bot.send_group_msg(message.group_id, CQBotCOC.dice(dice)).catch(() => {});
       },
     });
   }
   
   async uninstall() {
     let def = require("./bot");
-    def.bot?.unbind(this.header);
+    def._bot?.unbind(this.header);
   }
   
   private static dice(str: string): string {
@@ -70,10 +68,10 @@ class CQBotCOC extends Plug {
         };
       }
     });
-    
+  
     let preRet = handles.filter(v => v.list).map((v) => {
-      return `${v.origin}：[${v.list!.join()}]=${v.num}`;
-    }).join("\n");
+      return `${v.origin}：[${v.list!.join()}]=${v.num}\n`;
+    }).join("");
     let cache = 1;
     let sumNum = handles.reduceRight<number>((sum, v) => {
       switch (v.op) {
@@ -98,7 +96,7 @@ class CQBotCOC extends Plug {
         }
       }
     }, 0);
-    return `${preRet}\n${str}=${sumNum}`;
+    return `${preRet}${str}=${sumNum}`;
   }
 }
 

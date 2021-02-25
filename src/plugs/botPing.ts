@@ -14,42 +14,53 @@ class CQBotPing extends Plug {
   
   async install() {
     let def = require("./bot");
-    if (!def.bot) return;
     let bot: CQWebSocket = def.bot;
     this.header = bot.bind("on", {
       "message.group": (event, context, tags) => {
         // 没有@自己
-        if (!tags.some(tag => tag["tagName"] === "at" && tag.get("qq") === bot.qq)) {
+        if (!tags.some(tag => tag["tagName"] === "at" && +tag.get("qq") === context.self_id)) {
           return;
         }
-        // stopPropagation方法阻止事件冒泡到父元素
         event.stopPropagation();
         let {
           group_id,
           message_id,
-          sender: {
-            user_id,
-          },
+          user_id,
         } = context;
+        let text: string = tags.find(tag => tag.tagName === "text")?.get("text") ?? "";
+        let isRun = def.switchRun(text.trimStart(), [
+          [/^为什么呢$/, () => {
+            bot.send_group_msg(group_id, "是啊，为什么呢，我也在寻找原因呢").catch(() => {});
+          }],
+          // [/^.?为什么([^呢]*呢)?$/, () => {
+          //   bot.send_group_msg(group_id, [
+          //     CQ.json(CQ.escape(JSON.stringify(require("../configs/QualityAnswer.json")))),
+          //   ]).catch(() => {});
+          // }],
+        ]);
+        if (isRun) {
+          return;
+        }
         let cqTags = context.message
-          .replace(/\[[^\]]+]/g, "")
-          .replace(/吗/g, "")
-          .replace(/不/g, "很")
-          .replace(/你/g, "我")
-          .replace(/(?<!没)有/g, "没有")
-          .replace(/[？?]/g, "!");
+            .replace(/\[[^\]]+]/g, "")
+            .replace(/吗/g, "")
+            .replace(/不/g, "很")
+            .replace(/你/g, "我")
+            .replace(/(?<!没)有/g, "没有")
+            .replace(/[？?]/g, "!");
         bot.send_group_msg(group_id, [
           CQ.reply(message_id),
           CQ.at(user_id),
           CQ.text(cqTags),
-        ]).then(bot.messageSuccess, bot.messageFail);
+        ]).catch(() => {});
+        return;
       },
     });
   }
   
   async uninstall() {
     let def = require("./bot");
-    def.bot?.unbind(this.header);
+    def._bot?.unbind(this.header);
   }
 }
 

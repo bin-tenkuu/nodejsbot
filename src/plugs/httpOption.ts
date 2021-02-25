@@ -20,12 +20,12 @@ class HttpOption extends Plug {
       res.setHeader("Content-type", "text/html; charset=utf-8");
       console.log(`${Date()} 网页 '${req.url}' 收到请求`);
       if (req.url == null) {
-        res.end("http://127.0.0.1:40000/exit");
+        res.end("<a href='./exit'>http://127.0.0.1:40000/exit</a>");
         return;
       }
       let query = url.parse(req.url);
       if (query.pathname !== "/exit") {
-        res.end("http://127.0.0.1:40000/exit");
+        res.end("<a href='./exit'>http://127.0.0.1:40000/exit</a>");
         return;
       }
       res.end("开始退出");

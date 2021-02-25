@@ -2,12 +2,10 @@
 /node_modules/
 /.gradle/
 /.idea/
-/config/
 /test/
-/src/configs
+/src/configs/config.ts
 
-*.zip
 *.tgz
-/test.js
+*.js
 /nodejsbot-1.0.0.tgz
 /out

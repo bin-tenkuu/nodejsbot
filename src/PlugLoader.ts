@@ -12,25 +12,20 @@ class PlugLoader extends Plug {
   
   async install(): Promise<void> {
     console.info("开始加载插件列表");
-    let plugPath = `${module.path}/plugs`;
-    let dir = fs.opendirSync("./out/plugs", {
+    let plugPath = `./plugs`;
+    let files = fs.readdirSync("./out/plugs", {
       encoding: "utf-8",
-      bufferSize: 8,
     });
-    let dirent: fs.Dirent | null;
-    while (dirent = dir.readSync()) {
-      if (!dirent.isFile()) { continue; }
-      let filePath = `${plugPath}/${dirent.name}`;
-      console.info(filePath);
+    for (let file of files) {
+      let filePath = `${plugPath}/${file}`;
       let plug = require(filePath);
       if (plug instanceof Plug) {
-        console.info(plug.toString());
+        console.info("fix: ", filePath);
         continue;
       }
-      console.error(filePath);
+      console.error("error: ", filePath);
     }
     module.children = [];
-    return dir.close();
   }
   
   async uninstall(): Promise<void> {

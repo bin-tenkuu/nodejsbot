@@ -16,7 +16,6 @@ class CQBotSauceNAOGroup extends Plug {
   
   async install() {
     let def = require("./bot");
-    if (!def.bot) return;
     let bot: CQWebSocket = def.bot;
     this.header = bot.bind("on", {
       "message.group": (event, context, tags) => {
@@ -43,21 +42,21 @@ class CQBotSauceNAOGroup extends Plug {
           
           console.log("开始搜图");
           sauceNAO(url).then(result => {
-            console.log(result);
+            // console.log(result);
             if (result.results.length === 0) {
               console.log("搜图无结果");
               bot.send_group_msg(group_id, [
                 CQ.reply(message_id),
                 CQ.at(user_id),
                 CQ.text(`搜图无结果`),
-              ]).then(bot.messageSuccess, bot.messageFail);
+              ]).catch(() => {});
               return;
             }
             bot.send_group_msg(group_id, [
               CQ.reply(message_id),
               CQ.at(user_id),
               CQ.text("有结果，加载中"),
-            ]).then(bot.messageSuccess, bot.messageFail);
+            ]).catch(() => {});
             let [first, second, third] = result.results;
             bot.send_group_forward_msg(group_id, [
               CQ.nodeId(message_id),
@@ -76,15 +75,13 @@ class CQBotSauceNAOGroup extends Plug {
                 CQ.text(`相似度: ${third.header.similarity}%\n`),
                 CQ.text(this.decodeData(third.header.index_id, third.data)),
               ]),
-            ]).then(bot.messageSuccess, reason => {
-              bot.messageFail(reason);
+            ]).catch(() => {
               bot.send_group_msg(message_id, [
                 CQ.reply(message_id),
                 CQ.at(user_id),
                 CQ.text("加载失败或发送失败"),
-              ]);
+              ]).catch(() => {});
             });
-            
           }).catch((err) => {
             console.log("搜图出错");
             console.error(err);
@@ -92,9 +89,8 @@ class CQBotSauceNAOGroup extends Plug {
               CQ.reply(message_id),
               CQ.at(user_id),
               CQ.text(`搜图出错`),
-            ]).then(bot.messageSuccess, bot.messageFail);
+            ]).catch(() => {});
           });
-          
           event.stopPropagation();
           break;
         }
@@ -104,7 +100,7 @@ class CQBotSauceNAOGroup extends Plug {
   
   async uninstall() {
     let def = require("./bot");
-    def.bot?.unbind(this.header);
+    def._bot?.unbind(this.header);
   }
   
   /**

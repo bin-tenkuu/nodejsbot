@@ -17,7 +17,6 @@ class CQAntiXML extends Plug {
   
   async install() {
     let def = require("./bot");
-    if (!def.bot) return;
     let bot: CQWebSocket = def.bot;
     this.header = bot.bind("on", {
       "message.group": (event, message, tags) => {
@@ -29,10 +28,10 @@ class CQAntiXML extends Plug {
         if (parse === false) {
           bot.send_group_msg(message.group_id, [
             CQ.text("xml消息解析失败"),
-          ]).then(bot.messageSuccess, bot.messageFail);
+          ]).catch(() => {});
         } else {
           bot.send_group_forward_msg(message.group_id, parse)
-            .then(bot.messageSuccess, bot.messageFail);
+              .catch(() => {});
         }
       },
     });
@@ -40,7 +39,7 @@ class CQAntiXML extends Plug {
   
   async uninstall() {
     let def = require("./bot");
-    def.bot?.unbind(this.header);
+    def._bot?.unbind(this.header);
   }
   
   private static parse(data: string, name: string, uid: number): messageNode[] | false {

@@ -1,6 +1,6 @@
+import {CQWebSocket} from "go-cqwebsocket";
 import {SocketHandle} from "go-cqwebsocket/out/Interfaces";
 import {CQTag, text} from "go-cqwebsocket/out/tags";
-import {CQWebSocket} from "go-cqwebsocket";
 import Plug from "../Plug";
 import RepeatCache from "../utils/repeat";
 
@@ -17,7 +17,6 @@ class BotRepeat extends Plug {
   async install() {
     const repeatCache = new RepeatCache();
     let def = require("./bot");
-    if (!def.bot) return;
     let bot: CQWebSocket = def.bot;
     this.header = bot.bind("on", {
       "message.group": (event, context, tags) => {
@@ -37,14 +36,14 @@ class BotRepeat extends Plug {
           return;
         }
         event.stopPropagation();
-        bot.send_group_msg(group_id, [tag]).then(bot.messageSuccess, bot.messageFail);
+        bot.send_group_msg(group_id, tag.toString()).catch(() => {});
       },
     });
   }
   
   async uninstall() {
     let def = require("./bot");
-    def.bot?.unbind(this.header);
+    def._bot?.unbind(this.header);
   }
 }
 

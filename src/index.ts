@@ -6,10 +6,8 @@ PlugLoader.install().then(() => {
 }).then(() => {
   return require("./plugs/bot").install();
 }).then(() => {
-  return require("./plugs/botCOC").install();
+  // return require("./plugs/botPlugin").install();
+  return require("./plugs/botPing").install();
 }).then(() => {
   module.children = [];
 });
-
-
-

@@ -18,7 +18,6 @@ class CQBotTouHou extends Plug {
   
   async install() {
     let def = require("./bot");
-    if (!def.bot) return;
     let bot: CQWebSocket = def.bot;
     this.header = bot.bind("on", {
       "message.group": (event, context, tags) => {
@@ -27,7 +26,7 @@ class CQBotTouHou extends Plug {
           return;
         }
         let txt = cqTag.get("text");
-        if (/^\.东方图来$/.test(txt)) {
+        if (/^东方图来$/.test(txt)) {
           switch (this.isRandom) {
             case true:
               return;
@@ -41,20 +40,20 @@ class CQBotTouHou extends Plug {
           } = context;
           bot.send_group_msg(group_id, [
             CQ.text("随机东方图加载中"),
-          ]).then(bot.messageSuccess, bot.messageFail);
+          ]).catch(() => {});
           paulzzhTouHou().then(json => {
             bot.send_group_msg(group_id, [
               CQ.image(json["url"]),
-            ]).then(bot.messageSuccess, bot.messageFail);
+            ]).catch(() => {});
+            setTimeout(() => {
+              this.isRandom = false;
+            }, 1000);
           }).catch(err => {
             console.error(err);
             bot.send_group_msg(group_id, [
               CQ.text(`东方图API调用错误`),
-            ]).then(bot.messageSuccess, bot.messageFail);
+            ]).catch(() => {});
           });
-          setTimeout(() => {
-            this.isRandom = false;
-          }, 1000);
         }
       },
     });
@@ -62,7 +61,7 @@ class CQBotTouHou extends Plug {
   
   async uninstall() {
     let def = require("./bot");
-    def.bot?.unbind(this.header);
+    def._bot?.unbind(this.header);
   }
 }
 
