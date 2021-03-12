@@ -1,53 +1,15 @@
-fun = (a) => {
-  console.group(a.type);
-  
-  let t;
-  console.time("JSON");
-  t = JSON.stringify(a);
-  console.timeEnd("JSON");
-  console.log(t);
-  
-  console.time("str");
-  t = `{"type":"${a.type}","data":${JSON.stringify(a.data)}`;
-  console.timeEnd("str");
-  console.log(t);
-  
-  console.groupEnd();
-};
+let axios = require("axios").create({timeout: 1000 * 10});
 
-for (let i = 0; i < 10; i++) {
-  fun({
-    type: "image",
-    data: {
-      "file": "url",
-    },
-  });
-  fun({
-    type: "node",
-    data: {
-      "nodeid": 2938137849,
-    },
-  });
-  fun({
-    type: "node",
-    data: {
-      "name": "2938137849",
-      "uid": "2938137849",
-      "content": "2938137849",
-    },
-  });
-  fun({
-    type: "node",
-    data: {
-      "name": "2938137849",
-      "uid": "2938137849",
-      "content": [{
-        type: "image",
-        data: {
-          file: "url",
-        },
-      },
-      ],
-    },
+function get(pid) {
+  return axios.get(`https://pixiv.cat/${pid}.png`).then(value => {
+    return (value.headers["x-origin-url"]).replace("i.pximg.net", "i.pixiv.cat");
   });
 }
+
+get(`82775556-1`).then(str => {
+  console.log(str);
+}).catch((reason) => {
+  console.log(reason.response.data);
+  let exec = /(?<=<p>)[^<]+/.exec(reason.response.data)?.[0];
+  console.log(exec);
+});

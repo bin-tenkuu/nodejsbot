@@ -1,15 +1,40 @@
 import {CQ, CQWebSocket} from "go-cqwebsocket";
 import {SocketHandle} from "go-cqwebsocket/out/Interfaces";
 import Plug from "../Plug";
+import {ContextEvent} from "../utils/Util";
+
+type FunList = ((event: ContextEvent) => void)[]
 
 class CQBotPing extends Plug {
   private header?: SocketHandle;
+  private readonly helper: Map<Plug, FunList>;
   
   constructor() {
     super(module);
     this.name = "QQ群聊-回复";
     this.description = "QQ群@回复";
     this.version = 0.5;
+    this.helper = new Map();
+    this.get(this).push((event) => {
+      if (/^为什么呢$/.test(event.text)) {
+        event.bot.send_group_msg(event.context.group_id, "是啊，为什么呢，我也在寻找原因呢").catch(() => {});
+        return true;
+      }
+      return false;
+    });
+  }
+  
+  get<T extends Plug>($this: T): FunList {
+    let r = this.helper.get($this);
+    if (r == undefined) {
+      r = [];
+      this.helper.set($this, r);
+    }
+    return r;
+  }
+  
+  del<T extends Plug>($this: T): boolean {
+    return this.helper.delete($this);
   }
   
   async install() {
@@ -17,8 +42,10 @@ class CQBotPing extends Plug {
     let bot: CQWebSocket = def.bot;
     this.header = bot.bind("on", {
       "message.group": (event, context, tags) => {
-        // 没有@自己
-        if (!tags.some(tag => tag["tagName"] === "at" && +tag.get("qq") === context.self_id)) {
+        let contextEvent = new ContextEvent(bot, context, tags, event);
+        this.helper.forEach(funList => funList.forEach(func => func(contextEvent)));
+        // console.log(contextEvent.isAtMe, event.isCanceled);
+        if (event.isCanceled || !contextEvent.isAtMe) {
           return;
         }
         event.stopPropagation();
@@ -27,20 +54,6 @@ class CQBotPing extends Plug {
           message_id,
           user_id,
         } = context;
-        let text: string = tags.find(tag => tag.tagName === "text")?.get("text") ?? "";
-        let isRun = def.switchRun(text.trimStart(), [
-          [/^为什么呢$/, () => {
-            bot.send_group_msg(group_id, "是啊，为什么呢，我也在寻找原因呢").catch(() => {});
-          }],
-          // [/^.?为什么([^呢]*呢)?$/, () => {
-          //   bot.send_group_msg(group_id, [
-          //     CQ.json(CQ.escape(JSON.stringify(require("../configs/QualityAnswer.json")))),
-          //   ]).catch(() => {});
-          // }],
-        ]);
-        if (isRun) {
-          return;
-        }
         let cqTags = context.message
             .replace(/\[[^\]]+]/g, "")
             .replace(/吗/g, "")
@@ -59,9 +72,9 @@ class CQBotPing extends Plug {
   }
   
   async uninstall() {
-    let def = require("./bot");
-    def._bot?.unbind(this.header);
+    require("./bot").bot.unbind(this.header);
   }
+  
 }
 
 export = new CQBotPing();

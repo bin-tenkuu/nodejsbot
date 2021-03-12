@@ -60,8 +60,7 @@ class CQBotTouHou extends Plug {
   };
   
   async uninstall() {
-    let def = require("./bot");
-    def._bot?.unbind(this.header);
+    require("./bot").bot.unbind(this.header);
   }
 }
 

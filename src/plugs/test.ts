@@ -19,3 +19,7 @@ class test extends Plug {
 }
 
 export = new test();
+/*  TODO:
+ 毒鸡汤：https://www.iowen.cn/jitang/api/
+ 彩虹屁：https://chp.shadiao.app/api.php
+ */

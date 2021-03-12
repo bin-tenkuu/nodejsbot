@@ -1,0 +1,10 @@
+{
+  "action": "send_private_msg",
+  "params": {
+    "user_id": 2,
+    "message": {
+    },
+    "auto_escape": false
+  },
+  "echo": "any"
+}

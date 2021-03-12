@@ -1,6 +1,6 @@
 import axios_1 from "axios";
 import {SauceNAOkey, SeTuApiKey} from "../configs/config";
-import {loliconDate, paulzzhTouHouType, sauceNAOResult} from "./SearchType";
+import {loliconDate, paulzzhTouHouType, sauceNAOResult, toubiecType} from "./SearchType";
 
 export const axios = axios_1.create({
   timeout: 20000,
@@ -21,8 +21,8 @@ export function sauceNAO(url: string): Promise<sauceNAOResult> {
   }).then(value => value.data as sauceNAOResult);
 }
 
-/**
- * ascii2d搜图 TODO
+/**TODO
+ * ascii2d搜图
  * @param url
  */
 export function ascii2d(url: string) {
@@ -60,5 +60,21 @@ export function lolicon(keyword?: string, r18 = false): Promise<loliconDate> {
       size1200: true,
     },
   }).then<loliconDate>(r => r.data);
+}
+
+export function toubiec(): Promise<toubiecType> {
+  return axios.get(`https://acg.toubiec.cn/random.php?ret=json`);
+}
+
+/**
+ * p站图片链接
+ * @param pid
+ */
+export function pixivProxy(pid: string): Promise<string> {
+  return axios.get(`https://pixiv.cat/${pid}.png`).then(value => {
+    return (value.headers["x-origin-url"]).replace("i.pximg.net", "i.pixiv.cat");
+  }).catch(reason => {
+    return Promise.reject(reason.response.data);
+  });
 }
 

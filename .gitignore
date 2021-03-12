@@ -7,5 +7,7 @@
 
 *.tgz
 *.js
+/test.js
+/test2.js
 /nodejsbot-1.0.0.tgz
 /out

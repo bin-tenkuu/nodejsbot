@@ -1,11 +1,8 @@
-import {CQWebSocket} from "go-cqwebsocket";
-import {SocketHandle} from "go-cqwebsocket/out/Interfaces";
 import Plug from "../Plug";
 import * as COC from "../utils/COCUtils";
+import {ContextEvent} from "../utils/Util";
 
 class CQBotCOC extends Plug {
-  private header?: SocketHandle;
-  
   constructor() {
     super(module);
     this.name = "QQ群聊-COC跑团相关";
@@ -14,30 +11,22 @@ class CQBotCOC extends Plug {
   }
   
   async install() {
-    let def = require("./bot");
-    let bot: CQWebSocket = def.bot;
-    this.header = bot.bind("on", {
-      "message.group": (event, message, tags) => {
-        if (tags.length !== 1 || tags[0].tagName !== "text") {
-          return;
-        }
-        let dice = /^\.d +([^ ]+)/.exec((tags[0].get("text") as string))?.[1];
-        if (!dice) {
-          return;
-        }
-        event.stopPropagation();
-        if (/[^+\-*d0-9]/.test(dice)) {
-          bot.send_group_msg(message.group_id, "/d错误参数").catch(() => {});
-          return;
-        }
-        bot.send_group_msg(message.group_id, CQBotCOC.dice(dice)).catch(() => {});
-      },
+    require("./botPing").get(this).push((event: ContextEvent) => {
+      let dice = /^\.d +([^ ]+)/.exec(event.text)?.[1];
+      if (!dice) {
+        return;
+      }
+      event.stopPropagation();
+      if (/[^+\-*d0-9]/.test(dice)) {
+        event.bot.send_group_msg(event.context.group_id, "/d错误参数").catch(() => {});
+        return;
+      }
+      event.bot.send_group_msg(event.context.group_id, CQBotCOC.dice(dice)).catch(() => {});
     });
   }
   
   async uninstall() {
-    let def = require("./bot");
-    def._bot?.unbind(this.header);
+    require("./botPing").del(this);
   }
   
   private static dice(str: string): string {

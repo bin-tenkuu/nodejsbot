@@ -1,11 +1,11 @@
-import {CQ, CQWebSocket} from "go-cqwebsocket";
-import {SocketHandle} from "go-cqwebsocket/out/Interfaces";
+import {CQ} from "go-cqwebsocket";
 import Plug from "../Plug";
 import {lolicon} from "../utils/Search";
+import {ContextEvent} from "../utils/Util";
 
 class CQBotLoLiSeTu extends Plug {
-  private header?: SocketHandle;
   private isCalling: boolean;
+  private cacheURL?: string;
   
   constructor() {
     super(module);
@@ -16,80 +16,84 @@ class CQBotLoLiSeTu extends Plug {
   }
   
   async install() {
-    let def = require("./bot");
-    let bot: CQWebSocket = def.bot;
-    this.header = bot.bind("on", {
-      "message.group": (event, message, tags) => {
-        if (tags.length !== 1 || tags[0].tagName !== "text") {
+    require("./botPing").get(this).push((event: ContextEvent) => {
+      let exec = /^[来來发發给給][张張个個幅点點份](?<r18>[Rr]18的?)?(?<keyword>.*?)?的?[色瑟][图圖]$/.exec(event.text);
+      if (exec == null) {
+        return;
+      }
+      let groups = {
+        r18: exec.groups?.r18 !== undefined,
+        keyword: exec.groups?.keyword,
+      };
+      if (this.isCalling) {
+        return;
+      } else {
+        this.isCalling = true;
+      }
+      console.log("开始色图", groups);
+      let {
+        group_id: groupId,
+        sender: {
+          nickname: nickname,
+        }, user_id: userId,
+      } = event.context;
+      event.stopPropagation();
+      lolicon(groups.keyword, groups.r18).then(value => {
+        let bot = event.bot;
+        if (value.code !== 0) {
+          let message = CQBotLoLiSeTu.code(value.code);
+          console.log(`开始色图异常：异常返回码(${value.code})：${message}`);
+          bot.send_group_msg(groupId, message).catch(() => {});
+          this.isCalling = false;
           return;
         }
-        // "^竹竹.*[来來发發给給][张張个個幅点點份]?(?<r18>[Rr]18的?)?(?<keyword>.*?)?的?[色瑟][图圖]|^--setu$"
-        let exec = /^[来來][张張点點份](?<r18>[Rr]18的?)?(?<keyword>.*?)?的?[色瑟][图圖]/.exec(tags[0].get("text"));
-        if (exec == null) {
+        if (value.count < 1) {
+          bot.send_group_msg(groupId, "色图数量不足").catch(() => {});
+          console.log(`开始色图异常：色图数量不足(${value.count})`);
+          this.isCalling = false;
           return;
         }
-        
-        let groups = {
-          r18: exec.groups?.r18 !== undefined,
-          keyword: exec.groups?.keyword,
-        };
-        if (this.isCalling) {
-          return;
-        } else {
-          this.isCalling = true;
-        }
-        console.log("开始色图", groups);
-        let groupId = message.group_id;
-        lolicon(groups.keyword, groups.r18).then(value => {
-          if (value.code !== 0) {
-            bot.send_group_msg(groupId, CQBotLoLiSeTu.code(value.code)).catch(() => {});
+        let first = value.data[0];
+        console.log(`剩余次数：${value.quota}||剩余重置时间：${value.quota_min_ttl}s`);
+        Promise.all([
+          bot.send_group_msg(groupId, "开始加载"),
+          bot.send_group_forward_msg(groupId, [
+            CQ.nodeId(event.context.message_id),
+            CQ.node(nickname, userId, `标题：${first.title}
+作者：${first.author}\n原图：www.pixiv.net/artworks/${first.pid}`),
+            CQ.node(nickname, userId, CQ.escape(first.tags.join("\n"))),
+          ]),
+          bot.send_group_msg(groupId, [CQ.image(first.url)]).then(msgID => {
+            setTimeout(() => {
+              this.cacheURL = first.url;
+              bot.delete_msg(msgID.message_id).then(() => {});
+            }, 1000 * 60);
+          }).catch(() => {
+            return bot.send_group_msg(groupId, "图片发送失败,疑似露点图").catch(() => {});
+          }),
+        ]).catch(() => {}).finally(() => {
+          let unlock = () => {
             this.isCalling = false;
-            return;
+            console.log("解除锁定 %s", this.name);
+          };
+          if (value.quota < 5) {
+            setTimeout(unlock, 1000 * Number(value.quota_min_ttl));
+          } else {
+            unlock();
           }
-          if (value.count < 1) {
-            bot.send_group_msg(groupId, "色图数量不足").catch(() => {});
-            this.isCalling = false;
-            return;
-          }
-          let first = value.data[0];
-          console.log(`剩余次数：${value.quota}||推荐延时：${value.quota_min_ttl}s`);
-          bot.send_group_msg(groupId, "开始加载").then(loadId => {
-            let nickname = message.sender.nickname;
-            let userId = message.user_id;
-            bot.send_group_forward_msg(groupId, [
-              CQ.nodeId(message.message_id),
-              CQ.node(nickname, userId, `标题：${first.title}
-作者：${first.author}
-原图：www.pixiv.net/artworks/${first.pid}`),
-              CQ.node(nickname, userId, [CQ.image(first.url)]),
-              CQ.node(nickname, userId, first.tags.join("\n")),
-            ]).then(picId => {
-              bot.delete_msg(loadId.message_id).catch(() => {});
-              setTimeout(() => {
-                let unlock = () => {
-                  this.isCalling = false;
-                  console.log("解除锁定 %s", this.name);
-                };
-                bot.delete_msg(picId.message_id).catch(() => {});
-                if (value.quota >= 1) {
-                  unlock();
-                } else {
-                  setTimeout(unlock, 1000 * Number(value.quota_min_ttl));
-                }
-              }, 1000 * 60);
-            }).catch(() => {});
-          }).catch(() => {});
-        }).catch(reason => {
-          bot.send_group_msg(groupId, "未知错误").catch(() => {});
-          console.log(reason);
         });
-      },
+      }).catch(reason => {
+        event.bot.send_group_msg(groupId, "未知错误,或网络错误").catch(() => {});
+        event.bot.send_private_msg(2938137849, "搜图坏了").catch(() => {});
+        console.log(reason);
+        return this.uninstall();
+      });
     });
+  
   }
   
   async uninstall() {
-    let def = require("./bot");
-    def._bot?.unbind(this.header);
+    require("./botPing").del(this);
   }
   
   static code(code: number) {

@@ -1,13 +1,15 @@
 import PlugLoader from "./PlugLoader";
 
 
-PlugLoader.install().then(() => {
-  return require("./plugs/httpOption").install();
-}).then(() => {
-  return require("./plugs/bot").install();
-}).then(() => {
-  // return require("./plugs/botPlugin").install();
-  return require("./plugs/botPing").install();
+PlugLoader.install().then(async () => {
+  await require("./plugs/httpOption").install();
+  await require("./plugs/bot").install();
+  await require("./plugs/botPlugin").install();
+  await require("./plugs/botPing").install();
+  
+  
+  // await require("./plugs/botPixiv").install();
+  
 }).then(() => {
   module.children = [];
 });

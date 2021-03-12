@@ -3,19 +3,15 @@ import {adminId, cqws} from "../configs/config";
 import Plug from "../Plug";
 
 class CQBot extends Plug {
-  _bot?: CQWebSocket;
+  public bot: CQWebSocket;
   
   constructor() {
     super(module, "Bot");
     this.name = "QQ机器人";
     this.description = "用于连接gocq-http服务的bot";
     this.version = 0;
-  }
-  
-  install() {
-    let bot = new CQWebSocket(cqws);
-    this._bot = bot;
-    bot.bind("on", {
+    this.bot = new CQWebSocket(cqws);
+    this.bot.bind("on", {
       "socket.error": (_, code, err) => {
         console.warn(`${Date()} 连接错误[${code}]: ${err}`);
       },
@@ -26,12 +22,13 @@ class CQBot extends Plug {
         console.log(`${Date()} 已关闭 ${type}[${code}]: ${desc}`);
       },
     });
-    bot.messageSuccess = (ret, message) => console.log(`${Date()} ${message.action}成功：${ret.data}`);
-    bot.messageFail = (reason, message) => console.log(
-        `${Date()} ${message.action}失败[${reason.retcode}]:${reason.wording}`, reason);
+    this.bot.messageSuccess = (ret, message) => console.log(
+        `${Date()} ${message.action}成功：${JSON.stringify(ret.data)}`);
+    this.bot.messageFail = (reason, message) => console.log(
+        `${Date()} ${message.action}失败[${reason.retcode}]:${reason.wording}`);
     {
       let first = true;
-      let twice = (bot.bind("on", {
+      let twice = this.bot.bind("on", {
         "socket.open": () => {
           if (first) {
             console.log("连接1次");
@@ -39,23 +36,25 @@ class CQBot extends Plug {
             return;
           }
           console.log("连接2次");
-          bot.send_private_msg(2938137849, "已上线").catch(() => {});
-          bot.unbind(twice);
+          this.bot.send_private_msg(2938137849, "已上线").catch(() => {});
+          this.bot.unbind(twice);
         },
-      }));
+      });
     }
+  }
+  
+  install() {
     return new Promise<void>((resolve, reject) => {
-      bot.bind("onceAll", {
+      this.bot.bind("onceAll", {
         "socket.open": () => resolve(),
         "socket.close": () => reject(),
       });
-      bot.connect();
+      this.bot.connect();
     });
   }
   
   async uninstall() {
-    let bot = this.bot;
-    await bot.send_private_msg(adminId, "即将下线").catch(() => {});
+    await this.bot.send_private_msg(adminId, "即将下线").catch(() => {});
     return new Promise<void>((resolve, reject) => {
       {
         let first = true;
@@ -68,7 +67,7 @@ class CQBot extends Plug {
           console.log("断开2次");
           fun();
         };
-        bot.bind("on", {
+        this.bot.bind("on", {
           "socket.close": () => {
             close(resolve);
           },
@@ -77,23 +76,8 @@ class CQBot extends Plug {
           },
         });
       }
-      bot.disconnect();
+      this.bot.disconnect();
     });
-  }
-  
-  get bot(): CQWebSocket {
-    if (this._bot === undefined) {
-      throw "haven't installed";
-    }
-    return this._bot;
-  }
-  
-  switchRun(text: string, map: [RegExp, (this: void) => void][]): boolean {
-    if (text == undefined) return false;
-    let filter = map.filter((reg) => reg[0].test(text));
-    if (filter.length <= 0) return false;
-    filter.forEach(([, fun]) => fun());
-    return true;
   }
 }
 

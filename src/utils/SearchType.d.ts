@@ -78,10 +78,19 @@ type setu = {
   /**作品标签，包含标签的中文翻译（有的话）*/
   tags: string[]
 }
+export type toubiecType = [{
+  id: string
+  imgurl: string
+  width: string
+  height: string
+  client_ip: string
+  client_lsp: string
+}];
 
 interface Prom<T, U> extends PromiseLike<T> {
-  then<TR1 = T, TR2 = U>(onfulfilled?: ((value: T) => TR1 | PromiseLike<TR1>),
-                         onrejected?: ((reason: U) => TR2 | PromiseLike<TR2>),
+  then<TR1 = T, TR2 = U>(
+      onfulfilled?: ((value: T) => TR1 | PromiseLike<TR1>),
+      onrejected?: ((reason: U) => TR2 | PromiseLike<TR2>),
   ): Promise<TR1 | TR2>;
   
   catch<TR = U>(onrejected?: ((reason: U) => TR | PromiseLike<TR>)): Promise<T | TR>;
