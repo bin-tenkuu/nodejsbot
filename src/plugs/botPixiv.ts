@@ -1,7 +1,7 @@
 import {CQ} from "go-cqwebsocket";
 import Plug from "../Plug";
-import {pixivProxy} from "../utils/Search";
-import {ContextEvent} from "../utils/Util";
+import {pixivCat} from "../utils/Search";
+import {GroupEvent} from "../utils/Util";
 
 class CQBotPixiv extends Plug {
   constructor() {
@@ -12,37 +12,58 @@ class CQBotPixiv extends Plug {
   }
   
   async install() {
-    require("./botPing").get(this).push((event: ContextEvent) => {
-      let exec = /^看{1,2}p站(?<pid>\d+(?:-\d+)?)$/.exec(event.text);
+    require("./botGroup").get(this).push((event: GroupEvent) => {
+      let exec = /^看{1,2}p站(?<pid>\d+)$/.exec(event.text);
       if (exec) {
         event.stopPropagation();
         let pid = (exec.groups as { pid?: string }).pid;
-        if (pid == undefined) {
-          event.bot.send_group_msg(event.context.group_id, "pid获取失败").catch(() => {
+        let {
+          bot,
+          context: {
+            group_id,
+            user_id,
+            sender,
+          },
+        } = event;
+        let name = sender.card ?? sender.nickname;
+        if (pid === undefined) {
+          bot.send_group_msg(group_id, "pid获取失败").catch(() => {
             console.log("文字消息发送失败");
           });
           return;
         }
-        pixivProxy(pid).then(value => {
-          event.bot.send_group_msg(event.context.group_id, [
-            CQ.image(value),
-          ]).catch(() => {
-            console.log("图片发送失败");
-            return event.bot.send_group_msg(event.context.group_id, "图片发送失败");
-          }).catch(() => {
-            console.log("文本都发送失败");
-          });
-        }).catch((reason) => {
-          event.bot.send_group_msg(event.context.group_id, [
-            CQ.text(/(?<=<p>)[^<]+/.exec(reason)?.[0] ?? ""),
-          ]).catch(() => {});
+        pixivCat(pid).then(data => {
+          console.log(data);
+          if (data.success) {
+            let promise = data.multiple ?
+                bot.send_group_forward_msg(group_id, data.original_urls_proxy.map(url => {
+                  return CQ.node(name, user_id, [CQ.image(url)]);
+                })) :
+                bot.send_group_forward_msg(group_id, [
+                  CQ.node(name, user_id, [CQ.image(data.original_url_proxy)]),
+                ]);
+            promise.catch(() => {
+              console.log("合并转发发送失败");
+              return bot.send_group_msg(group_id, "带图合并转发发送失败");
+            }).catch(() => {
+              console.log("文本发送失败");
+            });
+          } else {
+            bot.send_group_msg(group_id, [CQ.text(data.error)]).catch(() => {});
+          }
+        }).catch(() => {
+          bot.send_group_msg(group_id, [
+            CQ.text("网络错误或内部错误"),
+          ]);
+        }).catch(() => {
+          console.log("文本发送失败");
         });
       }
     });
   }
   
   async uninstall() {
-    require("./botPing").del(this);
+    require("./botGroup").del(this);
   }
 }
 

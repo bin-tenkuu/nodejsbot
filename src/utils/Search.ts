@@ -1,8 +1,8 @@
-import axios_1 from "axios";
+import _axios from "axios";
 import {SauceNAOkey, SeTuApiKey} from "../configs/config";
-import {loliconDate, paulzzhTouHouType, sauceNAOResult, toubiecType} from "./SearchType";
+import {loliconDate, paulzzhTouHouType, pixivCatType, sauceNAOResult, toubiecType} from "./SearchType";
 
-export const axios = axios_1.create({
+export const axios = _axios.create({
   timeout: 20000,
 });
 
@@ -70,11 +70,9 @@ export function toubiec(): Promise<toubiecType> {
  * p站图片链接
  * @param pid
  */
-export function pixivProxy(pid: string): Promise<string> {
-  return axios.get(`https://pixiv.cat/${pid}.png`).then(value => {
-    return (value.headers["x-origin-url"]).replace("i.pximg.net", "i.pixiv.cat");
-  }).catch(reason => {
-    return Promise.reject(reason.response.data);
-  });
+export function pixivCat(pid: string): Promise<pixivCatType> {
+  return axios.post("https://api.pixiv.cat/v1/generate", {
+    p: pid,
+  }).then(value => value.data);
 }
 

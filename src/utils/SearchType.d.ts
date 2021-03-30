@@ -86,6 +86,23 @@ export type toubiecType = [{
   client_ip: string
   client_lsp: string
 }];
+export type pixivCatType = {
+  success: false
+  error: string
+} | ({
+  success: true
+  id: number
+  id_str: string
+} & ({
+  multiple: true
+  html: string
+  original_urls: string[]
+  original_urls_proxy: string[]
+} | {
+  multiple: false
+  original_url: string
+  original_url_proxy: string
+}))
 
 interface Prom<T, U> extends PromiseLike<T> {
   then<TR1 = T, TR2 = U>(

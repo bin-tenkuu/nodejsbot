@@ -1,13 +1,11 @@
 import {CQ} from "go-cqwebsocket";
-import {SocketHandle} from "go-cqwebsocket/out/Interfaces";
 import {CQTag, image} from "go-cqwebsocket/out/tags";
 import Plug from "../Plug";
 
 import {sauceNAO} from "../utils/Search";
-import {ContextEvent} from "../utils/Util";
+import {GroupEvent} from "../utils/Util";
 
 class CQBotSauceNAOGroup extends Plug {
-  private header?: SocketHandle;
   
   constructor() {
     super(module);
@@ -17,7 +15,7 @@ class CQBotSauceNAOGroup extends Plug {
   }
   
   async install() {
-    require("./botPing").get(this).push((event: ContextEvent) => {
+    require("./botGroup").get(this).push((event: GroupEvent) => {
       if (!/^\.搜图/.test(event.text)) {
         return;
       }
@@ -96,7 +94,7 @@ class CQBotSauceNAOGroup extends Plug {
   }
   
   async uninstall() {
-    require("./bot").bot.unbind(this.header);
+    require("./botGroup").del(this);
   }
   
   /**

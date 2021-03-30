@@ -1,6 +1,6 @@
 import Plug from "../Plug";
 import * as COC from "../utils/COCUtils";
-import {ContextEvent} from "../utils/Util";
+import {GroupEvent} from "../utils/Util";
 
 class CQBotCOC extends Plug {
   constructor() {
@@ -11,7 +11,7 @@ class CQBotCOC extends Plug {
   }
   
   async install() {
-    require("./botPing").get(this).push((event: ContextEvent) => {
+    require("./botGroup").get(this).push((event: GroupEvent) => {
       let dice = /^\.d +([^ ]+)/.exec(event.text)?.[1];
       if (!dice) {
         return;
@@ -26,7 +26,7 @@ class CQBotCOC extends Plug {
   }
   
   async uninstall() {
-    require("./botPing").del(this);
+    require("./botGroup").del(this);
   }
   
   private static dice(str: string): string {

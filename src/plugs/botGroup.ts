@@ -1,18 +1,18 @@
 import {CQ, CQWebSocket} from "go-cqwebsocket";
 import {SocketHandle} from "go-cqwebsocket/out/Interfaces";
 import Plug from "../Plug";
-import {ContextEvent} from "../utils/Util";
+import {GroupEvent} from "../utils/Util";
 
-type FunList = ((event: ContextEvent) => void)[]
+type FunList = ((this: void, event: GroupEvent) => void)
 
-class CQBotPing extends Plug {
+class CQBotGroup extends Plug {
   private header?: SocketHandle;
-  private readonly helper: Map<Plug, FunList>;
+  private readonly helper: Map<Plug, FunList[]>;
   
   constructor() {
     super(module);
     this.name = "QQ群聊-回复";
-    this.description = "QQ群@回复";
+    this.description = "QQ群聊-回复";
     this.version = 0.5;
     this.helper = new Map();
     this.get(this).push((event) => {
@@ -24,11 +24,15 @@ class CQBotPing extends Plug {
     });
   }
   
-  get<T extends Plug>($this: T): FunList {
+  set<T extends Plug>($this: T, list: FunList[]): void {
+    this.helper.set($this, list);
+  }
+  
+  get<T extends Plug>($this: T): FunList[] {
     let r = this.helper.get($this);
     if (r == undefined) {
       r = [];
-      this.helper.set($this, r);
+      this.set($this, r);
     }
     return r;
   }
@@ -42,7 +46,7 @@ class CQBotPing extends Plug {
     let bot: CQWebSocket = def.bot;
     this.header = bot.bind("on", {
       "message.group": (event, context, tags) => {
-        let contextEvent = new ContextEvent(bot, context, tags, event);
+        let contextEvent = new GroupEvent(bot, context, tags, event);
         this.helper.forEach(funList => funList.forEach(func => func(contextEvent)));
         // console.log(contextEvent.isAtMe, event.isCanceled);
         if (event.isCanceled || !contextEvent.isAtMe) {
@@ -54,9 +58,7 @@ class CQBotPing extends Plug {
           message_id,
           user_id,
         } = context;
-        let cqTags = context.message
-            .replace(/\[[^\]]+]/g, "")
-            .replace(/吗/g, "")
+        let cqTags = contextEvent.text.replace(/吗/g, "")
             .replace(/不/g, "很")
             .replace(/你/g, "我")
             .replace(/(?<!没)有/g, "没有")
@@ -77,4 +79,4 @@ class CQBotPing extends Plug {
   
 }
 
-export = new CQBotPing();
+export = new CQBotGroup();

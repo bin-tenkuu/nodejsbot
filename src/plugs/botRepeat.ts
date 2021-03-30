@@ -1,7 +1,7 @@
 import {CQTag, text} from "go-cqwebsocket/out/tags";
 import Plug from "../Plug";
 import RepeatCache from "../utils/repeat";
-import {ContextEvent} from "../utils/Util";
+import {GroupEvent} from "../utils/Util";
 
 class BotRepeat extends Plug {
   private repeatCache = new RepeatCache();
@@ -14,15 +14,13 @@ class BotRepeat extends Plug {
   }
   
   async install() {
-    require("./botPing").get(this).push((event: ContextEvent) => {
+    require("./botGroup").get(this).push((event: GroupEvent) => {
       let tag: CQTag<text> = event.tags[0];
       if (event.length !== 1 || tag.tagName !== "text") {
         return;
       }
       let msg = tag.get("text");
-      if (msg.startsWith(".")) {
-        return;
-      }
+      if (/^[-+$%^&*.]/.test(msg)) return;
       let {
         group_id,
         user_id,
@@ -35,7 +33,7 @@ class BotRepeat extends Plug {
   }
   
   async uninstall() {
-    require("./botPing").del(this);
+    require("./botGroup").del(this);
   }
 }
 

@@ -1,13 +1,15 @@
 <?xml version='1.0' encoding='UTF-8' standalone='yes' ?>
-<msg serviceID="1" templateID="123" action="web" brief="&#91;QQ小程序&#93;哔哩哔哩" sourceMsgId="0"
-     url="https://b23.tv/M1V2PW?share_medium=android&amp;amp;share_source=qq&amp;amp;bbid=XY9F2939944B83145F5119E3D5C2E6E4CE2F2&amp;amp;ts=1612493115712"
-     flag="0" adverSign="0" multiMsgFlag="0">
-  <item layout="2" advertiser_id="0" aid="0">
-    <picture cover="http://pubminishare-30161.picsz.qpic.cn/0ae13774-483e-4b9a-b672-06362cc9dfd0" w="0" h="0"/>
-    <title>哔哩哔哩</title>
-    <summary>《明日方舟》EP - 尽波澜</summary>
+<msg serviceID="35" templateID="-1" action="viewMultiMsg" brief="&#91;聊天记录&#93;"
+     m_fileName="6942840486383270380" tSum="2" m_fileSize="100" sourceMsgId="0"
+     url="" flag="3" adverSign="0" multiMsgFlag="0">
+  <item layout="1" advertiser_id="0" aid="0">
+    <title size="34" color="#000000"></title>
+    <title size="26" color="#000000">楚尧的聊天记录</title>
+    <title size="26" color="#000000">小仙女：这是我的胸，好看吗？
+      小仙女：&#91;图片&#93;
+    </title>
+    <hr hidden="false" style="0" />
+    <summary size="26" color="#808080">查看转发消息</summary>
   </item>
-  <source name="哔哩哔哩" icon="http://miniapp.gtimg.cn/public/appicon/432b76be3a548fc128acaa6c1ec90131_200.jpg"
-          url="https://b23.tv/M1V2PW?share_medium=android&amp;amp;share_source=qq&amp;amp;bbid=XY9F2939944B83145F5119E3D5C2E6E4CE2F2&amp;amp;ts=1612493115712"
-          action="web" a_actionData="tencent0://" appid="0"/>
+  <source name="聊天记录" icon="" action="" appid="0" />
 </msg>

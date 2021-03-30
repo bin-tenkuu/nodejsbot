@@ -14,7 +14,7 @@
     //     "declaration": true,                   /* Generates corresponding '.d.ts' file. */
     //     "declarationMap": true,                /* Generates a sourcemap for each corresponding '.d.ts' file. */
     //     "sourceMap": true,                     /* Generates corresponding '.map' file. */
-    "outDir": "./out",
+    //    "outDir": "./out",
     "rootDir": "./src",
     "resolveJsonModule": true,
     // "composite": true,                     /* Enable project compilation */

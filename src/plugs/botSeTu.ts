@@ -1,7 +1,7 @@
 import {CQ} from "go-cqwebsocket";
 import Plug from "../Plug";
 import {lolicon} from "../utils/Search";
-import {ContextEvent} from "../utils/Util";
+import {GroupEvent} from "../utils/Util";
 
 class CQBotLoLiSeTu extends Plug {
   private isCalling: boolean;
@@ -16,7 +16,7 @@ class CQBotLoLiSeTu extends Plug {
   }
   
   async install() {
-    require("./botPing").get(this).push((event: ContextEvent) => {
+    require("./botGroup").get(this).push((event: GroupEvent) => {
       let exec = /^[来來发發给給][张張个個幅点點份](?<r18>[Rr]18的?)?(?<keyword>.*?)?的?[色瑟][图圖]$/.exec(event.text);
       if (exec == null) {
         return;
@@ -32,14 +32,18 @@ class CQBotLoLiSeTu extends Plug {
       }
       console.log("开始色图", groups);
       let {
-        group_id: groupId,
-        sender: {
-          nickname: nickname,
-        }, user_id: userId,
-      } = event.context;
+        context: {
+          message_id: messageId,
+          group_id: groupId,
+          sender: {
+            nickname: nickname,
+          },
+          user_id: userId,
+        },
+        bot: bot,
+      } = event;
       event.stopPropagation();
       lolicon(groups.keyword, groups.r18).then(value => {
-        let bot = event.bot;
         if (value.code !== 0) {
           let message = CQBotLoLiSeTu.code(value.code);
           console.log(`开始色图异常：异常返回码(${value.code})：${message}`);
@@ -58,15 +62,15 @@ class CQBotLoLiSeTu extends Plug {
         Promise.all([
           bot.send_group_msg(groupId, "开始加载"),
           bot.send_group_forward_msg(groupId, [
-            CQ.nodeId(event.context.message_id),
+            CQ.nodeId(messageId),
             CQ.node(nickname, userId, `标题：${first.title}
 作者：${first.author}\n原图：www.pixiv.net/artworks/${first.pid}`),
             CQ.node(nickname, userId, CQ.escape(first.tags.join("\n"))),
           ]),
-          bot.send_group_msg(groupId, [CQ.image(first.url)]).then(msgID => {
+          bot.send_group_msg(groupId, [CQ.image(first.url)]).then((msgID) => {
             setTimeout(() => {
               this.cacheURL = first.url;
-              bot.delete_msg(msgID.message_id).then(() => {});
+              bot.delete_msg(msgID.message_id).catch(() => {});
             }, 1000 * 60);
           }).catch(() => {
             return bot.send_group_msg(groupId, "图片发送失败,疑似露点图").catch(() => {});
@@ -83,17 +87,16 @@ class CQBotLoLiSeTu extends Plug {
           }
         });
       }).catch(reason => {
-        event.bot.send_group_msg(groupId, "未知错误,或网络错误").catch(() => {});
-        event.bot.send_private_msg(2938137849, "搜图坏了").catch(() => {});
+        bot.send_group_msg(groupId, "未知错误,或网络错误").catch(() => {});
+        bot.send_private_msg(2938137849, "色图坏了").catch(() => {});
         console.log(reason);
         return this.uninstall();
       });
     });
-  
   }
   
   async uninstall() {
-    require("./botPing").del(this);
+    require("./botGroup").del(this);
   }
   
   static code(code: number) {
