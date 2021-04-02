@@ -1,5 +1,6 @@
 import fs from "fs";
 import Plug from "./Plug";
+import {logger} from "./utils/logger";
 
 class PlugLoader extends Plug {
   
@@ -11,19 +12,19 @@ class PlugLoader extends Plug {
   }
   
   async install(): Promise<void> {
-    console.info("开始加载插件列表");
+    logger.info("开始加载插件列表");
     let plugPath = `./plugs`;
-    let files = fs.readdirSync("./out/plugs", {
+    let files = fs.readdirSync("./src/plugs", {
       encoding: "utf-8",
     });
     for (let file of files) {
       let filePath = `${plugPath}/${file}`;
       let plug = require(filePath);
       if (plug instanceof Plug) {
-        console.info("fix: ", filePath);
+        logger.info("fix: ", filePath);
         continue;
       }
-      console.error("error: ", filePath);
+      logger.error("error: ", filePath);
     }
     module.children = [];
   }

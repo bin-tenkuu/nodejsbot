@@ -4,7 +4,7 @@ export function dice(times: number, max: number): { num: number, list: number[] 
   }
   let r = 0;
   let arr: number[] = new Array(times);
-  for (; times > 0;) {
+  while (times > 0) {
     let random = Math.ceil(Math.random() * max);
     r += random;
     times--;

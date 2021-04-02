@@ -11,8 +11,8 @@ class CQBotGroup extends Plug {
   
   constructor() {
     super(module);
-    this.name = "QQ群聊-回复";
-    this.description = "QQ群聊-回复";
+    this.name = "QQ群聊";
+    this.description = "QQ群聊";
     this.version = 0.5;
     this.helper = new Map();
     this.get(this).push((event) => {
@@ -37,8 +37,8 @@ class CQBotGroup extends Plug {
     return r;
   }
   
-  del<T extends Plug>($this: T): boolean {
-    return this.helper.delete($this);
+  del<T extends Plug>($this: T): void {
+    this.helper.set($this, []);
   }
   
   async install() {

@@ -9,7 +9,7 @@ PlugLoader.install().then(async () => {
   
   await require("./plugs/botPlugin").install();
   
-  
+  await require("./plugs/botSeTu").install();
   // await require("./plugs/botPixiv").install();
   
 }).then(() => {

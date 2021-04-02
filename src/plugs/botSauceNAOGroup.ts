@@ -1,6 +1,7 @@
 import {CQ} from "go-cqwebsocket";
 import {CQTag, image} from "go-cqwebsocket/out/tags";
 import Plug from "../Plug";
+import {logger} from "../utils/logger";
 
 import {sauceNAO} from "../utils/Search";
 import {GroupEvent} from "../utils/Util";
@@ -27,7 +28,7 @@ class CQBotSauceNAOGroup extends Plug {
       if (url === undefined) {
         return;
       }
-      console.log("开始搜图");
+      logger.info("开始搜图");
       let {
         bot: bot,
         context: {
@@ -42,7 +43,7 @@ class CQBotSauceNAOGroup extends Plug {
       sauceNAO(url).then(result => {
         // console.log(result);
         if (result.results.length === 0) {
-          console.log("搜图无结果");
+          logger.info("搜图无结果");
           bot.send_group_msg(groupId, [
             CQ.reply(messageId),
             CQ.at(userId),
@@ -81,8 +82,8 @@ class CQBotSauceNAOGroup extends Plug {
           ]).catch(() => {});
         });
       }).catch((err) => {
-        console.log("搜图出错");
-        console.error(err);
+        logger.warn("搜图出错");
+        logger.error(err);
         bot.send_group_msg(groupId, [
           CQ.reply(messageId),
           CQ.at(userId),
@@ -128,7 +129,7 @@ class CQBotSauceNAOGroup extends Plug {
       case 41:
         return `图库:Twitter\n上传者:${data["twitter_user_handle"]}\n原图:${url}`;
       default:
-        console.log(index, data);
+        logger.info(index, data);
         return `图库id:${index}\n具体信息未解析\n链接:${url}`;
     }
   }

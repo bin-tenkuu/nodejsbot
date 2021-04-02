@@ -11,8 +11,8 @@ class CQBotPrivate extends Plug {
   
   constructor() {
     super(module);
-    this.name = "QQ私聊-回复";
-    this.description = "QQ私聊-回复";
+    this.name = "QQ私聊";
+    this.description = "QQ私聊";
     this.version = 0.1;
     this.helper = new Map();
   }
@@ -30,8 +30,8 @@ class CQBotPrivate extends Plug {
     return r;
   }
   
-  del<T extends Plug>($this: T): boolean {
-    return this.helper.delete($this);
+  del<T extends Plug>($this: T): void {
+    this.helper.set($this, []);
   }
   
   async install() {

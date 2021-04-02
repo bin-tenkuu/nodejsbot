@@ -1,5 +1,6 @@
 import {CQ} from "go-cqwebsocket";
 import Plug from "../Plug";
+import {logger} from "../utils/logger";
 import {lolicon} from "../utils/Search";
 import {GroupEvent} from "../utils/Util";
 
@@ -26,11 +27,12 @@ class CQBotLoLiSeTu extends Plug {
         keyword: exec.groups?.keyword,
       };
       if (this.isCalling) {
+        logger.info("冷却中", groups);
         return;
       } else {
         this.isCalling = true;
       }
-      console.log("开始色图", groups);
+      logger.info("开始色图", groups);
       let {
         context: {
           message_id: messageId,
@@ -46,19 +48,19 @@ class CQBotLoLiSeTu extends Plug {
       lolicon(groups.keyword, groups.r18).then(value => {
         if (value.code !== 0) {
           let message = CQBotLoLiSeTu.code(value.code);
-          console.log(`开始色图异常：异常返回码(${value.code})：${message}`);
+          logger.warn(`开始色图异常：异常返回码(${value.code})：${message}`);
           bot.send_group_msg(groupId, message).catch(() => {});
           this.isCalling = false;
           return;
         }
         if (value.count < 1) {
           bot.send_group_msg(groupId, "色图数量不足").catch(() => {});
-          console.log(`开始色图异常：色图数量不足(${value.count})`);
+          logger.warn(`开始色图异常：色图数量不足(${value.count})`);
           this.isCalling = false;
           return;
         }
         let first = value.data[0];
-        console.log(`剩余次数：${value.quota}||剩余重置时间：${value.quota_min_ttl}s`);
+        logger.info(`剩余次数：${value.quota}||剩余重置时间：${value.quota_min_ttl}s`);
         Promise.all([
           bot.send_group_msg(groupId, "开始加载"),
           bot.send_group_forward_msg(groupId, [
@@ -78,7 +80,7 @@ class CQBotLoLiSeTu extends Plug {
         ]).catch(() => {}).finally(() => {
           let unlock = () => {
             this.isCalling = false;
-            console.log("解除锁定 %s", this.name);
+            logger.info("解除锁定 %s", this.name);
           };
           if (value.quota < 5) {
             setTimeout(unlock, 1000 * Number(value.quota_min_ttl));
@@ -89,7 +91,7 @@ class CQBotLoLiSeTu extends Plug {
       }).catch(reason => {
         bot.send_group_msg(groupId, "未知错误,或网络错误").catch(() => {});
         bot.send_private_msg(2938137849, "色图坏了").catch(() => {});
-        console.log(reason);
+        logger.info(reason);
         return this.uninstall();
       });
     });

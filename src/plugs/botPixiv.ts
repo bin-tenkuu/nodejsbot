@@ -2,6 +2,7 @@ import {CQ} from "go-cqwebsocket";
 import Plug from "../Plug";
 import {pixivCat} from "../utils/Search";
 import {GroupEvent} from "../utils/Util";
+import {logger} from "../utils/logger";
 
 class CQBotPixiv extends Plug {
   constructor() {
@@ -28,12 +29,12 @@ class CQBotPixiv extends Plug {
         let name = sender.card ?? sender.nickname;
         if (pid === undefined) {
           bot.send_group_msg(group_id, "pid获取失败").catch(() => {
-            console.log("文字消息发送失败");
+            logger.info("文字消息发送失败");
           });
           return;
         }
         pixivCat(pid).then(data => {
-          console.log(data);
+          logger.info(data);
           if (data.success) {
             let promise = data.multiple ?
                 bot.send_group_forward_msg(group_id, data.original_urls_proxy.map(url => {
@@ -43,10 +44,10 @@ class CQBotPixiv extends Plug {
                   CQ.node(name, user_id, [CQ.image(data.original_url_proxy)]),
                 ]);
             promise.catch(() => {
-              console.log("合并转发发送失败");
+              logger.warn("合并转发发送失败");
               return bot.send_group_msg(group_id, "带图合并转发发送失败");
             }).catch(() => {
-              console.log("文本发送失败");
+              logger.warn("文本发送失败");
             });
           } else {
             bot.send_group_msg(group_id, [CQ.text(data.error)]).catch(() => {});
@@ -56,7 +57,7 @@ class CQBotPixiv extends Plug {
             CQ.text("网络错误或内部错误"),
           ]);
         }).catch(() => {
-          console.log("文本发送失败");
+          logger.warn("文本发送失败");
         });
       }
     });

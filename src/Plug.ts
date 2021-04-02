@@ -1,3 +1,5 @@
+import {logger} from "./utils/logger";
+
 enum State {
   create,
   installed,
@@ -28,7 +30,7 @@ export default abstract class Plug {
         if (this._state === State.error) return;
         if (this._state === State.installed) return;
         await this.__proto__.install.call(this);
-        console.log("已启动 %s", this.toString());
+        logger.info("已启动 %s", this.toString());
         this._state = State.installed;
       } catch (e) {
         this._state = State.error;
@@ -41,7 +43,7 @@ export default abstract class Plug {
       try {
         if (this._state === State.uninstalled) return;
         await this.__proto__.uninstall.call(this);
-        console.log("已停止 %s", this.toString());
+        logger.info("已停止 %s", this.toString());
         if (this._state === State.error) return;
         this._state = State.uninstalled;
       } catch (e) {

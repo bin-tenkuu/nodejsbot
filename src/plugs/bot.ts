@@ -1,6 +1,7 @@
 import {CQWebSocket} from "go-cqwebsocket";
 import {adminId, cqws} from "../configs/config";
 import Plug from "../Plug";
+import {logger} from "../utils/logger";
 
 class CQBot extends Plug {
   public bot: CQWebSocket;
@@ -13,40 +14,38 @@ class CQBot extends Plug {
     this.bot = new CQWebSocket(cqws);
     this.bot.bind("on", {
       "socket.error": (_, code, err) => {
-        console.warn(`${Date()} 连接错误[${code}]: ${err}`);
+        logger.warn(`连接错误[${code}]: ${err}`);
       },
       "socket.open": (_, type) => {
-        console.log(`${Date()} 连接开启 ${type}`);
+        logger.info(`连接开启 ${type}`);
       },
       "socket.close": (_, code, desc, type) => {
-        console.log(`${Date()} 已关闭 ${type}[${code}]: ${desc}`);
+        logger.info(`已关闭 ${type}[${code}]: ${desc}`);
       },
     });
-    this.bot.messageSuccess = (ret, message) => console.log(
-        `${Date()} ${message.action}成功：${JSON.stringify(ret.data)}`);
-    this.bot.messageFail = (reason, message) => console.log(
-        `${Date()} ${message.action}失败[${reason.retcode}]:${reason.wording}`);
-    {
-      let first = true;
-      let twice = this.bot.bind("on", {
-        "socket.open": () => {
-          if (first) {
-            console.log("连接1次");
-            first = false;
-            return;
-          }
-          console.log("连接2次");
-          this.bot.send_private_msg(2938137849, "已上线").catch(() => {});
-          this.bot.unbind(twice);
-        },
-      });
-    }
+    this.bot.messageSuccess = (ret, message) => {
+      logger.info(`${message.action}成功：${JSON.stringify(ret.data)}`);
+    };
+    this.bot.messageFail = (reason, message) => {
+      logger.info(`${message.action}失败[${reason.retcode}]:${reason.wording}`);
+    };
   }
   
   install() {
     return new Promise<void>((resolve, reject) => {
-      this.bot.bind("onceAll", {
-        "socket.open": () => resolve(),
+      let first = true;
+      let twice = this.bot.bind("on", {
+        "socket.open": () => {
+          if (first) {
+            logger.info("连接1次");
+            first = false;
+            return;
+          }
+          logger.info("连接2次");
+          resolve();
+          this.bot.send_private_msg(2938137849, "已上线").catch(() => {});
+          this.bot.unbind(twice);
+        },
         "socket.close": () => reject(),
       });
       this.bot.connect();
@@ -60,11 +59,11 @@ class CQBot extends Plug {
         let first = true;
         let close = (fun: Function) => {
           if (first) {
-            console.log("断开1次");
+            logger.info("断开1次");
             first = false;
             return;
           }
-          console.log("断开2次");
+          logger.info("断开2次");
           fun();
         };
         this.bot.bind("on", {

@@ -1,6 +1,7 @@
 import Plug from "../Plug";
 import * as COC from "../utils/COCUtils";
 import {GroupEvent} from "../utils/Util";
+import {logger} from "../utils/logger";
 
 class CQBotCOC extends Plug {
   constructor() {
@@ -80,7 +81,7 @@ class CQBotCOC extends Plug {
         }
         default: {
           let op: never = v.op;
-          console.log(op);
+          logger.info(op);
           return sum;
         }
       }

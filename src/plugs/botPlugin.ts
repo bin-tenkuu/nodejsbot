@@ -20,6 +20,7 @@ class CQBotPlugin extends Plug {
       } = event;
       if (!event.isAdmin) return;
       if (!/^插件/.test(text)) return;
+      event.stopPropagation();
       let plugins = Object.values(Plug.plugs);
       switch (true) {
         case (/^插件列表/.test(text)): {
