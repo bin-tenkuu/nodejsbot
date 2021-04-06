@@ -4,7 +4,7 @@ import RepeatCache from "../utils/repeat";
 import {GroupEvent} from "../utils/Util";
 
 class BotRepeat extends Plug {
-  private repeatCache = new RepeatCache();
+  private repeatCache = new RepeatCache<string>();
   
   constructor() {
     super(module);

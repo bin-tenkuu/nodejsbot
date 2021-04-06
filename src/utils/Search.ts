@@ -28,11 +28,10 @@ export function sauceNAO(url: string): Promise<sauceNAOResult> {
 export function ascii2d(url: string) {
   return axios.post(`https://ascii2d.net/search/uri`, {
     uri: url,
-  })
-      .then(r => ({
-        colorURL: r.request.res.responseUrl,
-        colorDetail: r.data,
-      }));
+  }).then(r => ({
+    colorURL: r.request.res.responseUrl,
+    colorDetail: r.data,
+  }));
 }
 
 /**
@@ -59,7 +58,7 @@ export function lolicon(keyword?: string, r18 = false): Promise<loliconDate> {
       num: 1,
       size1200: true,
     },
-  }).then<loliconDate>(r => r.data);
+  }).then<loliconDate>(r => r.data as loliconDate);
 }
 
 export function toubiec(): Promise<toubiecType> {

@@ -5,7 +5,7 @@ import {paulzzhTouHou} from "../utils/Search";
 
 class CQBotTouHou extends Plug {
   private isRandom: boolean;
-  private header?: SocketHandle;
+  private header?: Partial<SocketHandle>;
   
   constructor() {
     super(module);

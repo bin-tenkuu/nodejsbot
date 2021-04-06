@@ -6,7 +6,7 @@ import {GroupEvent} from "../utils/Util";
 type FunList = ((this: void, event: GroupEvent) => void)
 
 class CQBotGroup extends Plug {
-  private header?: SocketHandle;
+  private header?: Partial<SocketHandle>;
   private readonly helper: Map<Plug, FunList[]>;
   
   constructor() {
@@ -30,7 +30,7 @@ class CQBotGroup extends Plug {
   
   get<T extends Plug>($this: T): FunList[] {
     let r = this.helper.get($this);
-    if (r == undefined) {
+    if (r === undefined) {
       r = [];
       this.set($this, r);
     }

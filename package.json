@@ -7,15 +7,15 @@
   },
   "main": "src/index.js",
   "files": [
-    "src/**/*.ts",
+    "src/**/*.js",
     "src/**/*.json"
   ],
   "type": "commonjs",
   "scripts": {
     "build": "tsc",
-    "debug": "node --inspect -r ts-node/register src/index.ts",
+    "test": "node --inspect src/index.js",
     "stop": "curl 127.0.0.1:40000/exit",
-    "start": "ts-node src/index.js"
+    "start": "node src/index.js"
   },
   "keywords": [
     "demo"
@@ -26,13 +26,11 @@
     "@types/node": "^14.14.25"
   },
   "dependencies": {
-    "autobind-decorator": "^2.4.0",
     "axios": "^0.21.1",
-    "go-cqwebsocket": "^2.2.2",
+    "go-cqwebsocket": "latest",
     "log4js": "^6.3.0",
     "node-cache": "^5.1.2",
     "reflect-metadata": "^0.1.13",
-    "ts-node": "^9.1.1",
     "xmldom-ts": "^0.3.1"
   },
   "private": true

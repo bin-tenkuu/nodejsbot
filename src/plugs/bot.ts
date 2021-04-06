@@ -24,10 +24,10 @@ class CQBot extends Plug {
       },
     });
     this.bot.messageSuccess = (ret, message) => {
-      logger.info(`${message.action}成功：${JSON.stringify(ret.data)}`);
+      logger.debug(`${message.action}成功：${JSON.stringify(ret.data)}`);
     };
     this.bot.messageFail = (reason, message) => {
-      logger.info(`${message.action}失败[${reason.retcode}]:${reason.wording}`);
+      logger.error(`${message.action}失败[${reason.retcode}]:${reason.wording}`);
     };
   }
   
@@ -49,6 +49,9 @@ class CQBot extends Plug {
         "socket.close": () => reject(),
       });
       this.bot.connect();
+      process.on("exit", () => {
+        this.bot.disconnect();
+      });
     });
   }
   

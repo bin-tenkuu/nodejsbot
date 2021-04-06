@@ -33,4 +33,4 @@ class PlugLoader extends Plug {
   }
 }
 
-export = new PlugLoader();
+export = new PlugLoader().install();

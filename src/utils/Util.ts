@@ -1,6 +1,5 @@
 import {CQWebSocket} from "go-cqwebsocket";
-import {CQEvent} from "go-cqwebsocket/out/event-bus";
-import {GroupMessage, PrivateMessage} from "go-cqwebsocket/out/Interfaces";
+import {CQEvent, GroupMessage, PrivateMessage} from "go-cqwebsocket/out/Interfaces";
 import {at, CQTag} from "go-cqwebsocket/out/tags";
 import {adminGroup, adminId} from "../configs/config";
 

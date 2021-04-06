@@ -1,7 +1,7 @@
 import Plug from "../Plug";
 import * as COC from "../utils/COCUtils";
-import {GroupEvent} from "../utils/Util";
 import {logger} from "../utils/logger";
+import {GroupEvent} from "../utils/Util";
 
 class CQBotCOC extends Plug {
   constructor() {
@@ -14,7 +14,7 @@ class CQBotCOC extends Plug {
   async install() {
     require("./botGroup").get(this).push((event: GroupEvent) => {
       let dice = /^\.d +([^ ]+)/.exec(event.text)?.[1];
-      if (!dice) {
+      if (dice === undefined) {
         return;
       }
       event.stopPropagation();

@@ -1,6 +1,4 @@
 import http from "http";
-
-import url from "url";
 import Plug from "../Plug";
 import {logger} from "../utils/logger";
 
@@ -18,19 +16,19 @@ class HttpOption extends Plug {
   async install() {
     let server = http.createServer((req, res) => {
       res.setHeader("Content-type", "text/html; charset=utf-8");
-      logger.info(`${Date()} 网页 '${req.url}' 收到请求`);
+      logger.info(`网页 '${req.url}' 收到请求`);
       logger.info(`代理:\t${req.headers["x-forwarded-for"]}`);
-      logger.info(`远程地址:\t${req.socket.remoteAddress}`);
-      if (req.url == null) {
+      let {
+        remoteFamily: family,
+        remoteAddress: address,
+        remotePort: port,
+      } = req.socket;
+      logger.info(`远程地址:\t${family} -> ${address} : ${port}`);
+      if (req.url !== "/exit") {
         res.end("<a href='./exit'>http://127.0.0.1:40000/exit</a>");
         return;
       }
-      let query = url.parse(req.url);
-      if (query.pathname !== "/exit") {
-        res.end("<a href='./exit'>http://127.0.0.1:40000/exit</a>");
-        return;
-      }
-      res.end("开始退出");
+      res.end("开始退出\n");
       Promise.all(Object.values(Plug.plugs).map((p) => p.uninstall())).then(() => {
         logger.info(">>>>>>>>>> 全部卸载完成 <<<<<<<<<<");
         setTimeout(() => {

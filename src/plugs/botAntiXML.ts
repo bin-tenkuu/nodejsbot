@@ -6,7 +6,7 @@ import Plug from "../Plug";
 
 
 class CQAntiXML extends Plug {
-  private header?: SocketHandle;
+  private header?: Partial<SocketHandle>;
   
   constructor() {
     super(module);

@@ -45,6 +45,9 @@ bot.on("message.private", (event, message, tags) => {
     bot.disconnect();
   }, 3000);
 });
-
-
+bot.send_group_forward_msg(adminGroup, [
+  CQ.node("bin", 2938137849, a),
+]);
+bot.send_group_msg(adminGroup, []).catch(err => console.log(err));
 bot.connect();
+bot.disconnect();

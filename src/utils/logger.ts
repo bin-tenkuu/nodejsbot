@@ -1,21 +1,30 @@
-import {configure} from "log4js";
+import {BaseLayout, configure, ConsoleAppender, DateFileAppender, MessagePassThroughLayout} from "log4js";
 
 export var logger = configure({
   appenders: {
-    consoleLog: {
+    consoleLog: <ConsoleAppender>{
       type: "console",
+      layout: <MessagePassThroughLayout>{
+        type: "messagePassThrough",
+      },
     },
-    fileLog: {
-      type: "file",
-      filename: "./logs/logs.log",
-      backups: 3,
+    dataLog: <DateFileAppender>{
+      type: "dateFile",
+      filename: "./logs/date.log",
+      pattern: "_yyyy-MM-dd",
+      alwaysIncludePattern: true,
+      keepFileExt: true,
+      layout: <BaseLayout>{
+        type: "basic",
+      },
     },
   },
   categories: {
-    default: {
-      appenders: ["consoleLog", "fileLog"],
+    "default": {
+      appenders: ["consoleLog", "dataLog"],
       level: "all",
+      enableCallStack: true,
     },
   },
-}).getLogger();
+}).getLogger("default");
 
