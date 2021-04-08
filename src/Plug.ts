@@ -54,6 +54,7 @@ export default abstract class Plug {
       }
     };
     this._state = State.uninstalled;
+    logger.debug("fix:\t" + this.module.filename);
   }
   
   abstract install(): Promise<void>
@@ -61,19 +62,23 @@ export default abstract class Plug {
   abstract uninstall(): Promise<void>
   
   upgradeSelf(): this {
-    delete require.cache[this.module.id];
+    Reflect.deleteProperty(require.cache, this.module.id);
     return require(this.module.id);
   }
   
   toString() {
-    return `${this.constructor.name} {name: ${this.name}, version: ${this.version}}`;
+    return `{name: ${this.name}, version: ${this.version}}\t-> ${this.constructor.name}`;
   }
   
   get installed() {
     return this._state === State.installed;
   }
   
+  public get state(): string {
+    return State[this._state];
+  }
+  
   toJSON() {
-    return {"name": this.name, "version": this.version, "State": State[this._state]};
+    return {"name": this.name, "version": this.version, "State": this.state};
   }
 }

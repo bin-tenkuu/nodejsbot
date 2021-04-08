@@ -10,7 +10,6 @@ class HttpOption extends Plug {
     this.name = "网页指令";
     this.description = "通过网页链接达到控制效果";
     this.version = 0.6;
-    
   }
   
   async install() {
@@ -31,9 +30,6 @@ class HttpOption extends Plug {
       res.end("开始退出\n");
       Promise.all(Object.values(Plug.plugs).map((p) => p.uninstall())).then(() => {
         logger.info(">>>>>>>>>> 全部卸载完成 <<<<<<<<<<");
-        setTimeout(() => {
-          process.exit();
-        }, 2000);
       });
     }).listen(40000);
     logger.info("快速结束已启动,点击 http://127.0.0.1:40000");

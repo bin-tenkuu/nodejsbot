@@ -14,24 +14,24 @@ class CQBotPrivate extends Plug {
     this.name = "QQ私聊";
     this.description = "QQ私聊";
     this.version = 0.1;
-    this.helper = new Map();
+    this.helper = new Map<Plug, FunList[]>();
   }
   
-  set<T extends Plug>($this: T, list: FunList[]): void {
-    this.helper.set($this, list);
+  set(plug: Plug, list: FunList[]): void {
+    this.helper.set(plug, list);
   }
   
-  get<T extends Plug>($this: T): FunList[] {
-    let r = this.helper.get($this);
+  get(plug: Plug): FunList[] {
+    let r = this.helper.get(plug);
     if (r === undefined) {
       r = [];
-      this.set($this, r);
+      this.set(plug, r);
     }
     return r;
   }
   
-  del<T extends Plug>($this: T): void {
-    this.helper.set($this, []);
+  del(plug: Plug): void {
+    this.helper.set(plug, []);
   }
   
   async install() {

@@ -16,11 +16,11 @@ class CQBot extends Plug {
       "socket.error": (_, code, err) => {
         logger.warn(`连接错误[${code}]: ${err}`);
       },
-      "socket.open": (_, type) => {
-        logger.info(`连接开启 ${type}`);
+      "socket.open": (_) => {
+        logger.info(`连接开启`);
       },
-      "socket.close": (_, code, desc, type) => {
-        logger.info(`已关闭 ${type}[${code}]: ${desc}`);
+      "socket.close": (_, code, desc) => {
+        logger.info(`已关闭 [${code}]: ${desc}`);
       },
     });
     this.bot.messageSuccess = (ret, message) => {
@@ -33,18 +33,11 @@ class CQBot extends Plug {
   
   install() {
     return new Promise<void>((resolve, reject) => {
-      let first = true;
-      let twice = this.bot.bind("on", {
+      this.bot.bind("onceAll", {
         "socket.open": () => {
-          if (first) {
-            logger.info("连接1次");
-            first = false;
-            return;
-          }
-          logger.info("连接2次");
-          resolve();
+          logger.info("连接");
           this.bot.send_private_msg(2938137849, "已上线").catch(() => {});
-          this.bot.unbind(twice);
+          resolve();
         },
         "socket.close": () => reject(),
       });
@@ -58,26 +51,16 @@ class CQBot extends Plug {
   async uninstall() {
     await this.bot.send_private_msg(adminId, "即将下线").catch(() => {});
     return new Promise<void>((resolve, reject) => {
-      {
-        let first = true;
-        let close = (fun: Function) => {
-          if (first) {
-            logger.info("断开1次");
-            first = false;
-            return;
-          }
-          logger.info("断开2次");
-          fun();
-        };
-        this.bot.bind("on", {
-          "socket.close": () => {
-            close(resolve);
-          },
-          "socket.error": () => {
-            close(reject);
-          },
-        });
-      }
+      this.bot.bind("on", {
+        "socket.close": () => {
+          logger.info("断开");
+          resolve();
+        },
+        "socket.error": () => {
+          logger.info("断开");
+          reject();
+        },
+      });
       this.bot.disconnect();
     });
   }

@@ -1,34 +1,25 @@
-type Prototype = {
-  constructor: Function
-  __proto__: Prototype
-} & any
+import {IncomingMessage, Server, ServerResponse} from "http";
+import "reflect-metadata";
 
-type Constructor = { new(...args: any[]): {} };
+type Constructor = { new(...args: any[]): any };
+type TypedFunction<P extends any[] = any[], R = any> = (...args: P) => R;
+type FunctionDecorator<T extends TypedFunction = TypedFunction> = <F extends T>(target: Object,
+    propertyKey: PropertyKey, descriptor: TypedPropertyDescriptor<F>) => void;
+type ConstructorDecorator<T extends Constructor = Constructor> = (constructor: T) => T | void;
+type PropertyDecorator = (target: Object, propertyKey: PropertyKey) => void;
+type ParameterDecorator = (target: Object, propertyKey: PropertyKey, parameterIndex: number) => void;
 
-interface FunctionAnnotation {
-  <T>(target: Prototype, propertyKey: PropertyKey, descriptor: TypedPropertyDescriptor<T>): void;
-}
-
-interface ConstructorAnnotation {
-  <T extends Constructor>(constructor: T): T;
-}
-
-interface PropertyAnnotation {
-  (target: Prototype, propertyKey: PropertyKey): void;
-}
-
-interface ParameterAnnotation {
-  (target: Prototype, propertyKey: PropertyKey, parameterIndex: number): void;
-}
-
-export function logFuncCall(): FunctionAnnotation {
-  return <FunctionAnnotation>function (target, propertyKey, descriptor) {
+export function logFuncCall(): FunctionDecorator {
+  return function (target, propertyKey, descriptor) {
     if (typeof descriptor.value === "function") {
       let value: Function = descriptor.value;
       // @ts-ignore
-      descriptor.value = function (...args: any) {
-        // @ts-ignore
-        value.logParam?.forEach(i => console.log(`${Date()} 第${i}参数: ${args[i]}`));
+      descriptor.value = function (...args: any[]) {
+        let metadata = Reflect.getMetadata("custom:log", target) ?? {};
+        let array: boolean[] = metadata[propertyKey as any] ?? [];
+        array.filter(v => v).forEach((v, i) => {
+          console.log(`${Date()} ${target.constructor.name}["${String(propertyKey)}"][param at ${i}] = ${args[i]}`);
+        });
         console.log(`${Date()} ${target.constructor.name}["${String(propertyKey)}"] be Called`);
         return value.call(this, ...args);
       };
@@ -50,31 +41,18 @@ export function logFuncCall(): FunctionAnnotation {
   };
 }
 
-/*// 匿名写法
- export function logCreate(): ConstructorAnnotation {
- return <T extends Constructor>(constructor: T) => {
- return <T>class {
- constructor(...args: any[]) {
- console.log(`${Date()} ${constructor.name} new an instance`);
- return new constructor(...args);
- }
- };
- };
- }//*/
-
-// 继承写法
-export function logCreate(): ConstructorAnnotation {
-  return <T extends Constructor>(constructor: T) => {
+export function logCreate(name?: string): ConstructorDecorator {
+  return (constructor) => {
     return class extends constructor {
       constructor(...args: any[]) {
-        console.log(`${Date()} ${constructor.name} new an instance`);
         super(...args);
+        console.log(`${Date()} ${name ?? this.constructor.name} newed an instance`);
       }
     };
   };
-}//*/
+}
 
-export function logProp(): PropertyAnnotation {
+export function logProp(): PropertyDecorator {
   return function (target, propertyKey) {
     let s = "_" + String(propertyKey);
     Object.defineProperty(target, propertyKey, {
@@ -92,36 +70,70 @@ export function logProp(): PropertyAnnotation {
   };
 }
 
-export function logParam(): ParameterAnnotation {
+export function logParam(): ParameterDecorator {
   return function (target, propertyKey, parameterIndex) {
-    target[propertyKey].logParam = [...target[propertyKey].logParam ?? [], parameterIndex];
+    let metadata: { [k in PropertyKey]?: boolean[] } = Reflect.getMetadata("custom:log", target) ?? {};
+    let array = metadata[propertyKey as any] ?? [];
+    array[parameterIndex] = true;
+    metadata[propertyKey as any] = array;
+    Reflect.defineMetadata("custom:log", metadata, target);
   };
 }
 
-/** (运行时)当父类中没有对应方法时报错 */
-export function override(): FunctionAnnotation {
+export function RequestMapping(url: string): FunctionDecorator<TypedFunction<[IncomingMessage, ServerResponse, URL], void>> {
   return (target, propertyKey) => {
-    if (target.__proto__?.[propertyKey] === undefined) {
-      console.error(`Method "${String(propertyKey)}" Not A Override Function`);
-    }
+    let metadata = Reflect.getMetadata("http", target) ?? {};
+    metadata[url] = propertyKey;
+    Reflect.defineMetadata("http", metadata, target);
   };
 }
 
-export function autoCallSuper(): FunctionAnnotation {
-  return (target, propertyKey, descriptor) => {
-    if (typeof descriptor.value === "function") {
-      let value = descriptor.value;
-      if (typeof target.__proto__?.[propertyKey] === "function") {
-        // @ts-ignore
-        descriptor.value = function (...args: any) {
-          target.__proto__[propertyKey].apply(this, args);
-          return value.apply(this, args);
-        };
-      } else {
-        console.error(`${target.__proto__.constructor.name} Have Not A Function Called "${String(propertyKey)}"`);
+export function CreatServer(port: number, host = "0.0.0.0"): ConstructorDecorator {
+  return (constructor) => {
+    return class extends constructor {
+      constructor(...args: any[]) {
+        super(...args);
+        new Server((req, res) => {
+          res.setHeader("Content-type", "text/html; charset=utf-8");
+          let url = req.url ?? "";
+          let {remoteAddress, remotePort} = req.socket;
+          let parse = new URL(url, `http://${remoteAddress}:${remotePort}`);
+          let metadata = Reflect.getMetadata("http", this.constructor.prototype) ?? {};
+          let key: string | undefined = metadata[parse.pathname] ?? metadata["404"];
+          if (key === undefined) {
+            key = metadata["404"];
+          }
+          console.log(`${parse.pathname} 命中解析：${key}`);
+          if (key === undefined) {
+            res.end();
+            return;
+          }
+          this[key]?.(req, res, parse);
+        }).listen(port, host);
       }
-    } else {
-      console.warn(`"callSuper" Annotation Only Used On NormalFunction, Not Getter/Setter`);
-    }
+    };
   };
+}
+
+{
+  @logCreate("Test")
+  @CreatServer(40000)
+  class Test {
+    constructor() {
+    }
+    
+    @logFuncCall()
+    @RequestMapping("/index")
+    fun(req: IncomingMessage, res: ServerResponse, url: URL): void {
+      res.end(url.toJSON());
+    }
+    
+    @logFuncCall()
+    @RequestMapping("404")
+    404(req: IncomingMessage, res: ServerResponse) {
+      res.end("这是一个404页面");
+    }
+  }
+  
+  new Test();
 }

@@ -11,7 +11,7 @@ export var logger = configure({
     dataLog: <DateFileAppender>{
       type: "dateFile",
       filename: "./logs/date.log",
-      pattern: "_yyyy-MM-dd",
+      pattern: "yyyy-MM-dd",
       alwaysIncludePattern: true,
       keepFileExt: true,
       layout: <BaseLayout>{

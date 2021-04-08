@@ -1,3 +1,5 @@
+import {logger} from "./utils/logger";
+
 Promise.resolve().then(async () => {
   await require("./plugs/httpOption").install();
   await require("./plugs/bot").install();
@@ -18,5 +20,6 @@ Promise.resolve().then(async () => {
   await require("./plugs/botTouHouPNG");
   await require("./plugs/test");
 }).then(() => {
+  logger.info("安装完成");
   module.children = [];
 });

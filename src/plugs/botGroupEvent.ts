@@ -19,9 +19,16 @@ class CQBotGroupEvent extends Plug {
     this.header = bot.bind("on", {
       "notice.group_increase": (event, message) => {
         event.stopPropagation();
-        let str = `@${message.user_id} 被管理员{@${message.operator_id}} ${
-            message.sub_type === "approve" ? "同意" : "邀请"
-        } 入群`;
+        let str;
+        if (message.operator_id === 0) {
+          str = `@${message.user_id} ${
+              message.sub_type === "approve" ? "欢迎" : "被邀请"
+          }入群`;
+        } else {
+          str = `@${message.user_id} 被管理员{@${message.operator_id}} ${
+              message.sub_type === "approve" ? "同意" : "邀请"
+          }入群`;
+        }
         bot.send_group_msg(message.group_id, str).catch(() => { });
       },
       "notice.group_decrease": (event, message) => {
@@ -34,7 +41,7 @@ class CQBotGroupEvent extends Plug {
         if (message.sub_type === "kick") {
           str = `@${message.user_id} 被 管理员{@${message.operator_id}} 踢出本群`;
         } else {
-          str = `@${message.user_id} 主动离开 本群`;
+          str = `@${message.user_id} 主动离开本群`;
         }
         bot.send_group_msg(message.group_id, str).catch(() => { });
       },
