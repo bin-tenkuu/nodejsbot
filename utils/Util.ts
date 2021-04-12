@@ -1,7 +1,7 @@
 import {CQWebSocket} from "go-cqwebsocket";
 import {CQEvent, GroupMessage, PrivateMessage} from "go-cqwebsocket/out/Interfaces";
 import {at, CQTag} from "go-cqwebsocket/out/tags";
-import {adminGroup, adminId} from "../../config/config.json";
+import {adminGroup, adminId} from "../config/config.json";
 
 class ContextEvent<T> {
   public readonly bot: CQWebSocket;

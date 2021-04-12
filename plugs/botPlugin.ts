@@ -1,5 +1,5 @@
 import {CQ} from "go-cqwebsocket";
-import {adminId} from "../../config/config.json";
+import {adminId} from "../config/config.json";
 import Plug from "../Plug";
 import {PrivateEvent} from "../utils/Util";
 

@@ -7,8 +7,10 @@
   },
   "main": "src/index.js",
   "files": [
-    "src/**/*.js",
-    "src/**/*.json"
+    "config/*",
+    "plugs/*",
+    "utils/*",
+    "*.js"
   ],
   "type": "commonjs",
   "scripts": {

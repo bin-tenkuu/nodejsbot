@@ -17,7 +17,7 @@
     //     "declarationMap": true,                /* Generates a sourcemap for each corresponding '.d.ts' file. */
     //     "sourceMap": true,                     /* Generates corresponding '.map' file. */
     //    "outDir": "./out",
-    "rootDir": "./src",
+    //    "rootDir": "./src",
     "resolveJsonModule": true,
     // "composite": true,                     /* Enable project compilation */
     // "tsBuildInfoFile": "./",               /* Specify file to store incremental compilation information */
@@ -67,7 +67,7 @@
     "forceConsistentCasingInFileNames": true
   },
   "include": [
-    "./src/**/*",
-    "./src/**/*.json"
+    "**/*.ts",
+    "config/*.json"
   ]
 }

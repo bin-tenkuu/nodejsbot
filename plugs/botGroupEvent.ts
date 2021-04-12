@@ -1,6 +1,6 @@
 import {CQWebSocket} from "go-cqwebsocket";
 import {SocketHandle} from "go-cqwebsocket/out/Interfaces";
-import {adminId} from "../../config/config.json";
+import {adminId} from "../config/config.json";
 import Plug from "../Plug";
 
 class CQBotGroupEvent extends Plug {
