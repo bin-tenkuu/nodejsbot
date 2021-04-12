@@ -1,3 +1,4 @@
+import {CQ} from "go-cqwebsocket";
 import Plug from "../Plug";
 import * as COC from "../utils/COCUtils";
 import {logger} from "../utils/logger";
@@ -12,7 +13,8 @@ class CQBotCOC extends Plug {
   }
   
   async install() {
-    require("./botGroup").get(this).push((event: GroupEvent) => {
+    let botGroup = require("./botGroup");
+    botGroup.get(this).push((event: GroupEvent) => {
       let dice = /^\.d +([^ ]+)/.exec(event.text)?.[1];
       if (dice === undefined) {
         return;
@@ -24,10 +26,13 @@ class CQBotCOC extends Plug {
       }
       event.bot.send_group_msg(event.context.group_id, CQBotCOC.dice(dice)).catch(() => {});
     });
+    botGroup.setHelper("跑团骰子", [CQ.text(".d (表达式) 其他")]);
   }
   
   async uninstall() {
-    require("./botGroup").del(this);
+    let botGroup = require("./botGroup");
+    botGroup.del(this);
+    botGroup.delHelper("跑团骰子");
   }
   
   private static dice(str: string): string {
@@ -58,7 +63,7 @@ class CQBotCOC extends Plug {
         };
       }
     });
-  
+    
     let preRet = handles.filter(v => v.list).map((v) => {
       return `${v.origin}：[${v.list!.join()}]=${v.num}\n`;
     }).join("");

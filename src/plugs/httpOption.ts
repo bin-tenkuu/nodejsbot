@@ -1,4 +1,4 @@
-import http from "http";
+import * as http from "http";
 import Plug from "../Plug";
 import {logger} from "../utils/logger";
 

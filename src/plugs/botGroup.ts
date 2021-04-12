@@ -1,5 +1,5 @@
 import {CQ, CQWebSocket} from "go-cqwebsocket";
-import {SocketHandle} from "go-cqwebsocket/out/Interfaces";
+import {message, messageNode, SocketHandle} from "go-cqwebsocket/out/Interfaces";
 import Plug from "../Plug";
 import {GroupEvent} from "../utils/Util";
 
@@ -7,29 +7,46 @@ type FunList = ((this: void, event: GroupEvent) => void)
 
 class CQBotGroup extends Plug {
   private header?: Partial<SocketHandle>;
-  private readonly helper: Map<Plug, FunList[]>;
+  private readonly handler: Map<Plug, FunList[]>;
+  private readonly helper: Map<string, message>;
   
   constructor() {
     super(module);
     this.name = "QQ群聊";
     this.description = "QQ群聊";
     this.version = 0.5;
+    this.handler = new Map();
     this.helper = new Map();
     this.get(this).push((event) => {
-      if (/^为什么呢$/.test(event.text)) {
-        event.bot.send_group_msg(event.context.group_id, "是啊，为什么呢，我也在寻找原因呢").catch(() => {});
-        return true;
-      }
-      return false;
+      if (!/^为什么呢$/.test(event.text) || event.isAt) return;
+      event.stopPropagation();
+      event.bot.send_group_msg(event.context.group_id, "是啊，为什么呢，我也在寻找原因呢").catch(() => {});
+      return;
+    }, event => {
+      if (!event.isAtMe || !/^(?:help|帮助)/.test(event.text)) return;
+      event.stopPropagation();
+      let msgNode: messageNode[] = [];
+      this.helper.forEach((value, key) => {
+        msgNode.push(CQ.node(key, event.bot.qq, value));
+      });
+      event.bot.send_group_forward_msg(event.context.group_id, msgNode);
     });
   }
   
+  setHelper(name: string, node: message): void {
+    this.helper.set(name, node);
+  }
+  
+  delHelper(name: string): void {
+    this.helper.delete(name);
+  }
+  
   set(plug: Plug, list: FunList[]): void {
-    this.helper.set(plug, list);
+    this.handler.set(plug, list);
   }
   
   get(plug: Plug): FunList[] {
-    let r = this.helper.get(plug);
+    let r = this.handler.get(plug);
     if (r === undefined) {
       r = [];
       this.set(plug, r);
@@ -38,7 +55,7 @@ class CQBotGroup extends Plug {
   }
   
   del(plug: Plug): void {
-    this.helper.set(plug, []);
+    this.handler.set(plug, []);
   }
   
   async install() {
@@ -47,7 +64,7 @@ class CQBotGroup extends Plug {
     this.header = bot.bind("on", {
       "message.group": (event, context, tags) => {
         let contextEvent = new GroupEvent(bot, context, tags, event);
-        this.helper.forEach(funList => funList.forEach(func => func(contextEvent)));
+        this.handler.forEach(funList => funList.forEach(func => func(contextEvent)));
         // console.log(contextEvent.isAtMe, event.isCanceled);
         if (event.isCanceled || !contextEvent.isAtMe) {
           return;

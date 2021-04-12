@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "基础配置文件",
+  "description": "基础配置文件",
+  "definitions": {
+  },
+  "type": "object",
+  "properties": {
+    "CQws": {
+      "description": "基础连接配置",
+      "type": "object",
+      "properties": {
+        "baseUrl": {
+          "type": "string",
+          "description": "基础链接",
+          "pattern": "^wss?://[-_%\\w\\d.]+(:\\d)?"
+        },
+        "accessToken": {
+          "type": "string",
+          "description": "访问密钥",
+          "default": ""
+        }
+      },
+      "required": ["baseUrl"]
+    },
+    "adminId": {
+      "description": "管理员qq号",
+      "type": "number",
+      "default": 0,
+      "maximum": 90000000000
+    },
+    "adminGroup": {
+      "description": "管理qq群号",
+      "type": "number",
+      "default": 0,
+      "maximum": 90000000000
+    },
+    "SauceNAOkey": {
+      "description": "SauceNAO 的 key",
+      "type": "string",
+      "pattern": "^[\\w\\d]{40}$"
+    },
+    "SeTuApiKey": {
+      "description": "LoliAPI 的 key",
+      "type": "string",
+      "pattern": "^[\\w\\d]{22}$"
+    }
+  },
+  "required": [
+    "CQws"
+  ]
+}

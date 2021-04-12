@@ -14,7 +14,8 @@ class CQBotPixiv extends Plug {
   }
   
   async install() {
-    require("./botGroup").get(this).push((event: GroupEvent) => {
+    let botGroup = require("./botGroup");
+    botGroup.get(this).push((event: GroupEvent) => {
       let exec = /^看{1,2}p站(?<pid>\d+)(?:-(?<p>\d+))?$/.exec(event.text);
       if (exec == null) return;
       event.stopPropagation();
@@ -28,10 +29,11 @@ class CQBotPixiv extends Plug {
         context: {
           group_id,
           user_id,
-          sender,
+          sender: {
+            nickname,
+          },
         },
       } = event;
-      let name = sender.card ?? sender.nickname;
       if (pid === undefined) {
         bot.send_group_msg(group_id, "pid获取失败").catch(() => {
           logger.warn("文字消息发送失败");
@@ -52,25 +54,25 @@ class CQBotPixiv extends Plug {
             } = data.original_urls_proxy;
             if (p === undefined) {
               promise = bot.send_group_forward_msg(group_id, [
-                CQ.node(name, user_id, `这个作品ID中有${length}张图片,需要指定第几张才能正确显示`),
-                CQ.node(name, user_id, [CQ.image(p0)]),
-                CQ.node(name, user_id, [CQ.image(p1)]),
+                CQ.node(nickname, user_id, `这个作品ID中有${length}张图片,需要指定第几张才能正确显示`),
+                CQ.node(nickname, user_id, [CQ.image(p0)]),
+                CQ.node(nickname, user_id, [CQ.image(p1)]),
               ]);
             } else if (+p >= length || +p === 0) {
               promise = bot.send_group_forward_msg(group_id, [
-                CQ.node(name, user_id, `这个作品ID中只有${length}张图片,在范围内才能正确显示`),
-                CQ.node(name, user_id, [CQ.image(data.original_urls_proxy[length - 1])]),
-                CQ.node(name, user_id, [CQ.image(data.original_urls_proxy[length - 2])]),
+                CQ.node(nickname, user_id, `这个作品ID中只有${length}张图片,在范围内才能正确显示`),
+                CQ.node(nickname, user_id, [CQ.image(data.original_urls_proxy[length - 1])]),
+                CQ.node(nickname, user_id, [CQ.image(data.original_urls_proxy[length - 2])]),
               ]);
             } else {
               promise = bot.send_group_forward_msg(group_id, [
-                CQ.node(name, user_id, `这个作品ID中有${length}张图片,这是第${p}张图片`),
-                CQ.node(name, user_id, [CQ.image(data.original_urls_proxy[+p])]),
+                CQ.node(nickname, user_id, `这个作品ID中有${length}张图片,这是第${p}张图片`),
+                CQ.node(nickname, user_id, [CQ.image(data.original_urls_proxy[+p])]),
               ]);
             }
           } else {
             promise = bot.send_group_forward_msg(group_id, [
-              CQ.node(name, user_id, [CQ.image(data.original_url_proxy)]),
+              CQ.node(nickname, user_id, [CQ.image(data.original_url_proxy)]),
             ]);
           }
           promise.catch(() => {
@@ -88,10 +90,13 @@ class CQBotPixiv extends Plug {
         logger.warn("文本发送失败");
       });
     });
+    botGroup.setHelper("加载p站图片", [CQ.text("看p站(pid)(-p)")]);
   }
   
   async uninstall() {
-    require("./botGroup").del(this);
+    let botGroup = require("./botGroup");
+    botGroup.del(this);
+    botGroup.delHelper("加载p站图片");
   }
 }
 

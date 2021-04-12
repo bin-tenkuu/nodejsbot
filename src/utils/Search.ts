@@ -1,5 +1,5 @@
 import _axios from "axios";
-import {SauceNAOkey, SeTuApiKey} from "../configs/config";
+import {SauceNAOkey, SeTuApiKey} from "../../config/config.json";
 import {loliconDate, paulzzhTouHouType, pixivCatType, sauceNAOResult, toubiecType} from "./SearchType";
 
 export const axios = _axios.create({

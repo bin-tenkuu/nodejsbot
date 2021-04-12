@@ -16,7 +16,8 @@ class CQBotSauceNAOGroup extends Plug {
   }
   
   async install() {
-    require("./botGroup").get(this).push((event: GroupEvent) => {
+    let botGroup = require("./botGroup");
+    botGroup.get(this).push((event: GroupEvent) => {
       if (!/^\.搜图/.test(event.text)) {
         return;
       }
@@ -92,10 +93,13 @@ class CQBotSauceNAOGroup extends Plug {
       });
       event.stopPropagation();
     });
+    botGroup.setHelper("搜图", [CQ.text(".搜图 [图片]")]);
   }
   
   async uninstall() {
-    require("./botGroup").del(this);
+    let botGroup = require("./botGroup");
+    botGroup.del(this);
+    botGroup.delHelper("搜图");
   }
   
   /**

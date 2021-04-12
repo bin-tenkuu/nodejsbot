@@ -11,6 +11,7 @@ Promise.resolve().then(async () => {
   await require("./plugs/botEvents").install();
   await require("./plugs/botFangCheHui");
   await require("./plugs/botGroupEvent").install();
+  await require("./plugs/botGroupSender");
   await require("./plugs/botPixiv").install();
   await require("./plugs/botPlugin").install();
   await require("./plugs/botPrivate").install();

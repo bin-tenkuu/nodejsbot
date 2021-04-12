@@ -3,12 +3,13 @@
 /.gradle/
 /.idea/
 /test/
-/src/configs/config.ts
 
-*.tgz
-*.js
-/test.js
-/test2.js
 /nodejsbot-1.0.0.tgz
-/out
 /logs
+/config
+!/config/schema/
+/config/config.json
+/db
+*.js
+/*.json
+/package-lock.json

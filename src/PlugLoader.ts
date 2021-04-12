@@ -1,4 +1,4 @@
-import fs from "fs";
+import * as fs from "fs";
 import Plug from "./Plug";
 import {logger} from "./utils/logger";
 
@@ -33,4 +33,4 @@ class PlugLoader extends Plug {
   }
 }
 
-export default new PlugLoader().install();
+export default new PlugLoader();
