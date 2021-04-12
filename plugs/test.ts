@@ -1,7 +1,7 @@
-import Plug from "../Plug";
+import {Plug} from "../Plug";
 import {logger} from "../utils/logger";
 
-class test extends Plug {
+export = new class test extends Plug {
   constructor() {
     super(module);
     this.name = "测试";
@@ -19,7 +19,6 @@ class test extends Plug {
   }
 }
 
-export = new test();
 /* TODO:
  毒鸡汤：https://www.iowen.cn/jitang/api/
  彩虹屁：https://chp.shadiao.app/api.php

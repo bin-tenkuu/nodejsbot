@@ -1,9 +1,9 @@
 import {CQWebSocket} from "go-cqwebsocket";
-import {CQEvent, GroupMessage, PrivateMessage} from "go-cqwebsocket/out/Interfaces";
+import {CQEvent, GroupMessage, MessageType, PrivateMessage} from "go-cqwebsocket/out/Interfaces";
 import {at, CQTag} from "go-cqwebsocket/out/tags";
 import {adminGroup, adminId} from "../config/config.json";
 
-class ContextEvent<T> {
+class ContextEvent<T extends MessageType> {
   public readonly bot: CQWebSocket;
   public readonly context: T;
   public readonly tags: CQTag<any>[];
@@ -16,7 +16,7 @@ class ContextEvent<T> {
     this.context = context;
     this.tags = tags;
     this.event = event;
-    this.text = tags.filter(tag => tag.tagName === "text").join("").trim();
+    this.text = context.raw_message.replace(/\[[^\]]+]/g, "").trim();
     this.length = tags.length;
   }
   

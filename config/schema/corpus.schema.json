@@ -1,0 +1,80 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "title": "语言库自动回复",
+  "description": "一个语言库",
+  "definitions": {
+    "regexp": {
+      "type": "string",
+      "description": "正则匹配,注入语言选择:JSRegexp",
+      "default": "",
+      "format": "regex"
+    },
+    "MSG": {
+      "type": "array",
+      "description": "数组格式消息段",
+      "items": {
+        "type": "string",
+        "description": "CQ码",
+        "anyOf": [
+          {
+            "enum": [
+              "[at]",
+              "[reply]"
+            ]
+          },
+          {
+            "type": "string",
+            "pattern": "^[^\\[]+$"
+          }
+        ]
+      },
+      "minLength": 1
+    }
+  },
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "format": "uri"
+    },
+    "group": {
+      "description": "群消息",
+      "type": "array",
+      "items": {
+        "properties": {
+          "regexp": {
+            "$ref": "#/definitions/regexp"
+          },
+          "reply": {
+            "$ref": "#/definitions/MSG"
+          },
+          "forward": {
+            "type": "array",
+            "description": "数组格式消息段数组",
+            "items": {
+              "$ref": "#/definitions/MSG"
+            }
+          }
+        },
+        "required": ["regexp"]
+      }
+    },
+    "private": {
+      "description": "私聊消息",
+      "type": "array",
+      "items": {
+        "properties": {
+          "regexp": {
+            "$ref": "#/definitions/regexp"
+          },
+          "reply": {
+            "$ref": "#/definitions/MSG"
+          }
+        },
+        "required": ["regexp"]
+      }
+    }
+  },
+  "required": [],
+  "additionalProperties": false
+}

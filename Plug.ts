@@ -8,7 +8,7 @@ enum State {
   error
 }
 
-export default abstract class Plug {
+export abstract class Plug {
   public static readonly plugs: { [key: string]: Plug } = {};
   public readonly module: NodeModule;
   public name: string;
@@ -84,7 +84,7 @@ export default abstract class Plug {
   }
 }
 
-class PlugLoader extends Plug {
+export var PlugLoader = new class PlugLoader extends Plug {
   
   constructor() {
     super(module, "PluginLoader");
@@ -113,6 +113,4 @@ class PlugLoader extends Plug {
   
   async uninstall(): Promise<void> {
   }
-}
-
-export var Loader = new PlugLoader();
+};

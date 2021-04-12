@@ -2,22 +2,20 @@ import {CQ, CQWebSocket} from "go-cqwebsocket";
 import {messageNode, SocketHandle} from "go-cqwebsocket/out/Interfaces";
 import {CQTag, node} from "go-cqwebsocket/out/tags";
 import "xmldom-ts";
-import Plug from "../Plug";
+import {Plug} from "../Plug";
 
-
-class CQAntiXML extends Plug {
+export = new class CQAntiXML extends Plug {
   private header?: Partial<SocketHandle>;
   
   constructor() {
-    super(module);
+    super(module, "AntiXML");
     this.name = "QQ群聊-防XML";
     this.description = "群消息防XML消息插件,使用合并转发api实现";
     this.version = 1;
   }
   
   async install() {
-    let def = require("./bot");
-    let bot: CQWebSocket = def.bot;
+    let bot: CQWebSocket = require("./bot").bot;
     this.header = bot.bind("on", {
       "message.group": (event, message, tags) => {
         let find = tags.find(tag => tag.tagName === "xml");
@@ -80,6 +78,5 @@ class CQAntiXML extends Plug {
   private static url(url?: string | null) {
     return /^[^?]*/.exec(url ?? "")![0];
   }
-}
+};
 
-export = new CQAntiXML();

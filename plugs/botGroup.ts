@@ -1,11 +1,11 @@
 import {CQ, CQWebSocket} from "go-cqwebsocket";
 import {message, messageNode, SocketHandle} from "go-cqwebsocket/out/Interfaces";
-import Plug from "../Plug";
+import {Plug} from "../Plug";
 import {GroupEvent} from "../utils/Util";
 
 type FunList = ((this: void, event: GroupEvent) => void)
 
-class CQBotGroup extends Plug {
+export = new class CQBotGroup extends Plug {
   private header?: Partial<SocketHandle>;
   private readonly handler: Map<Plug, FunList[]>;
   private readonly helper: Map<string, message>;
@@ -17,12 +17,7 @@ class CQBotGroup extends Plug {
     this.version = 0.5;
     this.handler = new Map();
     this.helper = new Map();
-    this.get(this).push((event) => {
-      if (!/^为什么呢$/.test(event.text) || event.isAt) return;
-      event.stopPropagation();
-      event.bot.send_group_msg(event.context.group_id, "是啊，为什么呢，我也在寻找原因呢").catch(() => {});
-      return;
-    }, event => {
+    this.get(this).push(event => {
       if (!event.isAtMe || !/^(?:help|帮助)/.test(event.text)) return;
       event.stopPropagation();
       let msgNode: messageNode[] = [];
@@ -95,5 +90,3 @@ class CQBotGroup extends Plug {
   }
   
 }
-
-export = new CQBotGroup();

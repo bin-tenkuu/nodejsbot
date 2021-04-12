@@ -1,9 +1,9 @@
 import {CQWebSocket} from "go-cqwebsocket";
-import {adminId, CQws} from "../config/config.json";
-import Plug from "../Plug";
+import {adminId, CQWS} from "../config/config.json";
+import {Plug} from "../Plug";
 import {logger} from "../utils/logger";
 
-class CQBot extends Plug {
+export = new class CQBot extends Plug {
   public bot: CQWebSocket;
   
   constructor() {
@@ -11,7 +11,7 @@ class CQBot extends Plug {
     this.name = "QQ机器人";
     this.description = "用于连接gocq-http服务的bot";
     this.version = 0;
-    this.bot = new CQWebSocket(CQws);
+    this.bot = new CQWebSocket(CQWS);
     this.bot.bind("on", {
       "socket.error": (_, code, err) => {
         logger.warn(`连接错误[${code}]: ${err}`);
@@ -31,7 +31,7 @@ class CQBot extends Plug {
     };
   }
   
-  install() {
+  async install() {
     return new Promise<void>((resolve, reject) => {
       this.bot.bind("onceAll", {
         "socket.open": () => {
@@ -64,6 +64,4 @@ class CQBot extends Plug {
       this.bot.disconnect();
     });
   }
-}
-
-export = new CQBot();
+};

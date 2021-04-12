@@ -1,9 +1,9 @@
 import {CQ} from "go-cqwebsocket";
 import {adminId} from "../config/config.json";
-import Plug from "../Plug";
+import {Plug} from "../Plug";
 import {PrivateEvent} from "../utils/Util";
 
-class CQBotPlugin extends Plug {
+export = new class CQBotPlugin extends Plug {
   
   constructor() {
     super(module);
@@ -92,5 +92,3 @@ class CQBotPlugin extends Plug {
     require("./botPrivate").del(this);
   }
 }
-
-export = new CQBotPlugin();

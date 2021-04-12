@@ -1,8 +1,8 @@
 import {CQ, CQWebSocket} from "go-cqwebsocket";
 import {SocketHandle} from "go-cqwebsocket/out/Interfaces";
-import Plug from "../Plug";
+import {Plug} from "../Plug";
 
-class CQFangCheHui extends Plug {
+export = new class CQFangCheHui extends Plug {
   private header?: Partial<SocketHandle>;
   
   constructor() {
@@ -29,4 +29,3 @@ class CQFangCheHui extends Plug {
   }
 }
 
-export = new CQFangCheHui();

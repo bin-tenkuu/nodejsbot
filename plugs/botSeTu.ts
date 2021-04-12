@@ -1,10 +1,10 @@
 import {CQ} from "go-cqwebsocket";
-import Plug from "../Plug";
+import {Plug} from "../Plug";
 import {logger} from "../utils/logger";
 import {lolicon} from "../utils/Search";
 import {GroupEvent} from "../utils/Util";
 
-class CQBotLoLiSeTu extends Plug {
+export = new class CQBotLoLiSeTu extends Plug {
   private isCalling: boolean;
   private cacheURL?: string;
   
@@ -125,4 +125,3 @@ class CQBotLoLiSeTu extends Plug {
   }
 }
 
-export = new CQBotLoLiSeTu();

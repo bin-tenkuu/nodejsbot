@@ -1,12 +1,12 @@
 import {CQ} from "go-cqwebsocket";
 import {CQTag, image} from "go-cqwebsocket/out/tags";
-import Plug from "../Plug";
+import {Plug} from "../Plug";
 import {logger} from "../utils/logger";
 
 import {sauceNAO} from "../utils/Search";
 import {GroupEvent} from "../utils/Util";
 
-class CQBotSauceNAOGroup extends Plug {
+export = new class CQBotSauceNAOGroup extends Plug {
   
   constructor() {
     super(module);
@@ -139,4 +139,3 @@ class CQBotSauceNAOGroup extends Plug {
   }
 }
 
-export = new CQBotSauceNAOGroup();

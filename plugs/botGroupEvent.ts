@@ -1,9 +1,9 @@
 import {CQWebSocket} from "go-cqwebsocket";
 import {SocketHandle} from "go-cqwebsocket/out/Interfaces";
 import {adminId} from "../config/config.json";
-import Plug from "../Plug";
+import {Plug} from "../Plug";
 
-class CQBotGroupEvent extends Plug {
+export = new class CQBotGroupEvent extends Plug {
   private header?: Partial<SocketHandle>;
   
   constructor() {
@@ -15,7 +15,7 @@ class CQBotGroupEvent extends Plug {
   
   async install() {
     let def = require("./bot");
-    let bot: CQWebSocket = def.bot;
+    let bot: CQWebSocket = def.cqBot;
     this.header = bot.bind("on", {
       "notice.group_increase": (event, message) => {
         event.stopPropagation();
@@ -52,5 +52,3 @@ class CQBotGroupEvent extends Plug {
     require("./bot").bot.unbind(this.header);
   }
 }
-
-export = new CQBotGroupEvent();

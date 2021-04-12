@@ -1,11 +1,11 @@
 import {CQ} from "go-cqwebsocket";
 import {MessageId, PromiseRes} from "go-cqwebsocket/out/Interfaces";
-import Plug from "../Plug";
+import {Plug} from "../Plug";
 import {logger} from "../utils/logger";
 import {pixivCat} from "../utils/Search";
 import {GroupEvent} from "../utils/Util";
 
-class CQBotPixiv extends Plug {
+export = new class CQBotPixiv extends Plug {
   constructor() {
     super(module);
     this.name = "QQ群聊-P站图片加载";
@@ -100,4 +100,3 @@ class CQBotPixiv extends Plug {
   }
 }
 
-export = new CQBotPixiv();

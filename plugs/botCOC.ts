@@ -1,10 +1,10 @@
 import {CQ} from "go-cqwebsocket";
-import Plug from "../Plug";
-import * as COC from "../utils/COCUtils";
+import {Plug} from "../Plug";
+import {dice} from "../utils/COCUtils";
 import {logger} from "../utils/logger";
 import {GroupEvent} from "../utils/Util";
 
-class CQBotCOC extends Plug {
+export = new class CQBotCOC extends Plug {
   constructor() {
     super(module);
     this.name = "QQ群聊-COC跑团相关";
@@ -50,11 +50,11 @@ class CQBotCOC extends Plug {
       let num: number | number[] = +(groups.num ?? 1);
       let op = groups.op ?? "+";
       if (groups.max) {
-        let dice = COC.dice(num, +groups.max);
+        let dices = dice(num, +groups.max);
         return {
           origin: value,
           op,
-          ...dice,
+          ...dices,
         };
       } else {
         return {
@@ -94,5 +94,3 @@ class CQBotCOC extends Plug {
     return `${preRet}${str}=${sumNum}`;
   }
 }
-
-export = new CQBotCOC();

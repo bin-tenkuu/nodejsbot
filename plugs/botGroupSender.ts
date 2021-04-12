@@ -1,9 +1,9 @@
 import {message} from "go-cqwebsocket/out/Interfaces";
-import Plug from "../Plug";
+import {Plug} from "../Plug";
 import {logger} from "../utils/logger";
 import {GroupEvent} from "../utils/Util";
 
-class CQBotTouHou extends Plug {
+export = new class CQBotTouHou extends Plug {
   private mapper: Map<string, () => Promise<message>>;
   
   constructor() {
@@ -36,5 +36,3 @@ class CQBotTouHou extends Plug {
     require("./botGroup").del(this);
   }
 }
-
-export = new CQBotTouHou();

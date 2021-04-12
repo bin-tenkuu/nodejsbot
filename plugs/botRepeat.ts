@@ -1,9 +1,9 @@
 import {CQTag, text} from "go-cqwebsocket/out/tags";
-import Plug from "../Plug";
+import {Plug} from "../Plug";
 import RepeatCache from "../utils/repeat";
 import {GroupEvent} from "../utils/Util";
 
-class BotRepeat extends Plug {
+export = new class BotRepeat extends Plug {
   private repeatCache = new RepeatCache<string>();
   
   constructor() {
@@ -36,5 +36,3 @@ class BotRepeat extends Plug {
     require("./botGroup").del(this);
   }
 }
-
-export = new BotRepeat();

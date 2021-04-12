@@ -1,11 +1,11 @@
 import {CQWebSocket} from "go-cqwebsocket";
 import {SocketHandle} from "go-cqwebsocket/out/Interfaces";
-import Plug from "../Plug";
+import {Plug} from "../Plug";
 import {PrivateEvent} from "../utils/Util";
 
 type FunList = ((this: void, event: PrivateEvent) => void)
 
-class CQBotPrivate extends Plug {
+export = new class CQBotPrivate extends Plug {
   private header?: Partial<SocketHandle>;
   private readonly helper: Map<Plug, FunList[]>;
   
@@ -55,5 +55,3 @@ class CQBotPrivate extends Plug {
   }
   
 }
-
-export = new CQBotPrivate();

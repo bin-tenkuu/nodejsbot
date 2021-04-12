@@ -1,8 +1,8 @@
-import * as http from "http";
-import Plug from "../Plug";
+import http from "http";
+import {Plug} from "../Plug";
 import {logger} from "../utils/logger";
 
-class HttpOption extends Plug {
+export = new class HttpOption extends Plug {
   private header?: http.Server;
   
   constructor() {
@@ -41,5 +41,3 @@ class HttpOption extends Plug {
   }
   
 }
-
-export = new HttpOption();
