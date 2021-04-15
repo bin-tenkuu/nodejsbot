@@ -1,6 +1,6 @@
 import {CQTag, text} from "go-cqwebsocket/out/tags";
 import {Plug} from "../Plug";
-import RepeatCache from "../utils/repeat";
+import {RepeatCache} from "../utils/repeat";
 import {GroupEvent} from "../utils/Util";
 
 export = new class BotRepeat extends Plug {
@@ -14,7 +14,7 @@ export = new class BotRepeat extends Plug {
   }
   
   async install() {
-    require("./botGroup").get(this).push((event: GroupEvent) => {
+    require("./bot").getGroup(this).push((event: GroupEvent) => {
       let tag: CQTag<text> = event.tags[0];
       if (event.length !== 1 || tag.tagName !== "text") {
         return;
@@ -33,6 +33,6 @@ export = new class BotRepeat extends Plug {
   }
   
   async uninstall() {
-    require("./botGroup").del(this);
+    require("./bot").delGroup(this);
   }
 }

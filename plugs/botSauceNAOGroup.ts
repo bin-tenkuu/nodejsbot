@@ -16,8 +16,8 @@ export = new class CQBotSauceNAOGroup extends Plug {
   }
   
   async install() {
-    let botGroup = require("./botGroup");
-    botGroup.get(this).push((event: GroupEvent) => {
+    let botGroup = require("./bot");
+    botGroup.getGroup(this).push((event: GroupEvent) => {
       if (!/^\.搜图/.test(event.text)) {
         return;
       }
@@ -93,13 +93,13 @@ export = new class CQBotSauceNAOGroup extends Plug {
       });
       event.stopPropagation();
     });
-    botGroup.setHelper("搜图", [CQ.text(".搜图 [图片]")]);
+    botGroup.setGroupHelper("搜图", [CQ.text(".搜图 [图片]")]);
   }
   
   async uninstall() {
-    let botGroup = require("./botGroup");
-    botGroup.del(this);
-    botGroup.delHelper("搜图");
+    let botGroup = require("./bot");
+    botGroup.delGroup(this);
+    botGroup.delGroupHelper("搜图");
   }
   
   /**

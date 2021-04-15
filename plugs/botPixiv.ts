@@ -14,8 +14,8 @@ export = new class CQBotPixiv extends Plug {
   }
   
   async install() {
-    let botGroup = require("./botGroup");
-    botGroup.get(this).push((event: GroupEvent) => {
+    let botGroup = require("./bot");
+    botGroup.getGroup(this).push((event: GroupEvent) => {
       let exec = /^看{1,2}p站(?<pid>\d+)(?:-(?<p>\d+))?$/.exec(event.text);
       if (exec == null) return;
       event.stopPropagation();
@@ -90,13 +90,13 @@ export = new class CQBotPixiv extends Plug {
         logger.warn("文本发送失败");
       });
     });
-    botGroup.setHelper("加载p站图片", [CQ.text("看p站(pid)(-p)")]);
+    botGroup.setGroupHelper("加载p站图片", [CQ.text("看p站(pid)(-p)")]);
   }
   
   async uninstall() {
     let botGroup = require("./botGroup");
-    botGroup.del(this);
-    botGroup.delHelper("加载p站图片");
+    botGroup.delGroup(this);
+    botGroup.delGroupHelper("加载p站图片");
   }
 }
 

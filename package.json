@@ -5,8 +5,9 @@
   "engines": {
     "node": ">=12"
   },
-  "main": "src/index.js",
+  "main": "index.js",
   "files": [
+    "db/*",
     "config/*",
     "plugs/*",
     "utils/*",
@@ -15,9 +16,9 @@
   "type": "commonjs",
   "scripts": {
     "build": "tsc",
-    "test": "node --inspect src/index.js",
+    "test": "node --inspect index.js",
     "stop": "curl 127.0.0.1:40000/exit",
-    "start": "node src/index.js"
+    "start": "node index.js"
   },
   "keywords": [
     "demo"

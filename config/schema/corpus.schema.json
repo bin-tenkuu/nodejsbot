@@ -10,25 +10,10 @@
       "format": "regex"
     },
     "MSG": {
-      "type": "array",
-      "description": "数组格式消息段",
-      "items": {
-        "type": "string",
-        "description": "CQ码",
-        "anyOf": [
-          {
-            "enum": [
-              "[at]",
-              "[reply]"
-            ]
-          },
-          {
-            "type": "string",
-            "pattern": "^[^\\[]+$"
-          }
-        ]
-      },
-      "minLength": 1
+      "type": "string",
+      "description": "字符串格式消息段",
+      "pattern": "^(\\[(CQ|FN):\\w+\\]|[^\\[]+)+$",
+      "default": null
     }
   },
   "type": "object",
@@ -46,14 +31,16 @@
             "$ref": "#/definitions/regexp"
           },
           "reply": {
-            "$ref": "#/definitions/MSG"
-          },
-          "forward": {
             "type": "array",
-            "description": "数组格式消息段数组",
+            "description": "如果 forward 字段未设置为 true, 则只有数组第一位有效",
             "items": {
               "$ref": "#/definitions/MSG"
             }
+          },
+          "forward": {
+            "type": "boolean",
+            "description": "是否为合并转发消息",
+            "default": false
           }
         },
         "required": ["regexp"]

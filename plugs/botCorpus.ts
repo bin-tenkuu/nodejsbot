@@ -36,8 +36,9 @@ export = new class CQBotCorpus extends Plug {
           if (element === undefined) element = this.corpus.group[i] = new RegExp(item.regexp);
           if (!element.test(text)) { continue; }
           event.stopPropagation();
-          if (item.reply !== undefined) {
-            CQBotCorpus.parseGroup(item.reply, message).then(tags => {
+          if (item.reply === undefined || item.reply.length === 0) return;
+          if (item.forward !== true) {
+            CQBotCorpus.parseGroup(item.reply[0], message).then(tags => {
               bot.send_group_msg(message.group_id, tags).catch(() => {});
             }).catch(() => {
               logger.warn(`语料库转换失败:corpus.group[${i}]:${item.regexp}`);
@@ -58,19 +59,53 @@ export = new class CQBotCorpus extends Plug {
     logger.info(this.toString());
   }
   
-  private static async parseGroup(strings: string[], message: GroupMessage): Promise<CQTag<any>[]> {
-    return strings.map<CQTag<any>>(str => {
-      if (!str.startsWith("[")) return CQ.text(str);
-      switch (str) {
-        case "[at]":
-          return CQ.at(message.user_id);
-        case "[reply]":
-          return CQ.reply(message.message_id);
-        default:
-          logger.info(`未支持的 JSON Tag:${str}`);
-          return CQ.text(str);
+  private static async parseGroup(template: string, message: GroupMessage): Promise<CQTag<any>[]> {
+    let split = this.split(template);
+    let tags: CQTag<any>[] = [];
+    for (let str of split) {
+      if (!str.startsWith("[")) {
+        tags.push(CQ.text(str));
+        continue;
       }
-    });
+      let exec = /^\[(?<head>CQ|FN):(?<body>[^\]]+)]$/.exec(str);
+      if (exec === null) {
+        tags.push(CQ.text(str));
+        continue;
+      }
+      let {head, body} = exec.groups as { head: "CQ" | "FN", body: string };
+      switch (head) {
+        case "CQ":
+          tags.push(this.parseCQ(body, message));
+          continue;
+        case "FN":
+          tags.push(this.parseFN(body, message));
+          continue;
+        default:
+          let never: never = head;
+          tags.push(CQ.text(str));
+          console.log(never);
+      }
+    }
+    return tags;
+  }
+  
+  private static parseCQ(str: string, message: GroupMessage): CQTag<any> {
+    switch (str) {
+      case "reply":
+        return CQ.reply(message.message_id);
+      case "at":
+        return CQ.at(message.user_id);
+      default:
+        return CQ.text(str);
+    }
+  }
+  
+  private static parseFN(str: string, message: GroupMessage): CQTag<any> {
+    return CQ.text(str);
+  }
+  
+  private static split(str: string): string[] {
+    return str.split(/(?<=])|(?=\[)/);
   }
 }
-type Group = { regexp: string, reply?: string[], forward?: string[][] }
+type Group = { regexp: string, reply?: string[], forward?: boolean }

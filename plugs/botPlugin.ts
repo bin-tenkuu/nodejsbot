@@ -13,7 +13,7 @@ export = new class CQBotPlugin extends Plug {
   }
   
   async install() {
-    require("./botPrivate").get(this).push((event: PrivateEvent) => {
+    require("./bot").getPrivate(this).push((event: PrivateEvent) => {
       let {
         text: text,
         bot: bot,
@@ -89,6 +89,6 @@ export = new class CQBotPlugin extends Plug {
   }
   
   async uninstall() {
-    require("./botPrivate").del(this);
+    require("./bot").delPrivate(this);
   }
 }

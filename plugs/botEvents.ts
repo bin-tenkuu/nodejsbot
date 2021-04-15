@@ -1,5 +1,6 @@
 import {CQ, CQWebSocket} from "go-cqwebsocket";
 import {SocketHandle} from "go-cqwebsocket/out/Interfaces";
+import {adminId} from "../config/config.json";
 import {Plug} from "../Plug";
 
 export = new class CQBotEvents extends Plug {
@@ -23,6 +24,34 @@ export = new class CQBotEvents extends Plug {
           CQ.at(message.user_id),
           CQ.text("憋戳我了"),
         ]).catch(() => {});
+      },
+      "notice.group_increase": (event, message) => {
+        event.stopPropagation();
+        let str;
+        if (message.operator_id === 0) {
+          str = `@${message.user_id} ${
+              message.sub_type === "approve" ? "欢迎" : "被邀请"
+          }入群`;
+        } else {
+          str = `@${message.user_id} 被管理员{@${message.operator_id}} ${
+              message.sub_type === "approve" ? "同意" : "邀请"
+          }入群`;
+        }
+        bot.send_group_msg(message.group_id, str).catch(() => { });
+      },
+      "notice.group_decrease": (event, message) => {
+        event.stopPropagation();
+        if (message.sub_type === "kick_me") {
+          bot.send_private_msg(adminId, `群 ${message.group_id} 被踢出`).catch(() => { });
+          return;
+        }
+        let str;
+        if (message.sub_type === "kick") {
+          str = `@${message.user_id} 被 管理员{@${message.operator_id}} 踢出本群`;
+        } else {
+          str = `@${message.user_id} 主动离开本群`;
+        }
+        bot.send_group_msg(message.group_id, str).catch(() => { });
       },
     });
   }

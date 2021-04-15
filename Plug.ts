@@ -1,4 +1,4 @@
-import * as fs from "fs";
+import {readdirSync} from "fs";
 import {logger} from "./utils/logger";
 
 enum State {
@@ -96,7 +96,7 @@ export var PlugLoader = new class PlugLoader extends Plug {
   async install(): Promise<void> {
     logger.info("开始加载插件列表");
     let plugPath = `./plugs`;
-    let files = fs.readdirSync("./src/plugs", {
+    let files = readdirSync("./src/plugs", {
       encoding: "utf-8",
     });
     for (let file of files) {

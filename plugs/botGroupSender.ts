@@ -16,7 +16,7 @@ export = new class CQBotTouHou extends Plug {
   }
   
   async install() {
-    require("./botGroup").get(this).push((event: GroupEvent) => {
+    require("./bot").getGroup(this).push((event: GroupEvent) => {
       if (!event.isAtMe) { return; }
       let exec = /^来点(?<id>.+)/.exec(event.text);
       if (exec == null) { return; }
@@ -33,6 +33,6 @@ export = new class CQBotTouHou extends Plug {
   };
   
   async uninstall() {
-    require("./botGroup").del(this);
+    require("./bot").delGroup(this);
   }
 }

@@ -17,8 +17,8 @@ export = new class CQBotLoLiSeTu extends Plug {
   }
   
   async install() {
-    let botGroup = require("./botGroup");
-    botGroup.get(this).push((event: GroupEvent) => {
+    let botGroup = require("./bot");
+    botGroup.getGroup(this).push((event: GroupEvent) => {
       let exec = /^[来來发發给給][张張个個幅点點份](?<r18>[Rr]18的?)?(?<keyword>.*?)?的?[色瑟][图圖]$/.exec(event.text);
       if (exec == null) {
         return;
@@ -96,13 +96,13 @@ export = new class CQBotLoLiSeTu extends Plug {
         return this.uninstall();
       });
     });
-    botGroup.setHelper("色图", [CQ.text("[来來发發给給][张張个個幅点點份]([Rr]18的?)?(.*?)?的?[色瑟][图圖]")]);
+    botGroup.setGroupHelper("色图", [CQ.text("[来來发發给給][张張个個幅点點份]([Rr]18的?)?(.*?)?的?[色瑟][图圖]")]);
   }
   
   async uninstall() {
-    let botGroup = require("./botGroup");
-    botGroup.del(this);
-    botGroup.delHelper("色图");
+    let botGroup = require("./bot");
+    botGroup.delGroup(this);
+    botGroup.delGroupHelper("色图");
   }
   
   static code(code: number) {

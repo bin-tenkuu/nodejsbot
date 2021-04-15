@@ -18,7 +18,7 @@ class Node<T> {
   }
 }
 
-export default class RepeatCache<T = unknown> {
+export class RepeatCache<T = unknown> {
   private cache: NodeCache;
   
   constructor() {
