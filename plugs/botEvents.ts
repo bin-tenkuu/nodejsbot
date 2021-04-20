@@ -53,6 +53,16 @@ export = new class CQBotEvents extends Plug {
         }
         bot.send_group_msg(message.group_id, str).catch(() => { });
       },
+      "request.friend": (event, message) => {
+        event.stopPropagation();
+        bot.send_private_msg(adminId, `${message.user_id}请求加好友`).catch(() => {});
+        bot.set_friend_add_request(message.flag, true).catch(() => {});
+      },
+      "request.group": (event, message) => {
+        event.stopPropagation();
+        bot.send_private_msg(adminId, ``).catch(() => {});
+        bot.set_group_add_request(message.flag, message.sub_type, true);
+      },
     });
   }
   

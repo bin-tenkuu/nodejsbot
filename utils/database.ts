@@ -3,12 +3,14 @@ import {Database, open as openSqlite} from "sqlite";
 import {Database as Database3, Statement} from "sqlite3";
 import {logger} from "./logger";
 
+type DatabaseHandle = (this: void, db: Database<Database3, Statement>) => Promise<void>;
+
 export var db = new class SQLControl {
   private readonly lists: ((db: Database<Database3, Statement>) => Promise<void>)[];
   private readonly path: string;
   private running: boolean;
   
-  constructor(path = "./db/db.db") {
+  constructor(path = "./db.db") {
     this.lists = [];
     this.running = false;
     if (!existsSync(path)) {
@@ -17,7 +19,7 @@ export var db = new class SQLControl {
     this.path = path;
   }
   
-  public start(fun: (db: Database<Database3, Statement>) => Promise<void>): void {
+  public start(fun: DatabaseHandle = async () => {}): void {
     this.lists.push(fun);
     if (this.running) {
       return;

@@ -8,7 +8,7 @@
 /logs
 /config/*.json
 !/config/schema/
-/db
+/db.db
 *.js
 /*.json
 /package-lock.json

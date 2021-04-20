@@ -54,7 +54,7 @@ export = new class CQBotLoLiSeTu extends Plug {
           this.isCalling = false;
           return;
         }
-        if (value.count < 1) {
+        if (value.count < 5) {
           bot.send_group_msg(groupId, "色图数量不足").catch(() => {});
           logger.warn(`开始色图异常：色图数量不足(${value.count})`);
           this.isCalling = false;
@@ -76,7 +76,7 @@ export = new class CQBotLoLiSeTu extends Plug {
               bot.delete_msg(msgID.message_id).catch(() => {});
             }, 1000 * 60);
           }).catch(() => {
-            return bot.send_group_msg(groupId, "图片发送失败,疑似露点图").catch(() => {});
+            return bot.send_group_msg(groupId, "图片发送失败,ban?").catch(() => {});
           }),
         ]).catch(() => {}).finally(() => {
           let unlock = () => {

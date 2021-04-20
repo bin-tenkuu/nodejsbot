@@ -35,7 +35,8 @@
             "description": "如果 forward 字段未设置为 true, 则只有数组第一位有效",
             "items": {
               "$ref": "#/definitions/MSG"
-            }
+            },
+            "minLength": 0
           },
           "forward": {
             "type": "boolean",

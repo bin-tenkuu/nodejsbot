@@ -7,7 +7,6 @@
   },
   "main": "index.js",
   "files": [
-    "db/*",
     "config/*",
     "plugs/*",
     "utils/*",

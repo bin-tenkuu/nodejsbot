@@ -35,8 +35,8 @@ export = new class CQBotCorpus extends Plug {
           let item = group[i] as Group;
           if (element === undefined) element = this.corpus.group[i] = new RegExp(item.regexp);
           if (!element.test(text)) { continue; }
-          event.stopPropagation();
           if (item.reply === undefined || item.reply.length === 0) return;
+          event.stopPropagation();
           if (item.forward !== true) {
             CQBotCorpus.parseGroup(item.reply[0], message).then(tags => {
               bot.send_group_msg(message.group_id, tags).catch(() => {});
@@ -45,10 +45,12 @@ export = new class CQBotCorpus extends Plug {
             });
             return;
           }
-          if (item.forward !== undefined) {
-            tags.length;
-            return;
-          }
+          Promise.all(item.reply.map(str => CQBotCorpus.parseGroup(str, message))).then(msg => {
+            let {user_id, sender: {nickname}} = message;
+            bot.send_group_forward_msg(message.group_id, msg.map(v => CQ.node(nickname, user_id, v)));
+          }).catch(() => {
+            logger.warn(`语料库转换失败:corpus.group[${i}]:${item.regexp}`);
+          });
           return;
         }
       },
@@ -78,7 +80,7 @@ export = new class CQBotCorpus extends Plug {
           tags.push(this.parseCQ(body, message));
           continue;
         case "FN":
-          tags.push(this.parseFN(body, message));
+          tags.push(await this.parseFN(body, message));
           continue;
         default:
           let never: never = head;
@@ -100,7 +102,7 @@ export = new class CQBotCorpus extends Plug {
     }
   }
   
-  private static parseFN(str: string, message: GroupMessage): CQTag<any> {
+  private static async parseFN(str: string, message: GroupMessage): Promise<CQTag<any>> {
     return CQ.text(str);
   }
   
