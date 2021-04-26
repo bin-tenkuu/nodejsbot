@@ -12,7 +12,7 @@
     "MSG": {
       "type": "string",
       "description": "字符串格式消息段",
-      "pattern": "^(\\[(CQ|FN):\\w+\\]|[^\\[]+)+$",
+      "pattern": "^(\\[(CQ:\\w+|FN:\\w+\\.\\w+)\\]|[^\\[]+)+$",
       "default": null
     }
   },
@@ -35,8 +35,7 @@
             "description": "如果 forward 字段未设置为 true, 则只有数组第一位有效",
             "items": {
               "$ref": "#/definitions/MSG"
-            },
-            "minLength": 0
+            }
           },
           "forward": {
             "type": "boolean",

@@ -1,38 +1,101 @@
-import {CQ} from "go-cqwebsocket";
+import {CQ, CQEvent} from "go-cqwebsocket";
 import {Plug} from "../Plug";
 import {dice} from "../utils/COCUtils";
+import {db} from "../utils/database";
 import {logger} from "../utils/logger";
-import {GroupEvent} from "../utils/Util";
+import {onlyText} from "../utils/Util";
 
 export = new class CQBotCOC extends Plug {
+  static shortKey = new Map<string, string>();
+  
   constructor() {
     super(module);
     this.name = "QQ群聊-COC跑团相关";
     this.description = "一些跑团常用功能";
     this.version = 1;
+    
   }
   
   async install() {
     let botGroup = require("./bot");
-    botGroup.getGroup(this).push((event: GroupEvent) => {
-      let dice = /^\.d +([^ ]+)/.exec(event.text)?.[1];
-      if (dice === undefined) {
-        return;
+    botGroup.getGroup(this).push((event: CQEvent<"message.group">) => {
+      let text = onlyText(event);
+      if (!/^\.d/.test(text)) return;
+      if (/^\.d /.test(text)) {
+        return CQBotCOC.execDice(event);
+      } else if (/\.dset /.test(text)) {
+        return CQBotCOC.execDiceSet(event);
+      } else if (/\.dstat/.test(text)) {
+        return CQBotCOC.execDiceStat(event);
       }
-      event.stopPropagation();
-      if (/[^+\-*d0-9]/.test(dice)) {
-        event.bot.send_group_msg(event.context.group_id, "/d错误参数").catch(() => {});
-        return;
-      }
-      event.bot.send_group_msg(event.context.group_id, CQBotCOC.dice(dice)).catch(() => {});
     });
-    botGroup.setGroupHelper("跑团骰子", [CQ.text(".d (表达式) 其他")]);
+    botGroup.setGroupHelper("跑团骰子", [CQ.text(`.d (表达式) 其他
+    .dset key[=value] 设置/删除简写
+    .dstat 查看简写列表`)]);
+    CQBotCOC.readShortKey();
   }
   
   async uninstall() {
     let botGroup = require("./bot");
     botGroup.delGroup(this);
     botGroup.delGroupHelper("跑团骰子");
+  }
+  
+  private static readShortKey() {
+    db.start(async db => {
+      db.all<{ key: string, value: string }[]>(`select key, value from COCShortKey`).then((kvs) => {
+        kvs.forEach(({key, value}) => CQBotCOC.shortKey.set(key, value));
+      });
+    });
+  }
+  
+  private static execDiceSet(event: CQEvent<"message.group">) {
+    let dice = /^\.dset +(?<key>\w[\w\d]+)(?:=(?<value>[+\-*d0-9#]+))?/.exec(onlyText(event));
+    let groupId = event.context.group_id;
+    if (dice === null) {
+      event.bot.send_group_msg(groupId, ".dset 参数错误").catch(() => {});
+      return;
+    }
+    let {key, value} = dice.groups as { key?: string, value?: string };
+    if (key === undefined || key.length > 5) return;
+    if (value === undefined) {
+      db.start(async db => {
+        await db.run(`delete from COCShortKey where key = ?`, key);
+      });
+      this.shortKey.delete(key);
+      event.bot.send_group_msg(groupId, `删除key:${key}`).catch(() => {});
+      return;
+    }
+    if (value.length > 10) return;
+    this.shortKey.set(key, value);
+    db.start(async db => {
+      await db.run(`insert into COCShortKey(key, value) values (?, ?)`, key, value);
+    });
+    event.bot.send_group_msg(groupId, `添加key:${key}=${value}`).catch(() => {});
+  }
+  
+  private static execDiceStat(event: CQEvent<"message.group">) {
+    let str = "";
+    this.shortKey.forEach((value, key) => {
+      str += `${key}=${value}\n`;
+    });
+    event.bot.send_group_msg(event.context.group_id, str);
+  }
+  
+  private static execDice(event: CQEvent<"message.group">) {
+    let dice = /^\.d +([^ ]+)/.exec(onlyText(event))?.[1].toString();
+    if (dice === undefined) {
+      return;
+    }
+    event.stopPropagation();
+    this.shortKey.forEach((value, key) => {
+      dice = (<string>dice).replace(new RegExp(key), value);
+    });
+    if (/[^+\-*d0-9#]/.test(dice)) {
+      event.bot.send_group_msg(event.context.group_id, ".d错误参数").catch(() => {});
+      return;
+    }
+    event.bot.send_group_msg(event.context.group_id, CQBotCOC.dice(dice)).catch(() => {});
   }
   
   private static dice(str: string): string {

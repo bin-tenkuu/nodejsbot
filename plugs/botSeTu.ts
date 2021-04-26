@@ -1,8 +1,8 @@
-import {CQ} from "go-cqwebsocket";
+import {CQ, CQEvent} from "go-cqwebsocket";
 import {Plug} from "../Plug";
 import {logger} from "../utils/logger";
 import {lolicon} from "../utils/Search";
-import {GroupEvent} from "../utils/Util";
+import {onlyText, sendAdminQQ, sendAuto, sendForward} from "../utils/Util";
 
 export = new class CQBotLoLiSeTu extends Plug {
   private isCalling: boolean;
@@ -18,8 +18,8 @@ export = new class CQBotLoLiSeTu extends Plug {
   
   async install() {
     let botGroup = require("./bot");
-    botGroup.getGroup(this).push((event: GroupEvent) => {
-      let exec = /^[来來发發给給][张張个個幅点點份](?<r18>[Rr]18的?)?(?<keyword>.*?)?的?[色瑟][图圖]$/.exec(event.text);
+    botGroup.getGroup(this).push((event: CQEvent<"message.group">) => {
+      let exec = /^[来來发發给給][张張个個幅点點份](?<r18>[Rr]18的?)?(?<keyword>.*?)?的?[色瑟][图圖]$/.exec(onlyText(event));
       if (exec == null) {
         return;
       }
@@ -50,48 +50,45 @@ export = new class CQBotLoLiSeTu extends Plug {
         if (value.code !== 0) {
           let message = CQBotLoLiSeTu.code(value.code);
           logger.warn(`开始色图异常：异常返回码(${value.code})：${message}`);
-          bot.send_group_msg(groupId, message).catch(() => {});
+          sendAuto(event, message);
           this.isCalling = false;
           return;
         }
-        if (value.count < 5) {
-          bot.send_group_msg(groupId, "色图数量不足").catch(() => {});
+        if (value.count < 1) {
+          sendAuto(event, "色图数量不足");
           logger.warn(`开始色图异常：色图数量不足(${value.count})`);
           this.isCalling = false;
           return;
         }
         let first = value.data[0];
         logger.info(`剩余次数：${value.quota}||剩余重置时间：${value.quota_min_ttl}s`);
-        Promise.all([
-          bot.send_group_msg(groupId, "开始加载"),
-          bot.send_group_forward_msg(groupId, [
-            CQ.nodeId(messageId),
-            CQ.node(nickname, userId, `标题：${first.title}
-作者：${first.author}\n原图：www.pixiv.net/artworks/${first.pid}`),
-            CQ.node(nickname, userId, CQ.escape(first.tags.join("\n"))),
-          ]),
-          bot.send_group_msg(groupId, [CQ.image(first.url)]).then((msgID) => {
-            setTimeout(() => {
-              this.cacheURL = first.url;
-              bot.delete_msg(msgID.message_id).catch(() => {});
-            }, 1000 * 60);
-          }).catch(() => {
-            return bot.send_group_msg(groupId, "图片发送失败,ban?").catch(() => {});
-          }),
-        ]).catch(() => {}).finally(() => {
-          let unlock = () => {
-            this.isCalling = false;
-            logger.info("解除锁定 %s", this.name);
-          };
-          if (value.quota < 5) {
-            setTimeout(unlock, 1000 * Number(value.quota_min_ttl));
-          } else {
-            unlock();
-          }
+        sendAuto(event, "开始加载");
+        bot.send_group_msg(groupId, [CQ.image(first.url)]).then((msgID) => {
+          setTimeout(() => {
+            this.cacheURL = first.url;
+            bot.delete_msg(msgID.message_id).catch(() => {});
+          }, 1000 * 60);
+        }).catch(() => {
+          return sendAuto(event, "图片发送失败,ban?");
         });
+        sendForward(event, [
+          CQ.nodeId(messageId),
+          CQ.node(nickname, userId, `标题：${first.title}
+作者：${first.author}\n原图：www.pixiv.net/artworks/${first.pid}`),
+          CQ.node(nickname, userId, CQ.escape(first.tags.join("\n"))),
+        ]).catch(() => {});
+        let unlock = () => {
+          this.isCalling = false;
+          logger.info("解除锁定 %s", this.name);
+        };
+        if (value.quota < 5) {
+          setTimeout(unlock, 2000 * Number(value.quota_min_ttl));
+        } else {
+          setTimeout(unlock, 1000);
+        }
       }).catch(reason => {
-        bot.send_group_msg(groupId, "未知错误,或网络错误").catch(() => {});
-        bot.send_private_msg(2938137849, "色图坏了").catch(() => {});
+        sendAuto(event, "未知错误,或网络错误");
+        sendAdminQQ(event, "色图坏了");
         logger.info(reason);
         return this.uninstall();
       });
@@ -123,5 +120,6 @@ export = new class CQBotLoLiSeTu extends Plug {
         return "未知的返回码";
     }
   }
+  
 }
 

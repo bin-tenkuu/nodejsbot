@@ -1,9 +1,9 @@
-import {CQ} from "go-cqwebsocket";
+import {CQ, CQEvent} from "go-cqwebsocket";
 import {MessageId, PromiseRes} from "go-cqwebsocket/out/Interfaces";
 import {Plug} from "../Plug";
 import {logger} from "../utils/logger";
 import {pixivCat} from "../utils/Search";
-import {GroupEvent} from "../utils/Util";
+import {onlyText, sendAuto, sendForward} from "../utils/Util";
 
 export = new class CQBotPixiv extends Plug {
   constructor() {
@@ -15,37 +15,22 @@ export = new class CQBotPixiv extends Plug {
   
   async install() {
     let botGroup = require("./bot");
-    botGroup.getGroup(this).push((event: GroupEvent) => {
-      let exec = /^看{1,2}p站(?<pid>\d+)(?:-(?<p>\d+))?$/.exec(event.text);
+    botGroup.getGroup(this).push((event: CQEvent<"message.group">) => {
+      let exec = /^看{1,2}p站(?<pid>\d+)(?:-(?<p>\d+))?$/.exec(onlyText(event));
       if (exec == null) return;
       event.stopPropagation();
-      let {
-        pid,
-        p,
-      } = (exec.groups as { pid?: string, p?: string });
+      let {pid, p} = (exec.groups as { pid?: string, p?: string });
       logger.debug(`p站图片请求：pid:${pid},p:${p}`);
-      let {
-        bot,
-        context: {
-          group_id,
-          user_id,
-          sender: {
-            nickname,
-          },
-        },
-      } = event;
+      let {user_id, nickname} = event.context.sender;
       if (pid === undefined) {
-        bot.send_group_msg(group_id, "pid获取失败").catch(() => {
-          logger.warn("文字消息发送失败");
-        });
-        return;
+        return sendAuto(event, "pid获取失败");
       }
       pixivCat(pid).then(data => {
         logger.info(`请求状态:${data.success}`);
         if (!data.success) {
-          bot.send_group_msg(group_id, [CQ.text(data.error)]).catch(() => {});
+          sendAuto(event, [CQ.text(data.error)]);
         } else {
-          let promise: PromiseRes<MessageId>;
+          let promise: PromiseRes<MessageId> | undefined;
           if (data.multiple) {
             let {
               0: p0,
@@ -53,41 +38,38 @@ export = new class CQBotPixiv extends Plug {
               length,
             } = data.original_urls_proxy;
             if (p === undefined) {
-              promise = bot.send_group_forward_msg(group_id, [
+              promise = sendForward(event, [
                 CQ.node(nickname, user_id, `这个作品ID中有${length}张图片,需要指定第几张才能正确显示`),
-                CQ.node(nickname, user_id, [CQ.image(p0)]),
-                CQ.node(nickname, user_id, [CQ.image(p1)]),
+                CQ.node(nickname, user_id, [CQ.image(p0), CQ.image(p1)]),
               ]);
             } else if (+p >= length || +p === 0) {
-              promise = bot.send_group_forward_msg(group_id, [
+              promise = sendForward(event, [
                 CQ.node(nickname, user_id, `这个作品ID中只有${length}张图片,在范围内才能正确显示`),
-                CQ.node(nickname, user_id, [CQ.image(data.original_urls_proxy[length - 1])]),
-                CQ.node(nickname, user_id, [CQ.image(data.original_urls_proxy[length - 2])]),
+                CQ.node(nickname, user_id, [
+                  CQ.image(data.original_urls_proxy[length - 2]),
+                  CQ.image(data.original_urls_proxy[length - 1]),
+                ]),
               ]);
             } else {
-              promise = bot.send_group_forward_msg(group_id, [
+              promise = sendForward(event, [
                 CQ.node(nickname, user_id, `这个作品ID中有${length}张图片,这是第${p}张图片`),
                 CQ.node(nickname, user_id, [CQ.image(data.original_urls_proxy[+p])]),
               ]);
             }
           } else {
-            promise = bot.send_group_forward_msg(group_id, [
+            promise = sendForward(event, [
               CQ.node(nickname, user_id, [CQ.image(data.original_url_proxy)]),
             ]);
           }
-          promise.catch(() => {
+          promise?.catch(() => {
             logger.warn("合并转发发送失败");
-            return bot.send_group_msg(group_id, "带图合并转发发送失败");
+            return sendAuto(event, "带图合并转发发送失败");
           }).catch(() => {
             logger.warn("文本发送失败");
           });
         }
       }).catch(() => {
-        return bot.send_group_msg(group_id, [
-          CQ.text("网络错误或内部错误"),
-        ]);
-      }).catch(() => {
-        logger.warn("文本发送失败");
+        return sendAuto(event, "网络错误或内部错误");
       });
     });
     botGroup.setGroupHelper("加载p站图片", [CQ.text("看p站(pid)(-p)")]);

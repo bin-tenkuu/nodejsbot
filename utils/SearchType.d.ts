@@ -25,7 +25,9 @@ export type sauceNAOResult = {
   },
   results: {
     header: sauceNAOResultsHeader,
-    data: unknown
+    data: {
+      [key: string]: unknown
+    }
   }[]
 }
 export type paulzzhTouHouType = {

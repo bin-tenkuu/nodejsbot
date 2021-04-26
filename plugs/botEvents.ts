@@ -1,10 +1,10 @@
 import {CQ, CQWebSocket} from "go-cqwebsocket";
-import {SocketHandle} from "go-cqwebsocket/out/Interfaces";
-import {adminId} from "../config/config.json";
+import {PartialSocketHandle} from "go-cqwebsocket/out/Interfaces";
 import {Plug} from "../Plug";
+import {sendAdminQQ} from "../utils/Util";
 
 export = new class CQBotEvents extends Plug {
-  private header?: Partial<SocketHandle>;
+  private header?: PartialSocketHandle;
   
   constructor() {
     super(module);
@@ -14,54 +14,53 @@ export = new class CQBotEvents extends Plug {
   }
   
   async install() {
-    let def = require("./bot");
-    let bot: CQWebSocket = def.bot;
-    this.header = bot.bind("on", {
-      "notice.notify.poke.group": (event, message) => {
-        if (+message.target_id !== bot.qq) {return;}
+    this.header = (<CQWebSocket>require("./bot").bot).bind("on", {
+      "notice.notify.poke.group": (event) => {
+        let context = event.context;
+        if (+context.target_id !== event.bot.qq) {return;}
         event.stopPropagation();
-        bot.send_group_msg(message.group_id, [
-          CQ.at(message.user_id),
+        event.bot.send_group_msg(context.group_id, [
+          CQ.at(context.user_id),
           CQ.text("憋戳我了"),
         ]).catch(() => {});
       },
-      "notice.group_increase": (event, message) => {
+      "notice.group_increase": (event) => {
         event.stopPropagation();
+        let {operator_id, user_id, sub_type, group_id} = event.context;
         let str;
-        if (message.operator_id === 0) {
-          str = `@${message.user_id} ${
-              message.sub_type === "approve" ? "欢迎" : "被邀请"
-          }入群`;
+        if (operator_id === 0) {
+          str = `@${user_id} ${sub_type === "approve" ? "欢迎" : "被邀请"}入群`;
         } else {
-          str = `@${message.user_id} 被管理员{@${message.operator_id}} ${
-              message.sub_type === "approve" ? "同意" : "邀请"
-          }入群`;
+          str = `@${user_id} 被管理员{@${operator_id}} ${sub_type === "approve" ? "同意" : "邀请"}入群`;
         }
-        bot.send_group_msg(message.group_id, str).catch(() => { });
+        event.bot.send_group_msg(group_id, str).catch(() => { });
       },
-      "notice.group_decrease": (event, message) => {
+      "notice.group_decrease": (event) => {
         event.stopPropagation();
-        if (message.sub_type === "kick_me") {
-          bot.send_private_msg(adminId, `群 ${message.group_id} 被踢出`).catch(() => { });
+        let {sub_type, group_id, user_id, operator_id} = event.context;
+        if (sub_type === "kick_me") {
+          sendAdminQQ(event, `群 ${group_id} 被踢出`);
           return;
         }
         let str;
-        if (message.sub_type === "kick") {
-          str = `@${message.user_id} 被 管理员{@${message.operator_id}} 踢出本群`;
+        if (sub_type === "kick") {
+          str = `@${user_id} 被 管理员{@${operator_id}} 踢出本群`;
         } else {
-          str = `@${message.user_id} 主动离开本群`;
+          str = `@${user_id} 主动离开本群`;
         }
-        bot.send_group_msg(message.group_id, str).catch(() => { });
+        event.bot.send_group_msg(group_id, str).catch(() => { });
       },
-      "request.friend": (event, message) => {
+      "request.friend": (event) => {
         event.stopPropagation();
-        bot.send_private_msg(adminId, `${message.user_id}请求加好友`).catch(() => {});
-        bot.set_friend_add_request(message.flag, true).catch(() => {});
+        let {user_id, flag} = event.context;
+        sendAdminQQ(event, `${user_id}请求加好友`);
+        event.bot.set_friend_add_request(flag, true).catch(() => {});
       },
-      "request.group": (event, message) => {
+      "request.group": (event) => {
         event.stopPropagation();
-        bot.send_private_msg(adminId, ``).catch(() => {});
-        bot.set_group_add_request(message.flag, message.sub_type, true);
+        let {flag, sub_type, group_id} = event.context;
+        sendAdminQQ(event, `${group_id}请求入群`);
+        event.bot.set_group_add_request(flag, sub_type, true);
       },
     });
   }

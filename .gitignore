@@ -11,5 +11,4 @@
 /db.db
 *.js
 /*.json
-/package-lock.json
 /*.xml

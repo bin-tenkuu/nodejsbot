@@ -1,7 +1,8 @@
 import {message} from "go-cqwebsocket/out/Interfaces";
+import {CQEvent} from "../../go-cqwebsocket";
 import {Plug} from "../Plug";
 import {logger} from "../utils/logger";
-import {GroupEvent} from "../utils/Util";
+import {isAtMe, onlyText, sendAuto} from "../utils/Util";
 
 export = new class CQBotTouHou extends Plug {
   private mapper: Map<string, () => Promise<message>>;
@@ -16,18 +17,18 @@ export = new class CQBotTouHou extends Plug {
   }
   
   async install() {
-    require("./bot").getGroup(this).push((event: GroupEvent) => {
-      if (!event.isAtMe) { return; }
-      let exec = /^来点(?<id>.+)/.exec(event.text);
+    require("./bot").getGroup(this).push((event: CQEvent<"message.group">) => {
+      if (!isAtMe(event)) { return; }
+      let exec = /^来点(?<id>.+)/.exec(onlyText(event));
       if (exec == null) { return; }
       let id = (exec.groups as { id?: string }).id;
       if (id === undefined) {return; }
       let func = this.mapper.get(id);
       if (func === undefined) {return;}
       func().then(value => {
-        event.bot.send_group_msg(event.context.group_id, value).catch(() => {
-          logger.warn(id + "API调用失败");
-        });
+        sendAuto(event, value);
+      }).catch(() => {
+        logger.warn(id + "API调用失败");
       });
     });
   };

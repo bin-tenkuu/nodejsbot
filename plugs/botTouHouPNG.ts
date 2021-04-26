@@ -1,11 +1,12 @@
-import {CQ, CQWebSocket} from "go-cqwebsocket";
-import {SocketHandle} from "go-cqwebsocket/out/Interfaces";
+import {CQ, CQEvent} from "go-cqwebsocket";
+import {CQTag} from "go-cqwebsocket/out/tags";
 import {Plug} from "../Plug";
+import {CanAutoCall} from "../utils/Annotation";
 import {paulzzhTouHou} from "../utils/Search";
+import {sendAuto} from "../utils/Util";
 
-export = new class CQBotTouHou extends Plug {
+class CQBotTouHou extends Plug {
   private isRandom: boolean;
-  private header?: Partial<SocketHandle>;
   
   constructor() {
     super(module);
@@ -17,49 +18,29 @@ export = new class CQBotTouHou extends Plug {
   }
   
   async install() {
-    let def = require("./bot");
-    let bot: CQWebSocket = def.bot;
-    this.header = bot.bind("on", {
-      "message.group": (event, context, tags) => {
-        let cqTag = tags.find(tag => tag["tagName"] === "text");
-        if (!cqTag) {
-          return;
-        }
-        let txt = cqTag.get("text");
-        if (/^东方图来$/.test(txt)) {
-          switch (this.isRandom) {
-            case true:
-              return;
-            case false:
-              this.isRandom = true;
-          }
-          console.log("开始东方");
-          event.stopPropagation();
-          let {
-            group_id,
-          } = context;
-          bot.send_group_msg(group_id, [
-            CQ.text("随机东方图加载中"),
-          ]).catch(() => {});
-          paulzzhTouHou().then(json => {
-            bot.send_group_msg(group_id, [
-              CQ.image(json["url"]),
-            ]).catch(() => {});
-            setTimeout(() => {
-              this.isRandom = false;
-            }, 1000);
-          }).catch(err => {
-            console.error(err);
-            bot.send_group_msg(group_id, [
-              CQ.text(`东方图API调用错误`),
-            ]).catch(() => {});
-          });
-        }
-      },
-    });
   };
   
   async uninstall() {
-    require("./bot").bot.unbind(this.header);
+  }
+  
+  @CanAutoCall()
+  async getTouHouPNG(event: CQEvent<"message.group"> | CQEvent<"message.private">): Promise<CQTag<any>[]> {
+    if (this.isRandom) {
+      return [CQ.text(`冷却中`)];
+    }
+    this.isRandom = true;
+    console.log("开始东方");
+    sendAuto(event, "随机东方图加载中");
+    try {
+      let json = await paulzzhTouHou();
+      setTimeout(() => {
+        this.isRandom = false;
+      }, 1000 * 10);
+      return [CQ.image(json.url), CQ.text("作者:" + json.author)];
+    } catch (e) {
+      return [CQ.text(`东方图API调用错误`)];
+    }
   }
 }
+
+export = new CQBotTouHou()
