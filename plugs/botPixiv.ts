@@ -65,7 +65,7 @@ export = new class CQBotPixiv extends Plug {
   }
   
   async uninstall() {
-    let botGroup = require("./botGroup");
+    let botGroup = require("./bot");
     botGroup.delGroup(this);
     botGroup.delGroupHelper("加载p站图片");
   }
