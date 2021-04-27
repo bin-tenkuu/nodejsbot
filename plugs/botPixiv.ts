@@ -26,34 +26,25 @@ export = new class CQBotPixiv extends Plug {
         return sendAuto(event, "pid获取失败");
       }
       pixivCat(pid).then(data => {
-        logger.info(`请求状态:${data.success}`);
         if (!data.success) {
+          logger.info(`请求失败`);
           sendAuto(event, [CQ.text(data.error)]);
         } else {
-          let promise: PromiseRes<MessageId> | undefined;
+          logger.info(`多张图片:${data.multiple}`);
+          let promise: PromiseRes<MessageId>;
           if (data.multiple) {
-            let {
-              0: p0,
-              1: p1,
-              length,
-            } = data.original_urls_proxy;
+            let urlsProxy = data.original_urls_proxy;
             if (p === undefined) {
+              let {0: p0, 1: p1, length} = urlsProxy;
               promise = sendForward(event, [
-                CQ.node(nickname, user_id, `这个作品ID中有${length}张图片,需要指定第几张才能正确显示`),
+                CQ.node(nickname, user_id, [CQ.text(`这个作品ID中有${length}张图片,需要指定第几张才能正确显示`)]),
                 CQ.node(nickname, user_id, [CQ.image(p0), CQ.image(p1)]),
               ]);
-            } else if (+p >= length || +p === 0) {
-              promise = sendForward(event, [
-                CQ.node(nickname, user_id, `这个作品ID中只有${length}张图片,在范围内才能正确显示`),
-                CQ.node(nickname, user_id, [
-                  CQ.image(data.original_urls_proxy[length - 2]),
-                  CQ.image(data.original_urls_proxy[length - 1]),
-                ]),
-              ]);
             } else {
+              let ps: number = +p > length ? length - 1 : +p;
               promise = sendForward(event, [
-                CQ.node(nickname, user_id, `这个作品ID中有${length}张图片,这是第${p}张图片`),
-                CQ.node(nickname, user_id, [CQ.image(data.original_urls_proxy[+p])]),
+                CQ.node(nickname, user_id, [CQ.text(`这个作品ID中有${length}张图片,这是第${p}张图片`)]),
+                CQ.node(nickname, user_id, [CQ.image(urlsProxy[ps - 1]), CQ.image(urlsProxy[ps])]),
               ]);
             }
           } else {
@@ -61,11 +52,9 @@ export = new class CQBotPixiv extends Plug {
               CQ.node(nickname, user_id, [CQ.image(data.original_url_proxy)]),
             ]);
           }
-          promise?.catch(() => {
+          promise.catch(() => {
             logger.warn("合并转发发送失败");
             return sendAuto(event, "带图合并转发发送失败");
-          }).catch(() => {
-            logger.warn("文本发送失败");
           });
         }
       }).catch(() => {

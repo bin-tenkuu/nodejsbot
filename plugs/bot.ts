@@ -1,10 +1,10 @@
 import {CQ, CQEvent, CQWebSocket} from "go-cqwebsocket";
-import {message, Status} from "go-cqwebsocket/out/Interfaces";
+import {message, messageNode, Status} from "go-cqwebsocket/out/Interfaces";
 import {adminGroup, adminId, CQWS} from "../config/config.json";
 import {Plug} from "../Plug";
 import {db} from "../utils/database";
 import {logger} from "../utils/logger";
-import {isAtMe, onlyText} from "../utils/Util";
+import {isAtMe, onlyText, sendForward} from "../utils/Util";
 
 type GroFunList = ((this: void, event: CQEvent<"message.group">) => void);
 type PriFunList = ((this: void, event: CQEvent<"message.private">) => void);
@@ -92,6 +92,17 @@ export = new class CQBot extends Plug {
         return;
       },
     });
+    this.getGroup(this).push(event => {
+      if (/^(?:帮助|help)/.test(onlyText(event))) {
+        let tags = <messageNode>[];
+        this.helper.forEach((value, key) => {
+          tags.push(CQ.node(key, event.context.user_id, value));
+        });
+        sendForward(event, tags).catch(() => {
+          logger.warn("帮助文档发送失败");
+        });
+      }
+    });
   }
   
   setGroupHelper(name: string, node: message): void {
@@ -112,7 +123,7 @@ export = new class CQBot extends Plug {
   }
   
   delGroup(plug: Plug): void {
-    this.grouper.delete(plug);
+    this.grouper.set(plug, []);
   }
   
   getPrivate(plug: Plug): PriFunList[] {
@@ -136,10 +147,8 @@ export = new class CQBot extends Plug {
           event.bot.send_private_msg(2938137849, "已上线").catch(() => {});
           resolve();
           this.sendStateInterval = setInterval(() => {
-            let state = this.bot.state?.stat;
-            if (state === undefined) { return; }
-            this.sendState(state);
-          }, 1000 * 60 * 60);
+            this.sendState(this.bot.state.stat);
+          }, 1000 * 60 * 60 * 2);
         },
         "socket.close": () => reject(),
       });
@@ -169,8 +178,7 @@ export = new class CQBot extends Plug {
   
   sendState(state: Status["stat"]) {
     this.bot.send_group_msg(adminGroup, `数据包丢失总数:${state.packet_lost
-    }\n接受信息总数:${state.message_received}\n发送信息总数:${state.message_sent
-    }\n连接断开次数:${state.disconnect_times}\n账号掉线次数:${state.lost_times}`).catch(() => {
+    }\n接受信息总数:${state.message_received}\n发送信息总数:${state.message_sent}`).catch(() => {
       if (this.sendStateInterval !== undefined) {
         clearInterval(this.sendStateInterval);
       }

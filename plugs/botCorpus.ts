@@ -1,5 +1,4 @@
 import {CQ, CQEvent} from "go-cqwebsocket";
-import {SocketHandle} from "go-cqwebsocket/out/Interfaces";
 import {CQTag} from "go-cqwebsocket/out/tags";
 import {group} from "../config/corpus.json";
 import {Plug} from "../Plug";
@@ -8,7 +7,6 @@ import {logger} from "../utils/logger";
 import {onlyText, sendAuto, sendForward} from "../utils/Util";
 
 export = new class CQBotCorpus extends Plug {
-  header?: Partial<SocketHandle>;
   corpus: {
     group: RegExp[],
     private: RegExp[],
@@ -55,13 +53,10 @@ export = new class CQBotCorpus extends Plug {
         return;
       }
     });
-    // require("./bot").getPrivate(this).push((event: PrivateEvent) => {
-    //
-    // });
   }
   
   async uninstall() {
-    logger.info(this.toString());
+    require("./bot").delGroup(this);
   }
   
   private static async parseGroup(template: string, message: CQEvent<"message.group">): Promise<CQTag<any>[]> {

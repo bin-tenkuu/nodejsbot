@@ -24,6 +24,7 @@ export = new class CQBotPlugin extends Plug {
     event.stopPropagation();
     let plugins = Object.values(Plug.plugs);
     let text = onlyText(event);
+    if (!/^插件|获取/.test(text)) {return; }
     switch (true) {
       case (/^插件列表/.test(text)):
         return CQBotPlugin.pluginList(plugins, event);
@@ -31,8 +32,10 @@ export = new class CQBotPlugin extends Plug {
         return this.pluginStat(plugins, event);
       case (/^插件信息/.test(text)):
         return this.pluginInfo(plugins, event);
-      case true:
-        return;
+      case (/^获取群列表/.test(text)):
+        return this.getGroupList(event);
+      case (/^获取好友列表/.test(text)):
+        return this.getFriendList(event);
         // TODO:消息热重载其他固定代码
     }
   }
@@ -68,4 +71,21 @@ export = new class CQBotPlugin extends Plug {
     return;
   }
   
+  private getGroupList(event: CQEvent<"message.private">) {
+    event.bot.get_group_list().then(list => {
+      let str = list.map(group => {
+        return `(${group.group_id})${group.group_name}`;
+      }).join("\n");
+      sendAdminQQ(event, [CQ.text(str)]);
+    });
+  }
+  
+  private getFriendList(event: CQEvent<"message.private">) {
+    event.bot.get_friend_list().then(list => {
+      let str = list.map(friend => {
+        return `(${friend.user_id})${friend.nickname}:(${friend.remark})`;
+      }).join("\n");
+      sendAdminQQ(event, [CQ.text(str)]);
+    });
+  }
 }
