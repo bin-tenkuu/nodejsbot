@@ -1,5 +1,6 @@
 import {CQ, CQEvent} from "go-cqwebsocket";
 import {Plug} from "../Plug";
+import {db} from "../utils/database";
 import {isAdminQQ, onlyText, sendAdminQQ} from "../utils/Util";
 
 export = new class CQBotPlugin extends Plug {
@@ -24,7 +25,7 @@ export = new class CQBotPlugin extends Plug {
     event.stopPropagation();
     let plugins = Object.values(Plug.plugs);
     let text = onlyText(event);
-    if (!/^插件|获取/.test(text)) {return; }
+    if (!/^(?:插件|获取|设置)/.test(text)) {return; }
     switch (true) {
       case (/^插件列表/.test(text)):
         return CQBotPlugin.pluginList(plugins, event);
@@ -36,6 +37,10 @@ export = new class CQBotPlugin extends Plug {
         return this.getGroupList(event);
       case (/^获取好友列表/.test(text)):
         return this.getFriendList(event);
+      case (/^获取ban列表/.test(text)):
+        return this.getBanList(event);
+      case (/^设置ban/.test(text)):
+        return this.setBanQQ(event);
         // TODO:消息热重载其他固定代码
     }
   }
@@ -87,5 +92,23 @@ export = new class CQBotPlugin extends Plug {
       }).join("\n");
       sendAdminQQ(event, [CQ.text(str)]);
     });
+  }
+  
+  private getBanList(event: CQEvent<"message.private">) {
+    db.start(async db => {
+      let list: number[] = await db.all(`select id from Members where baned = 1`);
+      sendAdminQQ(event, [CQ.text(list.join("\n"))]);
+    }).then(() => {});
+  }
+  
+  private async setBanQQ(event: CQEvent<"message.private">) {
+    let text = onlyText(event);
+    let matches = text.match(/\d+(?=\s)?/g) ?? [];
+    await db.start(async db => {
+      for (const value of matches) {
+        await db.run(`update Members set baned = 1 where id = ?;`, value);
+      }
+    });
+    sendAdminQQ(event, `已ban:\n${matches.join("\n")}`);
   }
 }

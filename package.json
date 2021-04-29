@@ -7,9 +7,9 @@
   },
   "main": "index.js",
   "files": [
-    "config/*",
-    "plugs/*",
-    "utils/*",
+    "config/*.json",
+    "plugs/*.js",
+    "utils/*.js",
     "*.js"
   ],
   "type": "commonjs",

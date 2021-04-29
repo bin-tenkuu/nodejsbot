@@ -43,40 +43,7 @@ export = new class CQBot extends Plug {
     this.helper = new Map();
     this.bot.bind("on", {
       "message.group": (event) => {
-        let userId = event.context.user_id;
-        db.start(async db => {
-          let newVar = await db.get("select id, exp from Members where id=?;", userId);
-          if (newVar === undefined) {
-            await db.run("insert into Members(id, exp, time) values (?, 1, ?)", userId, Date.now());
-          } else {
-            await db.run("update Members set exp=exp + 1, time=? where id = ?", Date.now(), userId);
-          }
-        });
-        let values = this.grouper.values();
-        for (let next = values.next(); !next.done; next = values.next()) {
-          for (let fun of next.value) {
-            fun(event);
-            if (event.isCanceled) return;
-          }
-        }
-        // console.log(contextEvent.isAtMe, event.isCanceled);
-        if (!isAtMe(event)) return;
-        event.stopPropagation();
-        let {
-          group_id,
-          message_id,
-        } = event.context;
-        let cqTags = onlyText(event).replace(/吗/g, "")
-            .replace(/不/g, "很")
-            .replace(/你/g, "我")
-            .replace(/(?<!没)有/g, "没有")
-            .replace(/[？?]/g, "!");
-        this.bot.send_group_msg(group_id, [
-          CQ.reply(message_id),
-          CQ.at(userId),
-          CQ.text(cqTags),
-        ]).catch(() => {});
-        return;
+        this.groupMessage(event);
       },
       "message.private": (event) => {
         let values = this.privater.values();
@@ -93,7 +60,7 @@ export = new class CQBot extends Plug {
       },
     });
     this.getGroup(this).push(event => {
-      if (/^(?:帮助|help)/.test(onlyText(event))) {
+      if (/^(?:帮助|help)$/.test(onlyText(event))) {
         let tags = <messageNode>[];
         this.helper.forEach((value, key) => {
           tags.push(CQ.node(key, event.context.user_id, value));
@@ -182,6 +149,47 @@ export = new class CQBot extends Plug {
       if (this.sendStateInterval !== undefined) {
         clearInterval(this.sendStateInterval);
       }
+    });
+  }
+  
+  private groupMessage(event: CQEvent<"message.group">) {
+    let userId = event.context.user_id;
+    db.start(async db => {
+      let data = await db.get("select id, baned from Members where id = ?;", userId) as { id: number, baned: 0 | 1 };
+      if (data === undefined) {
+        await db.run("insert into Members(id, exp, time) values (?, 1, ?);", userId, Date.now());
+      } else {
+        if (data.baned === 1) {
+          event.stopPropagation();
+        }
+        await db.run("update Members set exp=exp + 1, time=? where id = ?;", Date.now(), userId);
+      }
+    }).then(() => {
+      let values = this.grouper.values();
+      for (let next = values.next(); !next.done; next = values.next()) {
+        for (let fun of next.value) {
+          fun(event);
+          if (event.isCanceled) return;
+        }
+      }
+      // console.log(contextEvent.isAtMe, event.isCanceled);
+      if (!isAtMe(event)) return;
+      event.stopPropagation();
+      let {
+        group_id,
+        message_id,
+      } = event.context;
+      let cqTags = onlyText(event).replace(/吗/g, "")
+          .replace(/不/g, "很")
+          .replace(/你/g, "我")
+          .replace(/(?<!没)有/g, "没有")
+          .replace(/[？?]/g, "!");
+      this.bot.send_group_msg(group_id, [
+        CQ.reply(message_id),
+        CQ.at(userId),
+        CQ.text(cqTags),
+      ]).catch(() => {});
+      return;
     });
   }
 };

@@ -1,5 +1,5 @@
 export function dice(times: number, max: number): { num: number, list: number[] } {
-  if (times > 100 || max > 1e+10) {
+  if (times > 100 || max > 1e9) {
     return {num: 0, list: []};
   }
   let r = 0;

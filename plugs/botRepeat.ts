@@ -25,12 +25,21 @@ export = new class BotRepeat extends Plug {
       let {group_id, user_id} = event.context;
       if (this.repeatCache.check(group_id, user_id, msg, 4)) {
         event.stopPropagation();
-        return sendAuto(event, tag.toString());
+        return sendAuto(event, BotRepeat.random(msg));
       }
     });
   }
   
   async uninstall() {
     require("./bot").delGroup(this);
+  }
+  
+  static random(str: string): string {
+    let arr = [...str];
+    for (let i = arr.length - 1; i > 0; i--) {
+      let j = (Math.random() * i) | 0;
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr.join("");
   }
 }
