@@ -22,7 +22,7 @@ export = new class CQBotEvents extends Plug {
         event.bot.send_group_msg(context.group_id, [
           CQ.at(context.user_id),
           CQ.text("憋戳我了"),
-        ]).catch(() => {});
+        ]).catch(NOP);
       },
       "notice.group_increase": (event) => {
         event.stopPropagation();
@@ -54,7 +54,7 @@ export = new class CQBotEvents extends Plug {
         event.stopPropagation();
         let {user_id, flag} = event.context;
         sendAdminQQ(event, `${user_id}请求加好友`);
-        event.bot.set_friend_add_request(flag, true).catch(() => {});
+        event.bot.set_friend_add_request(flag, true).catch(NOP);
       },
       "request.group": (event) => {
         event.stopPropagation();

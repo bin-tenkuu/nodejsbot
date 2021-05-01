@@ -46,14 +46,14 @@ export = new class CQBotCOC extends Plug {
       db.all<{ key: string, value: string }[]>(`select key, value from COCShortKey`).then((kvs) => {
         kvs.forEach(({key, value}) => CQBotCOC.shortKey.set(key, value));
       });
-    }).then(() => {});
+    }).catch(NOP);
   }
   
   private static execDiceSet(event: CQEvent<"message.group">) {
     let dice = /^\.dset +(?<key>\w[\w\d]+)(?:=(?<value>[+\-*d0-9#]+))?/.exec(onlyText(event));
     let groupId = event.context.group_id;
     if (dice === null) {
-      event.bot.send_group_msg(groupId, ".dset 参数错误").catch(() => {});
+      event.bot.send_group_msg(groupId, ".dset 参数错误").catch(NOP);
       return;
     }
     let {key, value} = dice.groups as { key?: string, value?: string };
@@ -61,17 +61,17 @@ export = new class CQBotCOC extends Plug {
     if (value === undefined) {
       db.start(async db => {
         await db.run(`delete from COCShortKey where key = ?`, key);
-      }).then(() => {});
+      }).then(NOP);
       this.shortKey.delete(key);
-      event.bot.send_group_msg(groupId, `删除key:${key}`).catch(() => {});
+      event.bot.send_group_msg(groupId, `删除key:${key}`).catch(NOP);
       return;
     }
     if (value.length > 10) return;
     this.shortKey.set(key, value);
     db.start(async db => {
       await db.run(`insert into COCShortKey(key, value) values (?, ?)`, key, value);
-    }).then(() => {});
-    event.bot.send_group_msg(groupId, `添加key:${key}=${value}`).catch(() => {});
+    }).then(NOP);
+    event.bot.send_group_msg(groupId, `添加key:${key}=${value}`).catch(NOP);
   }
   
   private static execDiceStat(event: CQEvent<"message.group">) {
@@ -92,10 +92,10 @@ export = new class CQBotCOC extends Plug {
       dice = (<string>dice).replace(new RegExp(key), value);
     });
     if (/[^+\-*d0-9#]/.test(dice)) {
-      event.bot.send_group_msg(event.context.group_id, ".d错误参数").catch(() => {});
+      event.bot.send_group_msg(event.context.group_id, ".d错误参数").catch(NOP);
       return;
     }
-    event.bot.send_group_msg(event.context.group_id, CQBotCOC.dice(dice)).catch(() => {});
+    event.bot.send_group_msg(event.context.group_id, CQBotCOC.dice(dice)).catch(NOP);
   }
   
   private static dice(str: string): string {

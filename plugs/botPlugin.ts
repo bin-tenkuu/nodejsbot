@@ -20,7 +20,7 @@ export = new class CQBotPlugin extends Plug {
     require("./bot").delPrivate(this);
   }
   
-  run(event: CQEvent<"message.private">) {
+  private run(event: CQEvent<"message.private">) {
     if (!isAdminQQ(event)) return;
     event.stopPropagation();
     let plugins = Object.values(Plug.plugs);
@@ -40,7 +40,11 @@ export = new class CQBotPlugin extends Plug {
       case (/^获取ban列表/.test(text)):
         return this.getBanList(event);
       case (/^设置ban/.test(text)):
-        return this.setBanQQ(event);
+        return this.setBanQQ(event, 1);
+      case (/^设置unban/.test(text)):
+        return this.setBanQQ(event, 0);
+      case (/^获取分词/.test(text)):
+        return this.getWordSlices(event);
         // TODO:消息热重载其他固定代码
     }
   }
@@ -96,19 +100,30 @@ export = new class CQBotPlugin extends Plug {
   
   private getBanList(event: CQEvent<"message.private">) {
     db.start(async db => {
-      let list: number[] = await db.all(`select id from Members where baned = 1`);
-      sendAdminQQ(event, [CQ.text(list.join("\n"))]);
-    }).then(() => {});
+      let list: { id: number }[] = await db.all(`select id from Members where baned = 1`);
+      sendAdminQQ(event, [CQ.text(list.map(v => v.id).join("\n"))]);
+    }).then(NOP);
   }
   
-  private async setBanQQ(event: CQEvent<"message.private">) {
+  private async setBanQQ(event: CQEvent<"message.private">, ban: 0 | 1) {
     let text = onlyText(event);
     let matches = text.match(/\d+(?=\s)?/g) ?? [];
     await db.start(async db => {
       for (const value of matches) {
-        await db.run(`update Members set baned = 1 where id = ?;`, value);
+        await db.run(`update Members set baned = ? where id = ?;`, ban, value);
       }
     });
     sendAdminQQ(event, `已ban:\n${matches.join("\n")}`);
+  }
+  
+  private getWordSlices(event: CQEvent<"message.private">) {
+    let text = onlyText(event);
+    console.log(event.context.raw_message);
+    let matches = /^获取分词 +(.+)$/.exec(text)?.[1] ?? "";
+    event.bot.send(".get_word_slices", {
+      content: matches,
+    }).then(value => {
+      sendAdminQQ(event, `分词:\n${value.slices.join("\n")}`);
+    }).catch(NOP);
   }
 }

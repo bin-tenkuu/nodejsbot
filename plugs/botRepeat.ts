@@ -1,8 +1,7 @@
-import {CQTag, text} from "go-cqwebsocket/out/tags";
 import {CQEvent} from "../../go-cqwebsocket";
 import {Plug} from "../Plug";
 import {RepeatCache} from "../utils/repeat";
-import {sendAuto} from "../utils/Util";
+import {onlyText, sendAuto} from "../utils/Util";
 
 export = new class BotRepeat extends Plug {
   private repeatCache = new RepeatCache<string>();
@@ -16,16 +15,15 @@ export = new class BotRepeat extends Plug {
   
   async install() {
     require("./bot").getGroup(this).push((event: CQEvent<"message.group">) => {
-      let tag: CQTag<text> = event.cqTags[0];
-      if (event.cqTags.length !== 1 || tag.tagName !== "text") {
-        return;
-      }
-      let msg = tag.get("text");
+      if (event.cqTags.some(tag => tag.tagName !== "text")) { return; }
+      let msg = onlyText(event);
       if (/^[-+$%^&*.]/.test(msg)) return;
       let {group_id, user_id} = event.context;
       if (this.repeatCache.check(group_id, user_id, msg, 4)) {
         event.stopPropagation();
-        return sendAuto(event, BotRepeat.random(msg));
+        event.bot.get_word_slices(msg).then(value => {
+          sendAuto(event, BotRepeat.SendRandom(value.slices));
+        }).catch(NOP);
       }
     });
   }
@@ -34,12 +32,12 @@ export = new class BotRepeat extends Plug {
     require("./bot").delGroup(this);
   }
   
-  static random(str: string): string {
-    let arr = [...str];
-    for (let i = arr.length - 1; i > 0; i--) {
+  static SendRandom(str: string[]): string {
+    let i = str.length - 1;
+    for (; i > 0; i--) {
       let j = (Math.random() * i) | 0;
-      [arr[i], arr[j]] = [arr[j], arr[i]];
+      [str[i], str[j]] = [str[j], str[i]];
     }
-    return arr.join("");
+    return str.join("");
   }
 }

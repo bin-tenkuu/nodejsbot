@@ -66,7 +66,7 @@ export = new class CQBotLoLiSeTu extends Plug {
         bot.send_group_msg(groupId, [CQ.image(first.url)]).then((msgID) => {
           setTimeout(() => {
             this.cacheURL = first.url;
-            bot.delete_msg(msgID.message_id).catch(() => {});
+            bot.delete_msg(msgID.message_id).catch(NOP);
           }, 1000 * 60);
         }).catch(() => {
           return sendAuto(event, "图片发送失败,ban?");
@@ -76,7 +76,7 @@ export = new class CQBotLoLiSeTu extends Plug {
           CQ.node(nickname, userId, `标题：${first.title}
 作者：${first.author}\n原图：www.pixiv.net/artworks/${first.pid}`),
           CQ.node(nickname, userId, CQ.escape(first.tags.join("\n"))),
-        ]).catch(() => {});
+        ]).catch(NOP);
         let unlock = () => {
           this.isCalling = false;
           logger.info("解除锁定 %s", this.name);

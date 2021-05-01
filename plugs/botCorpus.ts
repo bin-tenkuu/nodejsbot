@@ -46,7 +46,7 @@ export = new class CQBotCorpus extends Plug {
         }
         Promise.all(item.reply.map(str => CQBotCorpus.parseGroup(str, event))).then(msg => {
           let {user_id, sender: {nickname}} = context;
-          sendForward(event, msg.map(v => CQ.node(nickname, user_id, v))).catch(() => {});
+          sendForward(event, msg.map(v => CQ.node(nickname, user_id, v))).catch(NOP);
         }).catch(() => {
           logger.warn(`语料库转换失败:corpus.group[${i}]:${item.regexp}`);
         });

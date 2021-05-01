@@ -1,5 +1,5 @@
-import {CQ, CQEvent, CQWebSocket} from "go-cqwebsocket";
-import {message, messageNode, Status} from "go-cqwebsocket/out/Interfaces";
+import {CQ, CQEvent, CQWebSocket, message, messageNode} from "go-cqwebsocket";
+import {Status} from "go-cqwebsocket/out/Interfaces";
 import {adminGroup, adminId, CQWS} from "../config/config.json";
 import {Plug} from "../Plug";
 import {db} from "../utils/database";
@@ -55,7 +55,7 @@ export = new class CQBot extends Plug {
         }
         // console.log(contextEvent.isAtMe, event.isCanceled);
         event.stopPropagation();
-        this.bot.send_private_msg(event.context.user_id, `收到消息,但未命中处理`).catch(() => {});
+        this.bot.send_private_msg(event.context.user_id, `收到消息,但未命中处理`).catch(NOP);
         return;
       },
     });
@@ -111,7 +111,7 @@ export = new class CQBot extends Plug {
       this.bot.bind("onceAll", {
         "socket.open": (event) => {
           logger.info("连接");
-          event.bot.send_private_msg(2938137849, "已上线").catch(() => {});
+          event.bot.send_private_msg(2938137849, "已上线").catch(NOP);
           resolve();
           this.sendStateInterval = setInterval(() => {
             this.sendState(this.bot.state.stat);
@@ -127,7 +127,7 @@ export = new class CQBot extends Plug {
   }
   
   async uninstall() {
-    await this.bot.send_private_msg(adminId, "即将下线").catch(() => {});
+    await this.bot.send_private_msg(adminId, "即将下线").catch(NOP);
     return new Promise<void>((resolve, reject) => {
       this.bot.bind("on", {
         "socket.close": () => {
@@ -188,7 +188,7 @@ export = new class CQBot extends Plug {
         CQ.reply(message_id),
         CQ.at(userId),
         CQ.text(cqTags),
-      ]).catch(() => {});
+      ]).catch(NOP);
       return;
     });
   }

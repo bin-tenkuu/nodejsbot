@@ -1,5 +1,4 @@
-import {message} from "go-cqwebsocket/out/Interfaces";
-import {CQEvent} from "../../go-cqwebsocket";
+import {CQEvent, message} from "go-cqwebsocket";
 import {Plug} from "../Plug";
 import {logger} from "../utils/logger";
 import {isAtMe, onlyText, sendAuto} from "../utils/Util";

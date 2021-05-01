@@ -1,5 +1,4 @@
-import {CQ, CQEvent} from "go-cqwebsocket";
-import {messageNode} from "go-cqwebsocket/out/Interfaces";
+import {CQ, CQEvent, messageNode} from "go-cqwebsocket";
 import {at, CQTag} from "go-cqwebsocket/out/tags";
 import {adminGroup, adminId} from "../config/config.json";
 import {logger} from "./logger";
