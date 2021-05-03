@@ -13,6 +13,7 @@ export = new class CQBotEvents extends Plug {
     this.name = "QQ其他-事件";
     this.description = "QQ的各种事件，非群聊";
     this.version = 0.1;
+  
     this.header = undefined;
     this.pokeGroupInner = false;
   }
@@ -22,9 +23,7 @@ export = new class CQBotEvents extends Plug {
       "notice.notify.poke.group": (event) => {
         let context = event.context;
         if (context.target_id !== event.bot.qq) {return;}
-        if (this.pokeGroupInner) {
-          return;
-        }
+        if (this.pokeGroupInner) return;
         this.pokeGroupInner = true;
         event.stopPropagation();
         setTimeout(() => {

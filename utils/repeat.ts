@@ -1,8 +1,8 @@
 import NodeCache from "node-cache";
 
 class Node<T> {
-  msg: T;
-  user: Set<number>;
+  public msg: T;
+  public user: Set<number>;
   
   constructor(msg: T) {
     this.msg = msg;
@@ -22,18 +22,25 @@ export class RepeatCache<T = unknown> {
   private cache: NodeCache;
   
   constructor() {
-    this.cache = new NodeCache({useClones: false, stdTTL: 600});
+    this.cache = new NodeCache({useClones: false, stdTTL: 600, deleteOnExpire: true});
   }
-  check(group: number, user: number, data: T, times: number) {
-    let node = this.getNode(group, user, data);
-    let t = node.times === times;
-    node.users = user;
-    return !t && node.times === times;
+  
+  addData(group: number, user: number, data: T): void {
+    this.getNode(group, user, data).users = user;
+  }
+  
+  check(group: number, times: number): boolean {
+    let node = this.cache.get<Node<T>>(group);
+    if (node !== undefined && node.times === times) {
+      node.users = 0;
+      return true;
+    }
+    return false;
   }
   
   getNode(group: number, user: number, data: T): Node<T> {
     let node = this.cache.get<Node<T>>(group);
-    if (!node || node.msg !== data) {
+    if (node === undefined || node.msg !== data) {
       node = new Node(data);
       this.cache.set(group, node, 600);
     }

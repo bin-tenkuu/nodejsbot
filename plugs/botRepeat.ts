@@ -15,11 +15,12 @@ export = new class BotRepeat extends Plug {
   
   async install() {
     require("./bot").getGroup(this).push((event: CQEvent<"message.group">) => {
+      let {group_id, user_id, raw_message} = event.context;
+      this.repeatCache.addData(group_id, user_id, raw_message);
       if (event.cqTags.some(tag => tag.tagName !== "text")) { return; }
       let msg = onlyText(event);
       if (/^[-+$%^&*.]/.test(msg)) return;
-      let {group_id, user_id} = event.context;
-      if (this.repeatCache.check(group_id, user_id, msg, 4)) {
+      if (this.repeatCache.check(group_id, 4)) {
         event.stopPropagation();
         if (msg.length < 3) {
           return sendAuto(event, msg);
