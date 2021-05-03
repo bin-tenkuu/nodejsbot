@@ -1,6 +1,6 @@
 import {BaseLayout, configure, ConsoleAppender, DateFileAppender, MessagePassThroughLayout} from "log4js";
 
-export var logger = configure({
+export const logger = configure({
   appenders: {
     consoleLog: <ConsoleAppender>{
       type: "console",

@@ -21,6 +21,9 @@ export = new class BotRepeat extends Plug {
       let {group_id, user_id} = event.context;
       if (this.repeatCache.check(group_id, user_id, msg, 4)) {
         event.stopPropagation();
+        if (msg.length < 3) {
+          return sendAuto(event, msg);
+        }
         event.bot.get_word_slices(msg).then(value => {
           sendAuto(event, BotRepeat.SendRandom(value.slices));
         }).catch(NOP);

@@ -1,28 +1,38 @@
-import {CQ, CQWebSocket} from "go-cqwebsocket";
+import {CQWebSocket} from "go-cqwebsocket";
 import {PartialSocketHandle} from "go-cqwebsocket/out/Interfaces";
+import {pokeGroup} from "../config/corpus.json";
 import {Plug} from "../Plug";
 import {sendAdminQQ} from "../utils/Util";
 
 export = new class CQBotEvents extends Plug {
   private header?: PartialSocketHandle;
+  private pokeGroupInner: boolean;
   
   constructor() {
     super(module);
     this.name = "QQ其他-事件";
     this.description = "QQ的各种事件，非群聊";
     this.version = 0.1;
+    this.header = undefined;
+    this.pokeGroupInner = false;
   }
   
   async install() {
     this.header = (<CQWebSocket>require("./bot").bot).bind("on", {
       "notice.notify.poke.group": (event) => {
         let context = event.context;
-        if (+context.target_id !== event.bot.qq) {return;}
+        if (context.target_id !== event.bot.qq) {return;}
+        if (this.pokeGroupInner) {
+          return;
+        }
+        this.pokeGroupInner = true;
         event.stopPropagation();
-        event.bot.send_group_msg(context.group_id, [
-          CQ.at(context.user_id),
-          CQ.text("憋戳我了"),
-        ]).catch(NOP);
+        setTimeout(() => {
+          let str = pokeGroup[Math.random() * pokeGroup.length | 0] ?? pokeGroup[0];
+          event.bot.send_group_msg(context.group_id, str).catch(NOP).finally(() => {
+            this.pokeGroupInner = false;
+          });
+        }, 1000);
       },
       "notice.group_increase": (event) => {
         event.stopPropagation();

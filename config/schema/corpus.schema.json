@@ -14,6 +14,12 @@
       "description": "字符串格式消息段",
       "pattern": "^(\\[(CQ:\\w+|FN:\\w+\\.\\w+)\\]|[^\\[]+)+$",
       "default": null
+    },
+    "CQ": {
+      "type": "string",
+      "description": "字符串格式消息段",
+      "pattern": "^(\\[CQ:\\w+(,\\w+=[^,\\]]+)+\\]|[^\\[]+)+$",
+      "default": null
     }
   },
   "type": "object",
@@ -59,6 +65,13 @@
           }
         },
         "required": ["regexp"]
+      }
+    },
+    "pokeGroup": {
+      "description": "群聊戳一戳消息",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/CQ"
       }
     }
   },
