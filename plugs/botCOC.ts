@@ -61,7 +61,7 @@ export = new class CQBotCOC extends Plug {
     if (value === undefined) {
       db.start(async db => {
         await db.run(`delete from COCShortKey where key = ?`, key);
-      }).then(NOP);
+      }).catch(NOP);
       this.shortKey.delete(key);
       event.bot.send_group_msg(groupId, `删除key:${key}`).catch(NOP);
       return;
@@ -70,7 +70,7 @@ export = new class CQBotCOC extends Plug {
     this.shortKey.set(key, value);
     db.start(async db => {
       await db.run(`insert into COCShortKey(key, value) values (?, ?)`, key, value);
-    }).then(NOP);
+    }).catch(NOP);
     event.bot.send_group_msg(groupId, `添加key:${key}=${value}`).catch(NOP);
   }
   

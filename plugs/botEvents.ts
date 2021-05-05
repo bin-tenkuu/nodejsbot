@@ -2,6 +2,8 @@ import {CQWebSocket} from "go-cqwebsocket";
 import {PartialSocketHandle} from "go-cqwebsocket/out/Interfaces";
 import {pokeGroup} from "../config/corpus.json";
 import {Plug} from "../Plug";
+import {db} from "../utils/database";
+import {logger} from "../utils/logger";
 import {sendAdminQQ} from "../utils/Util";
 
 export = new class CQBotEvents extends Plug {
@@ -13,7 +15,7 @@ export = new class CQBotEvents extends Plug {
     this.name = "QQ其他-事件";
     this.description = "QQ的各种事件，非群聊";
     this.version = 0.1;
-  
+    
     this.header = undefined;
     this.pokeGroupInner = false;
   }
@@ -21,17 +23,24 @@ export = new class CQBotEvents extends Plug {
   async install() {
     this.header = (<CQWebSocket>require("./bot").bot).bind("on", {
       "notice.notify.poke.group": (event) => {
-        let context = event.context;
-        if (context.target_id !== event.bot.qq) {return;}
         if (this.pokeGroupInner) return;
         this.pokeGroupInner = true;
+        let target_id = event.context.target_id;
+        if (target_id !== event.bot.qq) {return;}
         event.stopPropagation();
         setTimeout(() => {
-          let str = pokeGroup[Math.random() * pokeGroup.length | 0] ?? pokeGroup[0];
-          event.bot.send_group_msg(context.group_id, str).catch(NOP).finally(() => {
-            this.pokeGroupInner = false;
+          db.start(async db => {
+            let {user_id, group_id} = event.context;
+            let baned = await db.get<{ baned: 0 | 1 }>(`select baned from Members where id=?;`, user_id);
+            let str = pokeGroup[Math.random() * pokeGroup.length | 0];
+            if (baned?.baned !== 1) {
+              event.bot.send_group_msg(group_id, str).catch(NOP).finally(() => {
+                this.pokeGroupInner = false;
+              });
+            }
           });
-        }, 1000);
+          logger.log("执行延时结束");
+        }, (Math.random() * 5000 | 0) + 5000);
       },
       "notice.group_increase": (event) => {
         event.stopPropagation();
