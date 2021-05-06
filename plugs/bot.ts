@@ -53,10 +53,6 @@ export = new class CQBot extends Plug {
             if (event.isCanceled) return;
           }
         }
-        // console.log(contextEvent.isAtMe, event.isCanceled);
-        event.stopPropagation();
-        this.bot.send_private_msg(event.context.user_id, `收到消息,但未命中处理`).catch(NOP);
-        return;
       },
     });
     this.getGroup(this).push(event => {
@@ -153,8 +149,8 @@ export = new class CQBot extends Plug {
   }
   
   private groupMessage(event: CQEvent<"message.group">) {
+    let userId = event.context.user_id;
     db.start(async db => {
-      let userId = event.context.user_id;
       let data = await db.get("select id, baned from Members where id = ?;", userId) as { id: number, baned: 0 | 1 };
       if (data === undefined) {
         await db.run("insert into Members(id, exp, time) values (?, 1, ?);", userId, Date.now());
@@ -164,6 +160,7 @@ export = new class CQBot extends Plug {
         }
         await db.run("update Members set exp=exp + 1, time=? where id = ?;", Date.now(), userId);
       }
+    }).then(() => {
       let values = this.grouper.values();
       for (let next = values.next(); !next.done; next = values.next()) {
         for (let fun of next.value) {
@@ -183,11 +180,11 @@ export = new class CQBot extends Plug {
           .replace(/你/g, "我")
           .replace(/(?<!没)有/g, "没有")
           .replace(/[？?]/g, "!");
-      await this.bot.send_group_msg(group_id, [
+      this.bot.send_group_msg(group_id, [
         CQ.reply(message_id),
         CQ.at(userId),
         CQ.text(cqTags),
-      ]);
+      ]).catch(NOP);
       return;
     }).catch(NOP);
   }

@@ -22,7 +22,6 @@ export = new class CQBotPlugin extends Plug {
   
   private run(event: CQEvent<"message.private">) {
     if (!isAdminQQ(event)) return;
-    event.stopPropagation();
     let plugins = Object.values(Plug.plugs);
     let text = onlyText(event);
     if (!/^(?:插件|获取|设置)/.test(text)) {return; }

@@ -1,14 +1,15 @@
-import {CQWebSocket} from "go-cqwebsocket";
+import {CQ, CQEvent, CQWebSocket} from "go-cqwebsocket";
 import {PartialSocketHandle} from "go-cqwebsocket/out/Interfaces";
-import {pokeGroup} from "../config/corpus.json";
+import {adminId} from "../config/config.json";
 import {Plug} from "../Plug";
 import {db} from "../utils/database";
 import {logger} from "../utils/logger";
-import {sendAdminQQ} from "../utils/Util";
+import {isAdminQQ, onlyText, sendAdminQQ} from "../utils/Util";
 
 export = new class CQBotEvents extends Plug {
   private header?: PartialSocketHandle;
   private pokeGroupInner: boolean;
+  private pokeGroup: string[];
   
   constructor() {
     super(module);
@@ -18,29 +19,25 @@ export = new class CQBotEvents extends Plug {
     
     this.header = undefined;
     this.pokeGroupInner = false;
+    this.pokeGroup = [];
   }
   
   async install() {
+    this.init();
     this.header = (<CQWebSocket>require("./bot").bot).bind("on", {
       "notice.notify.poke.group": (event) => {
-        if (this.pokeGroupInner) return;
-        this.pokeGroupInner = true;
         let target_id = event.context.target_id;
         if (target_id !== event.bot.qq) {return;}
+        if (this.pokeGroupInner) return;
+        this.pokeGroupInner = true;
         event.stopPropagation();
         setTimeout(() => {
-          db.start(async db => {
-            let {user_id, group_id} = event.context;
-            let baned = await db.get<{ baned: 0 | 1 }>(`select baned from Members where id=?;`, user_id);
-            let str = pokeGroup[Math.random() * pokeGroup.length | 0];
-            if (baned?.baned !== 1) {
-              event.bot.send_group_msg(group_id, str).catch(NOP).finally(() => {
-                this.pokeGroupInner = false;
-              });
-            }
-          });
-          logger.log("执行延时结束");
-        }, (Math.random() * 5000 | 0) + 5000);
+          let {bot, context: {group_id}} = event;
+          let str = this.pokeGroup[Math.random() * this.pokeGroup.length | 0];
+          bot.send_group_msg(group_id, str).catch(NOP);
+          this.pokeGroupInner = false;
+          logger.info("pokeGroupInner = false");
+        }, 5000);
       },
       "notice.group_increase": (event) => {
         event.stopPropagation();
@@ -81,9 +78,44 @@ export = new class CQBotEvents extends Plug {
         event.bot.set_group_add_request(flag, sub_type, true);
       },
     });
+    require("./bot").getPrivate(this).push((event: CQEvent<"message.private">) => {
+      this.runPrivate(event);
+    });
   }
   
   async uninstall() {
     require("./bot").bot.unbind(this.header);
+    require("./bot").delPrivate(this);
+  }
+  
+  private init() {
+    db.start(async db => {
+      let all = await db.all<{ text: string }[]>(`select text from pokeGroup`);
+      this.pokeGroup = all.map(v => v.text);
+    }).catch(NOP);
+  }
+  
+  private runPrivate(event: CQEvent<"message.private">) {
+    if (!isAdminQQ(event)) { return; }
+    let text = onlyText(event);
+    switch (text) {
+      case "设置poke": {
+        sendAdminQQ(event, "请发送");
+        event.bot.once("message.private", event => {
+          let tags = event.cqTags.map(tag => {
+            if (tag.tagName === "text") return tag;
+            if (tag.tagName === "image") return CQ.image(tag.get("url"));
+            return CQ.text(`未支持tag:` + tag.tagName);
+          }).join("");
+          db.start(async db => {
+            await db.run(`insert into pokeGroup(text) values(?)`, tags);
+            this.pokeGroup.push(tags);
+          }).catch(NOP);
+          console.log(tags);
+          event.bot.send_private_msg(adminId, tags);
+        });
+      }
+      
+    }
   }
 }

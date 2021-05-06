@@ -10,7 +10,8 @@
     "config/*.json",
     "plugs/*.js",
     "utils/*.js",
-    "*.js"
+    "index.js",
+    "Plug.js"
   ],
   "type": "commonjs",
   "scripts": {
