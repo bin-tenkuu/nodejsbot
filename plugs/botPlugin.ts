@@ -1,7 +1,7 @@
 import {CQ, CQEvent} from "go-cqwebsocket";
 import {Plug} from "../Plug";
 import {db} from "../utils/database";
-import {isAdminQQ, onlyText, sendAdminQQ} from "../utils/Util";
+import {isAdminQQ, onlyText, sendAdminQQ, sendForward} from "../utils/Util";
 
 export = new class CQBotPlugin extends Plug {
   
@@ -14,10 +14,12 @@ export = new class CQBotPlugin extends Plug {
   
   async install() {
     require("./bot").getPrivate(this).push((event: CQEvent<"message.private">) => this.run(event));
+    require("./bot").getGroup(this).push((event: CQEvent<"message.group">) => this.runGroup(event));
   }
   
   async uninstall() {
     require("./bot").delPrivate(this);
+    require("./bot").getGroup(this);
   }
   
   private run(event: CQEvent<"message.private">) {
@@ -46,6 +48,22 @@ export = new class CQBotPlugin extends Plug {
         return this.getWordSlices(event);
         // TODO:消息热重载其他固定代码
     }
+  }
+  
+  private runGroup(event: CQEvent<"message.group">) {
+    if (!isAdminQQ(event)) return;
+    let text = onlyText(event);
+    if (!/^获取poke/.test(text)) {return; }
+    // switch (true) {
+    //   case (/^获取poke$/.test(text)):
+    db.start(async db => {
+      let all = await db.all<{ id: number, text: string }[]>("select id, text from pokeGroup");
+      let uin = event.context.self_id;
+      let map = all.map(v => CQ.node(String(v.id), uin, CQ.parse(v.text)));
+      sendForward(event, map);
+    }).catch(NOP);
+    return;
+    // }
   }
   
   private static pluginList(plugins: Plug[], event: CQEvent<"message.private">) {

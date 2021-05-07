@@ -8,20 +8,19 @@ export function isAt({cqTags}: CQEvent<"message.group">): boolean {
   return cqTags.some((tag: CQTag<at>) => tag.tagName === "at");
 }
 
-export function isAtMe(event: CQEvent<"message.group">): boolean {
-  if (event.contextType !== "message.group") return false;
-  if (event.cqTags.length === 0) { return false; }
-  return event.cqTags.some((tag: CQTag<at>) => tag.tagName === "at" && +tag.get("qq") === event.context.self_id);
+export function isAtMe({context: {self_id}, cqTags}: CQEvent<"message.group">): boolean {
+  if (cqTags.length === 0) { return false; }
+  return cqTags.some((tag: CQTag<at>) => tag.tagName === "at" && +tag.get("qq") === self_id);
 }
 
-export function onlyText({context: {raw_message}}: CQEvent<"message.group"> | CQEvent<"message.private">): string {
+export function onlyText({context: {raw_message}}: CQEvent<"message.group" | "message.private">): string {
   if (raw_message !== undefined) {
     return raw_message.replace(/\[[^\]]+]/g, "").trim();
   }
   return "";
 }
 
-export function isAdminQQ({context: {user_id}}: CQEvent<"message.private">): boolean {
+export function isAdminQQ({context: {user_id}}: CQEvent<"message.private" | "message.group">): boolean {
   return user_id === adminId;
 }
 

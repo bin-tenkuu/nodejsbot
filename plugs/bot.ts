@@ -151,7 +151,7 @@ export = new class CQBot extends Plug {
   private groupMessage(event: CQEvent<"message.group">) {
     let userId = event.context.user_id;
     db.start(async db => {
-      let data = await db.get("select id, baned from Members where id = ?;", userId) as { id: number, baned: 0 | 1 };
+      let data = await db.get<{ id: number, baned: 0 | 1 }>("select id, baned from Members where id = ?;", userId);
       if (data === undefined) {
         await db.run("insert into Members(id, exp, time) values (?, 1, ?);", userId, Date.now());
       } else {
