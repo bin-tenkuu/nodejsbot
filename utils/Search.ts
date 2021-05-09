@@ -75,10 +75,4 @@ export function pixivCat(pid: string): Promise<pixivCatType> {
   }).then(value => value.data);
 }
 
-/**TODO:
- * 彩虹屁：https://chp.shadiao.app/api.php
- */
-export function shadiao() {
-
-}
 

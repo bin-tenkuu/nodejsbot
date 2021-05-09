@@ -30,9 +30,8 @@ export = new class CQBotLoLiSeTu extends Plug {
       if (this.isCalling) {
         logger.info("冷却中", groups);
         return;
-      } else {
-        this.isCalling = true;
       }
+      this.isCalling = true;
       logger.info("开始色图", groups);
       let {
         context: {

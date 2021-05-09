@@ -54,16 +54,13 @@ export = new class CQBotPlugin extends Plug {
     if (!isAdminQQ(event)) return;
     let text = onlyText(event);
     if (!/^获取poke/.test(text)) {return; }
-    // switch (true) {
-    //   case (/^获取poke$/.test(text)):
     db.start(async db => {
       let all = await db.all<{ id: number, text: string }[]>("select id, text from pokeGroup");
       let uin = event.context.self_id;
-      let map = all.map(v => CQ.node(String(v.id), uin, CQ.parse(v.text)));
-      sendForward(event, map);
+      let map = all.map(v => CQ.node(String(v.id), uin, v.text));
+      sendForward(event, map).catch(NOP);
     }).catch(NOP);
     return;
-    // }
   }
   
   private static pluginList(plugins: Plug[], event: CQEvent<"message.private">) {

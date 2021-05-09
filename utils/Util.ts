@@ -29,21 +29,21 @@ export function isAdminGroup({context: {group_id}}: CQEvent<"message.group">): b
 }
 
 export function sendAdminQQ({bot}: CQEvent<any>, message: CQTag<any>[] | string) {
-  if (typeof message === "string") message = [CQ.text(message)];
+  if (typeof message === "string") message = CQ.parse(message);
   bot.send_private_msg(adminId, message).catch(() => {
     logger.warn("管理员消息发送失败");
   });
 }
 
 export function sendAdminGroup({bot}: CQEvent<any>, message: CQTag<any>[] | string) {
-  if (typeof message === "string") message = [CQ.text(message)];
+  if (typeof message === "string") message = CQ.parse(message);
   bot.send_group_msg(adminGroup, message).catch(() => {
     logger.warn("管理群消息发送失败");
   });
 }
 
 export function sendAuto(event: CQEvent<"message.group"> | CQEvent<"message.private">, message: CQTag<any>[] | string) {
-  if (typeof message === "string") message = [CQ.text(message)];
+  if (typeof message === "string") message = CQ.parse(message);
   if (event.contextType === "message.group") {
     event.bot.send_group_msg(event.context.group_id, message).catch(() => {
       logger.warn("群消息发送失败");

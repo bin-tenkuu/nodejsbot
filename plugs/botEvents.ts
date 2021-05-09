@@ -1,6 +1,5 @@
 import {CQ, CQEvent, CQWebSocket} from "go-cqwebsocket";
 import {PartialSocketHandle} from "go-cqwebsocket/out/Interfaces";
-import {adminId} from "../config/config.json";
 import {Plug} from "../Plug";
 import {db} from "../utils/database";
 import {logger} from "../utils/logger";
@@ -37,7 +36,7 @@ export = new class CQBotEvents extends Plug {
           bot.send_group_msg(group_id, str).catch(NOP);
           this.pokeGroupInner = false;
           logger.info("pokeGroupInner = false");
-        }, 5000);
+        }, 3000);
       },
       "notice.group_increase": (event) => {
         event.stopPropagation();
@@ -99,7 +98,7 @@ export = new class CQBotEvents extends Plug {
     if (!isAdminQQ(event)) { return; }
     let text = onlyText(event);
     switch (text) {
-      case "设置poke": {
+      case "设置poke":
         sendAdminQQ(event, "请发送");
         event.bot.once("message.private", event => {
           let tags = event.cqTags.map(tag => {
@@ -112,10 +111,21 @@ export = new class CQBotEvents extends Plug {
             this.pokeGroup.push(tags);
           }).catch(NOP);
           console.log(tags);
-          event.bot.send_private_msg(adminId, tags);
+          sendAdminQQ(event, tags);
         });
-      }
-      
+        break;
+      case "删除poke":
+        db.start(async db => {
+          let matches = text.match(/\d+(?=\s)?/g) ?? [];
+          let statement = await db.prepare("delete from pokeGroup where id=?");
+          for (let match of matches) {
+            await statement.run(matches);
+          }
+          await statement.finalize();
+          this.pokeGroup = await db.all("select id,text from pokeGroup");
+          sendAdminQQ(event, "已删除:" + matches.join(","));
+        }).catch(NOP);
+        break;
     }
   }
 }
