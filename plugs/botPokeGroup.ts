@@ -1,7 +1,7 @@
 import {CQ, CQEvent, CQTag, CQWebSocket} from "go-cqwebsocket";
 import {PartialSocketHandle} from "go-cqwebsocket/out/Interfaces";
 import {Plug} from "../Plug";
-import {canCallPrivate} from "../utils/Annotation";
+import {canCallGroup, canCallPrivate} from "../utils/Annotation";
 import {db} from "../utils/database";
 import {logger} from "../utils/logger";
 import {sendAdminQQ, sendGroup} from "../utils/Util";
@@ -59,7 +59,9 @@ class CQBotPokeGroup extends Plug {
    * @param execArray
    */
   @canCallPrivate()
-  async runPrivate(event: CQEvent<"message.private">, execArray: RegExpExecArray): Promise<CQTag<any>[]> {
+  @canCallGroup()
+  async runPrivate(event: CQEvent<"message.private"> | CQEvent<"message.group">,
+      execArray: RegExpExecArray): Promise<CQTag<any>[]> {
     event.stopPropagation();
     let {control, other} = execArray.groups as { control?: string, other?: string } ?? {};
     if (control === undefined) return [];

@@ -1,6 +1,6 @@
 import {CQ, CQEvent, CQTag} from "go-cqwebsocket";
 import {Plug} from "../Plug";
-import {canCallGroup} from "../utils/Annotation";
+import {canCallGroup, canCallPrivate} from "../utils/Annotation";
 import {logger} from "../utils/logger";
 import {pixivCat} from "../utils/Search";
 import {onlyText, sendAdminQQ, sendForward, sendGroup} from "../utils/Util";
@@ -18,7 +18,7 @@ class CQBotPixiv extends Plug {
     botGroup.getGroup(this).push((event: CQEvent<"message.group">) => {
       this.runPixiv(event);
     });
-    botGroup.setGroupHelper("加载p站图片", [CQ.text("看p站(pid)(-p)")]);
+    botGroup.setGroupHelper("加载p站图片", [CQ.text("看p站[pid](-p)")]);
   }
   
   async uninstall() {
@@ -41,9 +41,10 @@ class CQBotPixiv extends Plug {
   }
   
   @canCallGroup()
+  @canCallPrivate()
   async getPixiv(event: CQEvent<"message.group"> | CQEvent<"message.private">,
       exec: RegExpExecArray): Promise<CQTag<any>[]> {
-    let {pid, p} = (exec.groups as { pid?: string, p?: string });
+    let {pid, p} = (exec.groups as { pid?: string, p?: string }) ?? {};
     logger.debug(`p站图片请求：pid:${pid},p:${p}`);
     if (pid === undefined) {
       return [CQ.text("pid获取失败")];

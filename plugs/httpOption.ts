@@ -1,8 +1,9 @@
 import http from "http";
 import {Plug} from "../Plug";
+import {canCallGroup, canCallPrivate} from "../utils/Annotation";
 import {logger} from "../utils/logger";
 
-export = new class HttpOption extends Plug {
+class HttpOption extends Plug {
   private header?: http.Server;
   
   constructor() {
@@ -28,9 +29,7 @@ export = new class HttpOption extends Plug {
         return;
       }
       res.end("开始退出\n");
-      Promise.all(Object.values(Plug.plugs).map((p) => p.uninstall())).then(() => {
-        logger.info(">>>>>>>>>> 全部卸载完成 <<<<<<<<<<");
-      });
+      this.exit();
     }).listen(40000);
     logger.info("快速结束已启动,点击 http://127.0.0.1:40000");
     this.header = server;
@@ -40,4 +39,17 @@ export = new class HttpOption extends Plug {
     this.header?.close();
   }
   
+  @canCallPrivate()
+  @canCallGroup()
+  async exit() {
+    Promise.all([...(Plug.plugs.values())].map((p) => p.uninstall())).then(() => {
+      logger.info(">>>>>>>>>> 全部卸载完成 <<<<<<<<<<");
+      setTimeout(() => {
+        process.exit();
+      }, 1000);
+    });
+    return [];
+  }
 }
+
+export = new HttpOption

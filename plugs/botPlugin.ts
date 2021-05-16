@@ -65,7 +65,15 @@ class CQBotPlugin extends Plug {
   @canCallGroup()
   async pluginList(event: CQEvent<"message.private"> | CQEvent<"message.group">, execArray: RegExpExecArray) {
     event.stopPropagation();
-    let {open} = execArray.groups as { open?: "开" | "关" } ?? {};
+    let {type, open} = execArray.groups as { type?: "私聊" | "群聊", open?: "开" | "关" } ?? {};
+    let list: { regex: RegExp, reply: string, isOpen: boolean }[];
+    if (type === "私聊") {
+      list = bot.corpusPrivate;
+    } else if (type === "群聊") {
+      return [CQ.text("未做完")];
+    } else {
+      return [];
+    }
     let isOpen: boolean;
     if (open === "开") {
       isOpen = true;
@@ -74,11 +82,10 @@ class CQBotPlugin extends Plug {
     } else {
       return [];
     }
-    let filter = bot.corpusPrivate.filter(msg =>
-        msg.needAdmin === isOpen,
-    ).map((c, i) =>
-        `${i} :${c.regex}`,
-    ).join("\n");
+    let filter = list.map((msg, index) => ({regex: msg.regex, isOpen: msg.isOpen, index}))
+        .filter(msg => msg.isOpen === isOpen)
+        .map(({regex, index}) => `${index} :${regex}`)
+        .join("\n");
     return [CQ.text(filter)];
   }
   

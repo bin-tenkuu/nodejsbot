@@ -13,9 +13,9 @@ class CQBot extends Plug {
   public bot: CQWebSocket;
   private readonly grouper: Map<Plug, GroFunList[]>;
   private readonly helper: Map<string, message>;
-  private banSet: Set<number>;
   private sendStateInterval?: NodeJS.Timeout;
   
+  private banSet: Set<number>;
   readonly corpusPrivate: {
     regex: RegExp, reply: string, needAdmin: boolean, isOpen: boolean
   }[];
