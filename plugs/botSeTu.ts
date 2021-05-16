@@ -1,12 +1,13 @@
-import {CQ, CQEvent} from "go-cqwebsocket";
+import {CQ, CQEvent, CQTag} from "go-cqwebsocket";
 import {Plug} from "../Plug";
+import {canCallGroup, canCallPrivate} from "../utils/Annotation";
 import {logger} from "../utils/logger";
 import {lolicon} from "../utils/Search";
-import {onlyText, sendAdminQQ, sendAuto, sendForward} from "../utils/Util";
+import {sendAdminQQ, sendAuto, sendForward} from "../utils/Util";
 
-export = new class CQBotLoLiSeTu extends Plug {
+
+class CQBotLoLiSeTu extends Plug {
   private isCalling: boolean;
-  private cacheURL?: string;
   
   constructor() {
     super(module);
@@ -16,89 +17,70 @@ export = new class CQBotLoLiSeTu extends Plug {
     this.isCalling = false;
   }
   
-  async install() {
-    let botGroup = require("./bot");
-    botGroup.getGroup(this).push((event: CQEvent<"message.group">) => {
-      let exec = /^[来來发發给給][张張个個幅点點份](?<r18>[Rr]18的?)?(?<keyword>.*?)?的?[色瑟][图圖]$/.exec(onlyText(event));
-      if (exec == null) {
-        return;
+  @canCallGroup()
+  @canCallPrivate()
+  async getSeTu(event: CQEvent<"message.private"> | CQEvent<"message.group">,
+      exec: RegExpExecArray): Promise<CQTag<any>[]> {
+    event.stopPropagation();
+    if (this.isCalling) {
+      logger.info("冷却中");
+      return [];
+    }
+    this.isCalling = true;
+    let groups = {
+      keyword: exec.groups?.keyword,
+      r18: exec.groups?.r18 !== undefined,
+    };
+    logger.info("开始色图", groups);
+    try {
+      let data = await lolicon(groups.keyword, groups.r18);
+      if (data.code !== 0) {
+        let message = CQBotLoLiSeTu.code(data.code);
+        logger.warn(`开始色图异常：异常返回码(${data.code})：${message}`);
+        this.isCalling = false;
+        return [CQ.text(message)];
       }
-      let groups = {
-        r18: exec.groups?.r18 !== undefined,
-        keyword: exec.groups?.keyword,
-      };
-      if (this.isCalling) {
-        logger.info("冷却中", groups);
-        return;
+      if (data.count < 1) {
+        logger.warn(`开始色图异常：色图数量不足(${data.count})`);
+        this.isCalling = false;
+        return [CQ.text("色图数量不足")];
       }
-      this.isCalling = true;
-      logger.info("开始色图", groups);
-      let {
-        context: {
-          message_id: messageId,
-          group_id: groupId,
-          sender: {
-            nickname: nickname,
-          },
-          user_id: userId,
-        },
-        bot: bot,
-      } = event;
-      event.stopPropagation();
-      lolicon(groups.keyword, groups.r18).then(value => {
-        if (value.code !== 0) {
-          let message = CQBotLoLiSeTu.code(value.code);
-          logger.warn(`开始色图异常：异常返回码(${value.code})：${message}`);
-          sendAuto(event, message);
-          this.isCalling = false;
-          return;
-        }
-        if (value.count < 1) {
-          sendAuto(event, "色图数量不足");
-          logger.warn(`开始色图异常：色图数量不足(${value.count})`);
-          this.isCalling = false;
-          return;
-        }
-        let first = value.data[0];
-        logger.info(`剩余次数：${value.quota}||剩余重置时间：${value.quota_min_ttl}s`);
-        sendAuto(event, "开始加载");
-        bot.send_group_msg(groupId, [CQ.image(first.url)]).then((msgID) => {
-          setTimeout(() => {
-            this.cacheURL = first.url;
-            bot.delete_msg(msgID.message_id).catch(NOP);
-          }, 1000 * 60);
-        }).catch(() => {
-          return sendAuto(event, "图片发送失败,ban?");
-        });
+      let first = data.data[0];
+      logger.info(`剩余次数：${data.quota}||剩余重置时间：${data.quota_min_ttl}s`);
+      sendAuto(event, "开始加载");
+      if (event.contextType === "message.group") {
+        let {
+          context: {message_id: messageId, sender: {nickname: nickname, user_id: userId}},
+        } = event;
         sendForward(event, [
           CQ.nodeId(messageId),
           CQ.node(nickname, userId, `标题：${first.title}
 作者：${first.author}\n原图：www.pixiv.net/artworks/${first.pid}`),
           CQ.node(nickname, userId, CQ.escape(first.tags.join("\n"))),
         ]).catch(NOP);
-        let unlock = () => {
-          this.isCalling = false;
-          logger.info("解除锁定 %s", this.name);
-        };
-        if (value.quota < 5) {
-          setTimeout(unlock, 2000 * Number(value.quota_min_ttl));
-        } else {
-          setTimeout(unlock, 1000);
-        }
-      }).catch(reason => {
-        sendAuto(event, "未知错误,或网络错误");
-        sendAdminQQ(event, "色图坏了");
-        logger.info(reason);
-        return this.uninstall();
-      });
-    });
-    botGroup.setGroupHelper("色图", [CQ.text("[来來发發给給][张張个個幅点點份]([Rr]18的?)?(.*?)?的?[色瑟][图圖]")]);
+      }
+      let unlock = () => {
+        this.isCalling = false;
+        logger.info("解除锁定 %s", this.name);
+      };
+      if (data.quota < 5) {
+        setTimeout(unlock, 2000 * Number(data.quota_min_ttl));
+      } else {
+        setTimeout(unlock, 1000);
+      }
+      return [CQ.image(first.url)];
+    } catch (reason) {
+      sendAdminQQ(event, "色图坏了");
+      logger.info(reason);
+      return [CQ.text("未知错误,或网络错误")];
+    }
+  }
+  
+  
+  async install() {
   }
   
   async uninstall() {
-    let botGroup = require("./bot");
-    botGroup.delGroup(this);
-    botGroup.delGroupHelper("色图");
   }
   
   static code(code: number) {
@@ -122,3 +104,4 @@ export = new class CQBotLoLiSeTu extends Plug {
   
 }
 
+export = new CQBotLoLiSeTu()

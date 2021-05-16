@@ -38,6 +38,11 @@ class CQBotPlugin extends Plug {
           let s = list.map(v => v.id).join("\n");
           return [CQ.text(s)];
         });
+      case "插件列表": {
+        let s = [...Plug.plugs.values()].map((p, i) =>
+            `${i}. ${p.installed} <- ${p.name}`).join("\n");
+        return [CQ.text(s)];
+      }
       default:
         return [];
     }

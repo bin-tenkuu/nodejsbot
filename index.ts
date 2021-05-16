@@ -12,11 +12,11 @@ Promise.resolve().then(async () => {
   await require("./plugs/botCOC").install();
   await require("./plugs/botCorpus").install();
   await require("./plugs/botEvents").install();
-  await require("./plugs/botPixiv").install();
+  await require("./plugs/botPixiv");
   await require("./plugs/botPlugin").install();
   await require("./plugs/botRepeat").install();
   await require("./plugs/botSauceNAOGroup").install();
-  await require("./plugs/botSeTu").install();
+  await require("./plugs/botSeTu");
   await require("./plugs/botTouHouPNG");
   await require("./plugs/test");
 }).then(() => {

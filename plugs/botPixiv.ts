@@ -3,7 +3,7 @@ import {Plug} from "../Plug";
 import {canCallGroup, canCallPrivate} from "../utils/Annotation";
 import {logger} from "../utils/logger";
 import {pixivCat} from "../utils/Search";
-import {onlyText, sendAdminQQ, sendForward, sendGroup} from "../utils/Util";
+import {sendAdminQQ} from "../utils/Util";
 
 class CQBotPixiv extends Plug {
   constructor() {
@@ -14,36 +14,16 @@ class CQBotPixiv extends Plug {
   }
   
   async install() {
-    let botGroup = require("./bot");
-    botGroup.getGroup(this).push((event: CQEvent<"message.group">) => {
-      this.runPixiv(event);
-    });
-    botGroup.setGroupHelper("加载p站图片", [CQ.text("看p站[pid](-p)")]);
   }
   
   async uninstall() {
-    let botGroup = require("./bot");
-    botGroup.delGroup(this);
-    botGroup.delGroupHelper("加载p站图片");
-  }
-  
-  private async runPixiv(event: CQEvent<"message.group">) {
-    let exec = /^看{1,2}p站(?<pid>\d+)(?:-(?<p>\d+))?$/.exec(onlyText(event));
-    if (exec == null) return;
-    event.stopPropagation();
-    let content = await this.getPixiv(event, exec);
-    if (content.length === 1) {
-      sendGroup(event, content);
-    } else {
-      let {user_id, nickname} = event.context.sender;
-      sendForward(event, [CQ.node(nickname, user_id, content)]);
-    }
   }
   
   @canCallGroup()
   @canCallPrivate()
   async getPixiv(event: CQEvent<"message.group"> | CQEvent<"message.private">,
       exec: RegExpExecArray): Promise<CQTag<any>[]> {
+    event.stopPropagation();
     let {pid, p} = (exec.groups as { pid?: string, p?: string }) ?? {};
     logger.debug(`p站图片请求：pid:${pid},p:${p}`);
     if (pid === undefined) {

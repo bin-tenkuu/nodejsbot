@@ -85,24 +85,22 @@ class CQBot extends Plug {
     });
   }
   
-  private privateMessage(event: CQEvent<"message.private">) {
+  private async privateMessage(event: CQEvent<"message.private">) {
     let text = onlyText(event);
     let isAdmin = isAdminQQ(event);
     for (const element of this.corpusPrivate) {
-      if (!element.isOpen) { continue; }
-      if (element.needAdmin && !isAdmin) {continue;}
+      if (!element.isOpen) continue;
+      if (element.needAdmin && !isAdmin) continue;
       let exec = element.regex.exec(text);
-      if (exec === null) {continue;}
+      if (exec === null) continue;
       if (event.isCanceled) return;
-      parseMessage(element.reply, event, exec).then(tags => {
-        if (tags.length > 0) {
-          sendPrivate(event, tags);
-        }
+      await parseMessage(element.reply, event, exec).then(tags => {
+        if (tags.length > 0) sendPrivate(event, tags);
       }).catch(e => {
         logger.error("语料库转换失败:" + element.reply.toString());
         console.error(e);
       });
-      return;
+      if (event.isCanceled) return;
     }
   }
   
@@ -185,7 +183,7 @@ class CQBot extends Plug {
         this.groupMessage(event);
       },
       "message.private": (event) => {
-        this.privateMessage(event);
+        this.privateMessage(event).catch(NOP);
       },
     });
     this.getGroup(this).push(event => {

@@ -47,11 +47,17 @@
           },
           "needAdmin": {
             "type": "boolean",
+            "description": "是否需要管理员",
             "default": true
           },
           "isOpen": {
             "type": "boolean",
+            "description": "是否开启",
             "default": false
+          },
+          "delMSG": {
+            "type": "number",
+            "description": "秒为单位"
           }
         },
         "required": ["regexp"]
@@ -71,10 +77,12 @@
           },
           "needAdmin": {
             "type": "boolean",
+            "description": "是否需要管理员",
             "default": true
           },
           "isOpen": {
             "type": "boolean",
+            "description": "是否开启",
             "default": false
           }
         },

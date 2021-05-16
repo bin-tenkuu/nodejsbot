@@ -1,5 +1,6 @@
 import {CQ, CQEvent, CQWebSocket, messageNode} from "go-cqwebsocket";
 import {at, CQTag} from "go-cqwebsocket/out/tags";
+import {MessageId} from "../../go-cqwebsocket/out/Interfaces";
 import {adminGroup, adminId} from "../config/config.json";
 import {Plug} from "../Plug";
 import {canCallGroup, canCallGroupType, canCallPrivate, canCallPrivateType} from "./Annotation";
@@ -62,9 +63,9 @@ export function sendPrivate<T>({bot, context: {user_id = adminId}}: hasUser<T>,
 }
 
 export function sendGroup<T>({bot, context: {group_id = adminGroup}}: hasGroup<T>,
-    message: CQTag<any>[] | string) {
+    message: CQTag<any>[] | string, callback?: (id: MessageId) => void) {
   if (typeof message === "string") message = CQ.parse(message);
-  bot.send_group_msg(group_id, message).catch(() => {
+  bot.send_group_msg(group_id, message).then(callback, () => {
     logger.warn("群消息发送失败");
   });
 }
@@ -76,7 +77,17 @@ export function sendForward<T>({bot, context: {group_id = adminGroup}}: hasGroup
 export function sendForwardQuick<T>({bot, context: {group_id = adminGroup, sender}}: CQEvent<"message.group">,
     message: CQTag<any>[][]) {
   let {user_id: userId, nickname: name} = sender;
-  return bot.send_group_forward_msg(group_id, message.map(tags => CQ.node(name, userId, tags)));
+  let map: messageNode = message.map(tags => CQ.node(name, userId, tags));
+  return bot.send_group_forward_msg(group_id, map);
+}
+
+export function deleteMsg({bot}: CQEvent<any>, id: number, delay: number = 0) {
+  if (delay < 0) {
+    delay = 0;
+  }
+  setTimeout(() => {
+    bot.delete_msg(id).catch(NOP);
+  }, delay * 1000);
 }
 
 async function parseFN(body: string, event: CQEvent<"message.group"> | CQEvent<"message.private">,
