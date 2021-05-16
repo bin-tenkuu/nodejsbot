@@ -28,7 +28,7 @@
       "type": "string",
       "format": "uri"
     },
-    "group": {
+    "groupMSG": {
       "description": "群消息",
       "type": "array",
       "items": {
@@ -37,22 +37,27 @@
             "$ref": "#/definitions/regexp"
           },
           "reply": {
-            "type": "array",
-            "description": "如果 forward 字段未设置为 true, 则只有数组第一位有效",
-            "items": {
-              "$ref": "#/definitions/MSG"
-            }
+            "$ref": "#/definitions/MSG",
+            "default": ""
           },
           "forward": {
             "type": "boolean",
             "description": "是否为合并转发消息",
+            "default": true
+          },
+          "needAdmin": {
+            "type": "boolean",
+            "default": true
+          },
+          "isOpen": {
+            "type": "boolean",
             "default": false
           }
         },
         "required": ["regexp"]
       }
     },
-    "private": {
+    "privateMSG": {
       "description": "私聊消息",
       "type": "array",
       "items": {
@@ -61,7 +66,16 @@
             "$ref": "#/definitions/regexp"
           },
           "reply": {
-            "$ref": "#/definitions/MSG"
+            "$ref": "#/definitions/MSG",
+            "default": ""
+          },
+          "needAdmin": {
+            "type": "boolean",
+            "default": true
+          },
+          "isOpen": {
+            "type": "boolean",
+            "default": false
           }
         },
         "required": ["regexp"]

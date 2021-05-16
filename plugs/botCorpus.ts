@@ -1,16 +1,11 @@
-import {CQ, CQEvent} from "go-cqwebsocket";
-import {CQTag} from "go-cqwebsocket/out/tags";
-import {group} from "../config/corpus.json";
+import {CQEvent} from "go-cqwebsocket";
+import {groupMSG} from "../config/corpus.json";
 import {Plug} from "../Plug";
-import {CanAutoCall} from "../utils/Annotation";
 import {logger} from "../utils/logger";
-import {onlyText, sendAuto, sendForward} from "../utils/Util";
+import {isAdminQQ, onlyText, parseMessage, sendForwardQuick, sendGroup} from "../utils/Util";
 
 export = new class CQBotCorpus extends Plug {
-  corpus: {
-    group: RegExp[],
-    private: RegExp[],
-  };
+  corpus: Group[];
   
   constructor() {
     super(module);
@@ -18,39 +13,35 @@ export = new class CQBotCorpus extends Plug {
     this.description = "Bot 语料库,支持私聊/群聊/合并转发";
     this.version = 0.1;
     
-    this.corpus = {
-      group: [],
-      private: [],
-    };
+    this.corpus = groupMSG.map(msg => ({
+      regexp: new RegExp(msg.regexp),
+      reply: msg.reply ?? "",
+      forward: msg.forward === true,
+      needAdmin: msg.needAdmin === true,
+      isOpen: msg.isOpen !== false,
+    }));
   }
   
   async install() {
     require("./bot").getGroup(this).push((event: CQEvent<"message.group">) => {
-      let len = group.length;
       let text = onlyText(event);
-      let context = event.context;
-      for (let i = 0; i < len; i++) {
-        let element = this.corpus.group[i];
-        let item = group[i] as Group;
-        if (element === undefined) element = this.corpus.group[i] = new RegExp(item.regexp);
-        if (!element.test(text)) { continue; }
-        if (item.reply === undefined || item.reply.length === 0) return;
-        event.stopPropagation();
-        if (item.forward !== true) {
-          CQBotCorpus.parseGroup(item.reply[0], event).then(tags => {
-            sendAuto(event, tags);
-          }).catch(() => {
-            logger.warn(`语料库转换失败:corpus.group[${i}]:${item.regexp}`);
-          });
-          return;
-        }
-        Promise.all(item.reply.map(str => CQBotCorpus.parseGroup(str, event))).then(msg => {
-          let {user_id, sender: {nickname}} = context;
-          sendForward(event, msg.map(v => CQ.node(nickname, user_id, v))).catch(NOP);
-        }).catch(() => {
-          logger.warn(`语料库转换失败:corpus.group[${i}]:${item.regexp}`);
+      let isAdmin = isAdminQQ(event);
+      for (const element of this.corpus) {
+        if (!element.isOpen) { continue; }
+        if (element.needAdmin && !isAdmin) {continue;}
+        let exec = element.regexp.exec(text);
+        if (exec === null) {continue;}
+        if (event.isCanceled) return;
+        parseMessage(element.reply, event, exec).then(tags => {
+          if (element.forward) {
+            sendForwardQuick(event, [tags]);
+          } else {
+            sendGroup(event, tags);
+          }
+        }).catch(e => {
+          logger.warn(`群聊语料库转换失败:` + element.regexp);
+          console.error(e);
         });
-        return;
       }
     });
   }
@@ -59,68 +50,5 @@ export = new class CQBotCorpus extends Plug {
     require("./bot").delGroup(this);
   }
   
-  private static async parseGroup(template: string, message: CQEvent<"message.group">): Promise<CQTag<any>[]> {
-    let split = this.split(template);
-    let tags: CQTag<any>[] = [];
-    for (let str of split) {
-      if (!str.startsWith("[")) {
-        tags.push(CQ.text(str));
-        continue;
-      }
-      let exec = /^\[(?<head>CQ|FN|RG):(?<body>[^\]]+)]$/.exec(str);
-      if (exec === null) {
-        tags.push(CQ.text(str));
-        continue;
-      }
-      let {head, body} = exec.groups as { head: "CQ" | "FN", body: string };
-      switch (head) {
-        case "CQ":
-          tags.push(this.parseCQ(body, message));
-          continue;
-        case "FN":
-          tags.push(...await this.parseFN(body, message));
-          continue;
-        default:
-          let never: never = head;
-          tags.push(CQ.text(str));
-          console.log(never);
-      }
-    }
-    return tags;
-  }
-  
-  private static parseCQ(body: string, message: CQEvent<"message.group">): CQTag<any> {
-    switch (body) {
-      case "reply":
-        return CQ.reply(message.context.message_id);
-      case "at":
-        return CQ.at(message.context.user_id);
-      default:
-        return CQ.text(body);
-    }
-  }
-  
-  private static async parseFN(body: string, message: CQEvent<"message.group">): Promise<CQTag<any>[]> {
-    let split = body.split(".");
-    if (split[1] === undefined) return [CQ.text(body)];
-    let plug: Plug = Plug.plugs[split[0]];
-    if (plug === undefined) return [CQ.text(`插件${split[0]}不存在`)];
-    let plugFunc: Function = Reflect.get(plug, split[1]);
-    if (Reflect.getMetadata(CanAutoCall.name, plugFunc) === true &&
-        typeof plugFunc === "function" && plugFunc.length <= 1) {
-      try {
-        logger.info(`调用${body}`);
-        return (await plugFunc.call(plug, message) as CQTag<any>[]);
-      } catch (e) {
-        logger.error("调用出错", e);
-        return [CQ.text(`调用出错:` + body)];
-      }
-    }
-    return [CQ.text(body)];
-  }
-  
-  private static split(str: string): string[] {
-    return str.split(/(?<=])|(?=\[)/);
-  }
 }
-type Group = { regexp: string, reply?: string[], forward?: boolean }
+type Group = { regexp: RegExp, reply: string, forward: boolean, needAdmin: boolean, isOpen: boolean }

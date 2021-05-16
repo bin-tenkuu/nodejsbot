@@ -1,22 +1,27 @@
 import {CQ, CQEvent, CQWebSocket, message, messageNode} from "go-cqwebsocket";
 import {Status} from "go-cqwebsocket/out/Interfaces";
 import {adminGroup, adminId, CQWS} from "../config/config.json";
+import {privateMSG} from "../config/corpus.json";
 import {Plug} from "../Plug";
 import {db} from "../utils/database";
 import {logger} from "../utils/logger";
-import {isAtMe, onlyText, sendForward} from "../utils/Util";
+import {isAdminQQ, isAtMe, onlyText, parseMessage, sendForward, sendPrivate} from "../utils/Util";
 
 type GroFunList = ((this: void, event: CQEvent<"message.group">) => void);
-type PriFunList = ((this: void, event: CQEvent<"message.private">) => void);
-export = new class CQBot extends Plug {
+
+class CQBot extends Plug {
   public bot: CQWebSocket;
   private readonly grouper: Map<Plug, GroFunList[]>;
-  private readonly privater: Map<Plug, PriFunList[]>;
   private readonly helper: Map<string, message>;
+  private banSet: Set<number>;
   private sendStateInterval?: NodeJS.Timeout;
   
+  readonly corpusPrivate: {
+    regex: RegExp, reply: string, needAdmin: boolean, isOpen: boolean
+  }[];
+  
   constructor() {
-    super(module, "Bot");
+    super(module);
     this.name = "QQ机器人";
     this.description = "用于连接go-cqhttp服务的bot";
     this.version = 0;
@@ -39,33 +44,15 @@ export = new class CQBot extends Plug {
       logger.error(`${message.action}失败[${reason.retcode}]:${reason.wording}`);
     };
     this.grouper = new Map();
-    this.privater = new Map();
     this.helper = new Map();
-    this.bot.bind("on", {
-      "message.group": (event) => {
-        this.groupMessage(event);
-      },
-      "message.private": (event) => {
-        let values = this.privater.values();
-        for (let next = values.next(); !next.done; next = values.next()) {
-          for (let fun of next.value) {
-            fun(event);
-            if (event.isCanceled) return;
-          }
-        }
-      },
-    });
-    this.getGroup(this).push(event => {
-      if (/^(?:帮助|help)$/.test(onlyText(event))) {
-        let tags = <messageNode>[];
-        this.helper.forEach((value, key) => {
-          tags.push(CQ.node(key, event.context.user_id, value));
-        });
-        sendForward(event, tags).catch(() => {
-          logger.warn("帮助文档发送失败");
-        });
-      }
-    });
+    this.corpusPrivate = privateMSG.map(msg => ({
+      regex: new RegExp(msg.regexp),
+      reply: msg.reply ?? "",
+      needAdmin: msg.needAdmin === true,
+      isOpen: msg.isOpen !== false,
+    }));
+    this.banSet = new Set<number>();
+    this.init();
   }
   
   setGroupHelper(name: string, node: message): void {
@@ -86,20 +73,73 @@ export = new class CQBot extends Plug {
   }
   
   delGroup(plug: Plug): void {
-    this.grouper.set(plug, []);
+    this.grouper.delete(plug);
   }
   
-  getPrivate(plug: Plug): PriFunList[] {
-    let r = this.privater.get(plug);
-    if (r === undefined) {
-      r = [];
-      this.privater.set(plug, r);
+  sendState(state: Status["stat"]) {
+    this.bot.send_group_msg(adminGroup, `数据包丢失总数:${state.packet_lost
+    }\n接受信息总数:${state.message_received}\n发送信息总数:${state.message_sent}`).catch(() => {
+      if (this.sendStateInterval !== undefined) {
+        clearInterval(this.sendStateInterval);
+      }
+    });
+  }
+  
+  private privateMessage(event: CQEvent<"message.private">) {
+    let text = onlyText(event);
+    let isAdmin = isAdminQQ(event);
+    for (const element of this.corpusPrivate) {
+      if (!element.isOpen) { continue; }
+      if (element.needAdmin && !isAdmin) {continue;}
+      let exec = element.regex.exec(text);
+      if (exec === null) {continue;}
+      if (event.isCanceled) return;
+      parseMessage(element.reply, event, exec).then(tags => {
+        if (tags.length > 0) {
+          sendPrivate(event, tags);
+        }
+      }).catch(e => {
+        logger.error("语料库转换失败:" + element.reply.toString());
+        console.error(e);
+      });
+      return;
     }
-    return r;
   }
   
-  delPrivate(plug: Plug): void {
-    this.privater.set(plug, []);
+  private groupMessage(event: CQEvent<"message.group">) {
+    let userId = event.context.user_id;
+    db.start(async db => {
+      let data = await db.get<{ id: number }>("select id from Members where id = ?;", userId);
+      if (data === undefined) {
+        await db.run("insert into Members(id, exp, time) values (?, 1, ?);", userId, Date.now());
+      } else {
+        await db.run("update Members set exp=exp + 1, time=? where id = ?;", Date.now(), userId);
+      }
+      await db.close();
+    }).catch(NOP);
+    if (this.banSet.has(userId)) { return; }
+    let values = this.grouper.values();
+    for (let next = values.next(); !next.done; next = values.next()) {
+      for (let fun of next.value) {
+        fun(event);
+        if (event.isCanceled) return;
+      }
+    }
+    // console.log(contextEvent.isAtMe, event.isCanceled);
+    if (!isAtMe(event)) return;
+    event.stopPropagation();
+    let {group_id, message_id} = event.context;
+    let cqTags = onlyText(event).replace(/吗/g, "")
+        .replace(/不/g, "很")
+        .replace(/你/g, "我")
+        .replace(/(?<!没)有/g, "没有")
+        .replace(/[？?]/g, "!");
+    this.bot.send_group_msg(group_id, [
+      CQ.reply(message_id),
+      CQ.at(userId),
+      CQ.text(cqTags),
+    ]).catch(NOP);
+    return;
   }
   
   async install() {
@@ -139,53 +179,32 @@ export = new class CQBot extends Plug {
     });
   }
   
-  sendState(state: Status["stat"]) {
-    this.bot.send_group_msg(adminGroup, `数据包丢失总数:${state.packet_lost
-    }\n接受信息总数:${state.message_received}\n发送信息总数:${state.message_sent}`).catch(() => {
-      if (this.sendStateInterval !== undefined) {
-        clearInterval(this.sendStateInterval);
+  init() {
+    this.bot.bind("on", {
+      "message.group": (event) => {
+        this.groupMessage(event);
+      },
+      "message.private": (event) => {
+        this.privateMessage(event);
+      },
+    });
+    this.getGroup(this).push(event => {
+      if (/^(?:帮助|help)$/.test(onlyText(event))) {
+        let tags = <messageNode>[];
+        this.helper.forEach((value, key) => {
+          tags.push(CQ.node(key, event.context.user_id, value));
+        });
+        sendForward(event, tags).catch(() => {
+          logger.warn("帮助文档发送失败");
+        });
       }
     });
-  }
-  
-  private groupMessage(event: CQEvent<"message.group">) {
-    let userId = event.context.user_id;
     db.start(async db => {
-      let data = await db.get<{ id: number, baned: 0 | 1 }>("select id, baned from Members where id = ?;", userId);
-      if (data === undefined) {
-        await db.run("insert into Members(id, exp, time) values (?, 1, ?);", userId, Date.now());
-      } else {
-        if (data.baned === 1) {
-          event.stopPropagation();
-        }
-        await db.run("update Members set exp=exp + 1, time=? where id = ?;", Date.now(), userId);
-      }
-    }).then(() => {
-      let values = this.grouper.values();
-      for (let next = values.next(); !next.done; next = values.next()) {
-        for (let fun of next.value) {
-          fun(event);
-          if (event.isCanceled) return;
-        }
-      }
-      // console.log(contextEvent.isAtMe, event.isCanceled);
-      if (!isAtMe(event)) return;
-      event.stopPropagation();
-      let {
-        group_id,
-        message_id,
-      } = event.context;
-      let cqTags = onlyText(event).replace(/吗/g, "")
-          .replace(/不/g, "很")
-          .replace(/你/g, "我")
-          .replace(/(?<!没)有/g, "没有")
-          .replace(/[？?]/g, "!");
-      this.bot.send_group_msg(group_id, [
-        CQ.reply(message_id),
-        CQ.at(userId),
-        CQ.text(cqTags),
-      ]).catch(NOP);
-      return;
+      let all = await db.all<{ id: number }[]>(`select id from Members where baned = 1`);
+      this.banSet = new Set(all.map(v => v.id));
+      await db.close();
     }).catch(NOP);
   }
-};
+}
+
+export = new CQBot()

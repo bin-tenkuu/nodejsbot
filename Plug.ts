@@ -9,32 +9,34 @@ enum State {
 }
 
 export abstract class Plug {
-  public static readonly plugs: { [key: string]: Plug } = {};
+  public static readonly plugs: Map<string, Plug> = new Map<string, Plug>();
   public readonly module: NodeModule;
   public name: string;
   public description: string;
   public version: number;
-  protected declare readonly __proto__: this;
-  private _state: State;
+  protected declare readonly __proto__: Readonly<this>;
   public error?: any;
   
-  protected constructor(module: NodeModule, key?: string) {
-    this._state = State.create;
-    key = key ?? this.constructor.name;
+  #state: State;
+  
+  protected constructor(module: NodeModule) {
+    logger.debug("fix:\t" + module.filename);
+    this.#state = State.create;
+    let key = this.constructor.name;
     this.module = module;
-    Plug.plugs[key] = this;
+    Plug.plugs.set(key, this);
     this.name = key;
     this.description = "这个插件没有描述";
     this.version = -1;
     this.install = async function () {
       try {
-        if (this._state === State.error) return;
-        if (this._state === State.installed) return;
+        if (this.#state === State.error) return;
+        if (this.#state === State.installed) return;
         await this.__proto__.install.call(this);
         logger.info("已启动 %s", this.toString());
-        this._state = State.installed;
+        this.#state = State.installed;
       } catch (e) {
-        this._state = State.error;
+        this.#state = State.error;
         this.error = e;
       } finally {
         this.module.children = [];
@@ -42,44 +44,38 @@ export abstract class Plug {
     };
     this.uninstall = async function () {
       try {
-        if (this._state === State.uninstalled) return;
+        if (this.#state === State.uninstalled) return;
         await this.__proto__.uninstall.call(this);
         logger.info("已停止 %s", this.toString());
-        if (this._state === State.error) return;
-        this._state = State.uninstalled;
+        if (this.#state === State.error) return;
+        this.#state = State.uninstalled;
       } catch (e) {
-        this._state = State.error;
+        this.#state = State.error;
         this.error = e;
       } finally {
         this.module.children = [];
       }
     };
-    this._state = State.uninstalled;
-    logger.debug("fix:\t" + this.module.filename);
+    this.#state = State.uninstalled;
   }
   
-  abstract install(): Promise<void>
+  public async install(): Promise<void> {}
   
-  abstract uninstall(): Promise<void>
+  public async uninstall(): Promise<void> {}
   
-  upgradeSelf(): this {
-    Reflect.deleteProperty(require.cache, this.module.id);
-    return require(this.module.id);
-  }
-  
-  toString() {
+  public toString() {
     return `{name: ${this.name}, version: ${this.version}}\t-> ${this.constructor.name}`;
   }
   
-  get installed() {
-    return this._state === State.installed;
+  public get installed() {
+    return this.#state === State.installed;
   }
   
   public get state(): string {
-    return State[this._state];
+    return State[this.#state];
   }
   
-  toJSON() {
+  public toJSON() {
     return {"name": this.name, "version": this.version, "State": this.state};
   }
 }
@@ -87,7 +83,7 @@ export abstract class Plug {
 export var PlugLoader = new class PlugLoader extends Plug {
   
   constructor() {
-    super(module, "PluginLoader");
+    super(module);
     this.name = "插件加载器";
     this.description = "专门用于加载插件的插件";
     this.version = 1;

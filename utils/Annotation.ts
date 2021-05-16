@@ -1,12 +1,11 @@
 import {CQEvent} from "go-cqwebsocket";
 import {CQTag} from "go-cqwebsocket/out/tags";
-import {IncomingMessage, Server, ServerResponse} from "http";
 import "reflect-metadata";
+import {Plug} from "../Plug";
 
 type Constructor = { new(...args: any[]): any };
-type TypedFunction<P extends any[] = any[], R = any> = (...args: P) => R;
-type FunctionDecorator<T extends TypedFunction = TypedFunction> = <F extends T>(target: Object,
-    propertyKey: PropertyKey, descriptor: TypedPropertyDescriptor<F>) => void;
+type FunctionDecorator<T extends Function = Function, O extends Object = Object, Key extends PropertyKey = PropertyKey> =
+    <F extends T = T>(target: O, propertyKey: Key, descriptor: TypedPropertyDescriptor<F>) => void;
 type ConstructorDecorator<T extends Constructor = Constructor> = (constructor: T) => T | void;
 type PropertyDecorator = (target: Object, propertyKey: PropertyKey) => void;
 type ParameterDecorator = (target: Object, propertyKey: PropertyKey, parameterIndex: number) => void;
@@ -88,46 +87,24 @@ export function logParam(): ParameterDecorator {
   };
 }
 
-export function RequestMapping(url: string): FunctionDecorator<TypedFunction<[IncomingMessage, ServerResponse, URL], void>> {
-  return (target, propertyKey) => {
-    let metadata = Reflect.getMetadata("http", target) ?? {};
-    metadata[url] = propertyKey;
-    Reflect.defineMetadata("http", metadata, target);
-  };
-}
+export type canCallGroupType = (event: CQEvent<"message.group">, exec: RegExpExecArray) => Promise<CQTag<any>[]>
 
-export function CreatServer(port: number, host = "0.0.0.0"): ConstructorDecorator {
-  return (constructor) => {
-    return class extends constructor {
-      constructor(...args: any[]) {
-        super(...args);
-        new Server((req, res) => {
-          res.setHeader("Content-type", "text/html; charset=utf-8");
-          let url = req.url ?? "";
-          let {remoteAddress, remotePort} = req.socket;
-          let parse = new URL(url, `http://${remoteAddress}:${remotePort}`);
-          let metadata = Reflect.getMetadata("http", this.constructor.prototype) ?? {};
-          let key: string | undefined = metadata[parse.pathname] ?? metadata["404"];
-          if (key === undefined) {
-            key = metadata["404"];
-          }
-          console.log(`${parse.pathname} 命中解析：${key}`);
-          if (key === undefined) {
-            res.end();
-            return;
-          }
-          this[key]?.(req, res, parse);
-        }).listen(port, host);
-      }
-    };
-  };
-}
-
-export function CanAutoCall(): FunctionDecorator<TypedFunction<[CQEvent<"message.group"> | CQEvent<"message.private">], Promise<CQTag<any>[]>>> {
+export function canCallGroup(): FunctionDecorator<canCallGroupType, Plug, string> {
   return (target, propertyKey, descriptor) => {
     if (descriptor.value === undefined) {
-      throw new Error("CanAutoCall() can Only Decorator Function");
+      throw new Error("canCallGroup() can Only Decorator Function");
     }
-    Reflect.defineMetadata(CanAutoCall.name, true, descriptor.value);
+    Reflect.defineMetadata(canCallGroup.name, true, descriptor.value);
+  };
+}
+
+export type canCallPrivateType = (event: CQEvent<"message.private">, exec: RegExpExecArray) => Promise<CQTag<any>[]>
+
+export function canCallPrivate(): FunctionDecorator<canCallPrivateType, Plug, string> {
+  return (target, propertyKey, descriptor) => {
+    if (descriptor.value === undefined) {
+      throw new Error("canCallPrivate() can Only Decorator Function");
+    }
+    Reflect.defineMetadata(canCallPrivate.name, true, descriptor.value);
   };
 }

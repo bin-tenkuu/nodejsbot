@@ -1,9 +1,8 @@
 import {existsSync, openSync} from "fs";
 import {Database, ISqlite, open as openSqlite} from "sqlite";
-import {Database as Database3, Statement} from "sqlite3";
-import {logger} from "./logger";
+import {Database as Db3, Statement} from "sqlite3";
 
-type DatabaseHandle = (this: void, db: Database<Database3, Statement>) => Promise<void>;
+type DatabaseHandle<T = any> = (this: void, db: Database<Db3, Statement>) => Promise<T>;
 
 export var db = new class SQLControl {
   private readonly config: ISqlite.Config;
@@ -14,21 +13,15 @@ export var db = new class SQLControl {
     }
     this.config = {
       filename: path,
-      driver: Database3,
+      driver: Db3,
     };
   }
   
-  public async start(fun: DatabaseHandle = async () => {}): Promise<void> {
-    let db = await openSqlite(this.config);
-    try {
-      await fun(db);
-    } catch (e) {
-      logger.info("执行失败");
-    }
-    try {
-      await db.close();
-    } catch (e) {
-      logger.error("数据库关闭失败", e);
-    }
+  /**
+   * 记得关闭数据库
+   * @param fun 数据库回调函数
+   */
+  public async start<T = any>(fun: DatabaseHandle<T>): Promise<T> {
+    return openSqlite(this.config).then(fun);
   }
 };
