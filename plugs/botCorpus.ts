@@ -2,7 +2,7 @@ import {CQEvent} from "go-cqwebsocket";
 import {groupMSG} from "../config/corpus.json";
 import {Plug} from "../Plug";
 import {logger} from "../utils/logger";
-import {deleteMsg, isAdminQQ, onlyText, parseMessage, sendForwardQuick, sendGroup} from "../utils/Util";
+import {deleteMsg, isAdminQQ, onlyText, parseMessage, sendForward, sendForwardQuick, sendGroup} from "../utils/Util";
 
 export = new class CQBotCorpus extends Plug {
   corpus: Group[];
@@ -34,8 +34,13 @@ export = new class CQBotCorpus extends Plug {
         if (exec === null) {continue;}
         if (event.isCanceled) return;
         await parseMessage(element.reply, event, exec).then(tags => {
+          if (tags.length < 1) return;
           if (element.forward) {
-            sendForwardQuick(event, [tags]).catch(NOP);
+            if (tags[0].tagName === "node") {
+              sendForward(event, tags).catch(NOP);
+            } else {
+              sendForwardQuick(event, [tags]).catch(NOP);
+            }
           } else {
             sendGroup(event, tags, element.delMSG > 0 ? (id) => {
               deleteMsg(event, id.message_id, element.delMSG);

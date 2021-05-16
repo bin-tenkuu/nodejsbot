@@ -14,8 +14,8 @@ Promise.resolve().then(async () => {
   await require("./plugs/botEvents").install();
   await require("./plugs/botPixiv");
   await require("./plugs/botPlugin").install();
-  await require("./plugs/botRepeat").install();
-  await require("./plugs/botSauceNAOGroup").install();
+  await require("./plugs/botRepeat");
+  await require("./plugs/botSauceNAOGroup");
   await require("./plugs/botSeTu");
   await require("./plugs/botTouHouPNG");
   await require("./plugs/test");

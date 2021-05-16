@@ -1,12 +1,13 @@
 import {CQ, CQEvent} from "go-cqwebsocket";
 import {CQTag, image} from "go-cqwebsocket/out/tags";
 import {Plug} from "../Plug";
+import {canCallGroup} from "../utils/Annotation";
 import {logger} from "../utils/logger";
 
 import {sauceNAO} from "../utils/Search";
-import {onlyText, sendAuto, sendForward} from "../utils/Util";
+import {sendAuto, sendForward} from "../utils/Util";
 
-export = new class CQBotSauceNAOGroup extends Plug {
+class CQBotSauceNAOGroup extends Plug {
   
   constructor() {
     super(module);
@@ -15,86 +16,75 @@ export = new class CQBotSauceNAOGroup extends Plug {
     this.version = 0.1;
   }
   
-  async install() {
-    let botGroup = require("./bot");
-    botGroup.getGroup(this).push((event: CQEvent<"message.group">) => {
-      if (!/^\.搜图/.test(onlyText(event))) {
-        return;
-      }
-      let tag: CQTag<image> | undefined = event.cqTags.find(tag => tag.tagName === "image");
-      if (tag === undefined) {
-        return;
-      }
-      let url = tag.get("url");
-      if (url === undefined) {
-        return;
-      }
-      logger.info("开始搜图");
-      let {
-        message_id: messageId,
-        user_id: userId,
-        sender: {
-          nickname: nickName,
-        },
-      } = event.context;
-      event.stopPropagation();
-      sauceNAO(url).then(result => {
-        // console.log(result);
-        if (result.results.length === 0) {
-          logger.info("搜图无结果");
-          return sendAuto(event, [
-            CQ.reply(messageId),
-            CQ.at(userId),
-            CQ.text(`搜图无结果`),
-          ]);
-        }
-        sendAuto(event, [
+  @canCallGroup()
+  async getSauceNAO(event: CQEvent<"message.group">): Promise<CQTag<any>[]> {
+    let tag: CQTag<image> | undefined = event.cqTags.find(tag => tag.tagName === "image");
+    if (tag === undefined) return [CQ.text("请带上图片")];
+    let url = tag.get("url");
+    if (url === undefined) return [];
+    logger.info("开始搜图");
+    event.stopPropagation();
+    let {
+      message_id: messageId,
+      sender: {nickname: nickName, user_id: userId},
+    } = event.context;
+    try {
+      let result = await sauceNAO(url);
+      // console.log(result);
+      if (result.results.length === 0) {
+        logger.info("搜图无结果");
+        return [
           CQ.reply(messageId),
           CQ.at(userId),
-          CQ.text("有结果，加载中"),
-        ]);
-        let [first, second, third] = result.results;
-        sendForward(event, [
-          CQ.nodeId(messageId),
-          CQ.node(nickName, userId, [
-            CQ.image(first.header.thumbnail),
-            CQ.text(`相似度: ${first.header.similarity}%\n`),
-            CQ.text(this.decodeData(first.header.index_id, first.data)),
-          ]),
-          CQ.node(nickName, userId, [
-            CQ.image(second.header.thumbnail),
-            CQ.text(`相似度: ${second.header.similarity}%\n`),
-            CQ.text(this.decodeData(second.header.index_id, second.data)),
-          ]),
-          CQ.node(nickName, userId, [
-            CQ.image(third.header.thumbnail),
-            CQ.text(`相似度: ${third.header.similarity}%\n`),
-            CQ.text(this.decodeData(third.header.index_id, third.data)),
-          ]),
-        ]).catch(() => {
-          return sendAuto(event, [
-            CQ.reply(messageId),
-            CQ.at(userId),
-            CQ.text("加载失败或发送失败"),
-          ]);
-        });
-      }).catch((err) => {
-        logger.warn("搜图出错");
-        logger.error(err);
-        sendAuto(event, [
+          CQ.text(`搜图无结果`),
+        ];
+      }
+      let [first, second, third] = result.results;
+      sendForward(event, [
+        CQ.nodeId(messageId),
+        CQ.node(nickName, userId, [
+          CQ.image(first.header.thumbnail),
+          CQ.text(`相似度: ${first.header.similarity}%\n`),
+          CQ.text(this.decodeData(first.header.index_id, first.data)),
+        ]),
+        CQ.node(nickName, userId, [
+          CQ.image(second.header.thumbnail),
+          CQ.text(`相似度: ${second.header.similarity}%\n`),
+          CQ.text(this.decodeData(second.header.index_id, second.data)),
+        ]),
+        CQ.node(nickName, userId, [
+          CQ.image(third.header.thumbnail),
+          CQ.text(`相似度: ${third.header.similarity}%\n`),
+          CQ.text(this.decodeData(third.header.index_id, third.data)),
+        ]),
+      ]).catch(() => {
+        return sendAuto(event, [
           CQ.reply(messageId),
           CQ.at(userId),
-          CQ.text(`搜图出错`),
+          CQ.text("加载失败或发送失败"),
         ]);
       });
-    });
-    botGroup.setGroupHelper("搜图", [CQ.text(".搜图 [图片]")]);
+      return [
+        CQ.reply(messageId),
+        CQ.at(userId),
+        CQ.text("有结果，加载中"),
+      ];
+    } catch (e) {
+      logger.warn("搜图出错");
+      logger.error(e);
+      sendAuto(event, [
+        CQ.reply(messageId),
+        CQ.at(userId),
+        CQ.text(`搜图出错`),
+      ]);
+      return [];
+    }
+  }
+  
+  async install() {
   }
   
   async uninstall() {
-    let botGroup = require("./bot");
-    botGroup.delGroup(this);
-    botGroup.delGroupHelper("搜图");
   }
   
   /**
@@ -134,3 +124,4 @@ export = new class CQBotSauceNAOGroup extends Plug {
   }
 }
 
+export = new CQBotSauceNAOGroup()
