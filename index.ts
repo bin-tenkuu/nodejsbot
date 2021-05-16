@@ -10,10 +10,9 @@ Promise.resolve().then(async () => {
   await require("./plugs/bot").install();
   
   await require("./plugs/botCOC").install();
-  await require("./plugs/botCorpus").install();
   await require("./plugs/botEvents").install();
   await require("./plugs/botPixiv");
-  await require("./plugs/botPlugin").install();
+  await require("./plugs/botPlugin");
   await require("./plugs/botRepeat");
   await require("./plugs/botSauceNAOGroup");
   await require("./plugs/botSeTu");

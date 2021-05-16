@@ -1,12 +1,12 @@
-import {CQ, CQEvent} from "go-cqwebsocket";
+import {CQ, CQEvent, CQTag} from "go-cqwebsocket";
 import {Plug} from "../Plug";
+import {canCallGroup, canCallPrivate} from "../utils/Annotation";
 import {dice} from "../utils/COCUtils";
 import {db} from "../utils/database";
 import {logger} from "../utils/logger";
-import {onlyText} from "../utils/Util";
 
-export = new class CQBotCOC extends Plug {
-  static shortKey = new Map<string, string>();
+class CQBotCOC extends Plug {
+  shortKey = new Map<string, string>();
   
   constructor() {
     super(module);
@@ -14,91 +14,71 @@ export = new class CQBotCOC extends Plug {
     this.description = "一些跑团常用功能";
     this.version = 1;
     
+    this.readShortKey();
   }
   
-  async install() {
-    let botGroup = require("./bot");
-    botGroup.getGroup(this).push((event: CQEvent<"message.group">) => {
-      let text = onlyText(event);
-      if (!/^\.d/.test(text)) return;
-      if (/^\.d /.test(text)) {
-        return CQBotCOC.execDice(event);
-      } else if (/\.dset /.test(text)) {
-        return CQBotCOC.execDiceSet(event);
-      } else if (/\.dstat/.test(text)) {
-        return CQBotCOC.execDiceStat(event);
-      }
+  @canCallGroup()
+  @canCallPrivate()
+  async getDiceStat(event: CQEvent<"message.group"> | CQEvent<"message.private">) {
+    event.stopPropagation();
+    let str = "";
+    this.shortKey.forEach((value, key) => {
+      str += `${key}=${value}\n`;
     });
-    botGroup.setGroupHelper("跑团骰子", [CQ.text(`.d (表达式) 其他
-    .dset key[=value] 设置/删除简写
-    .dstat 查看简写列表`)]);
-    CQBotCOC.readShortKey();
+    if (str === "") str = "无";
+    return [CQ.text(str)];
   }
   
-  async uninstall() {
-    let botGroup = require("./bot");
-    botGroup.delGroup(this);
-    botGroup.delGroupHelper("跑团骰子");
-  }
-  
-  private static readShortKey() {
-    db.start(async db => {
-      db.all<{ key: string, value: string }[]>(`select key, value from COCShortKey`).then((kvs) => {
-        kvs.forEach(({key, value}) => CQBotCOC.shortKey.set(key, value));
-      });
-      await db.close();
-    }).catch(NOP);
-  }
-  
-  private static execDiceSet(event: CQEvent<"message.group">) {
-    let dice = /^\.dset +(?<key>\w[\w\d]+)(?:=(?<value>[+\-*d0-9#]+))?/.exec(onlyText(event));
-    let groupId = event.context.group_id;
-    if (dice === null) {
-      event.bot.send_group_msg(groupId, ".dset 参数错误").catch(NOP);
-      return;
-    }
-    let {key, value} = dice.groups as { key?: string, value?: string };
-    if (key === undefined || key.length > 5) return;
+  @canCallGroup()
+  @canCallPrivate()
+  private async getDiceSet(event: CQEvent<"message.group"> | CQEvent<"message.private">,
+      execArray: RegExpExecArray): Promise<CQTag<any>[]> {
+    event.stopPropagation();
+    let {key, value} = execArray.groups as { key?: string, value?: string } ?? {};
+    if (key === undefined || key.length > 5) return [CQ.text("key格式错误或长度大于5")];
     if (value === undefined) {
       db.start(async db => {
         await db.run(`delete from COCShortKey where key = ?`, key);
         await db.close();
       }).catch(NOP);
       this.shortKey.delete(key);
-      event.bot.send_group_msg(groupId, `删除key:${key}`).catch(NOP);
-      return;
+      return [CQ.text(`删除key:${key}`)];
     }
-    if (value.length > 10) return;
+    if (value.length > 10) return [CQ.text("value长度不大于10")];
     this.shortKey.set(key, value);
     db.start(async db => {
       await db.run(`insert into COCShortKey(key, value) values (?, ?)`, key, value);
       await db.close();
     }).catch(NOP);
-    event.bot.send_group_msg(groupId, `添加key:${key}=${value}`).catch(NOP);
+    return [CQ.text(`添加key:${key}=${value}`)];
   }
   
-  private static execDiceStat(event: CQEvent<"message.group">) {
-    let str = "";
-    this.shortKey.forEach((value, key) => {
-      str += `${key}=${value}\n`;
-    });
-    event.bot.send_group_msg(event.context.group_id, str);
+  async install() {}
+  
+  async uninstall() {}
+  
+  private readShortKey() {
+    db.start(async db => {
+      let all = await db.all<{ key: string, value: string }[]>(`select key, value from COCShortKey`);
+      all.forEach(({key, value}) => this.shortKey.set(key, value));
+      await db.close();
+    }).catch(NOP);
   }
   
-  private static execDice(event: CQEvent<"message.group">) {
-    let dice = /^\.d +([^ ]+)/.exec(onlyText(event))?.[1].toString();
-    if (dice === undefined) {
-      return;
-    }
+  @canCallGroup()
+  @canCallPrivate()
+  async getDice(event: CQEvent<"message.group"> | CQEvent<"message.private">,
+      execArray: RegExpExecArray): Promise<CQTag<any>[]> {
     event.stopPropagation();
+    let dice = execArray[1];
+    if (dice === undefined) return [];
     this.shortKey.forEach((value, key) => {
-      dice = (<string>dice).replace(new RegExp(key), value);
+      dice = dice.replace(new RegExp(key), value);
     });
     if (/[^+\-*d0-9#]/.test(dice)) {
-      event.bot.send_group_msg(event.context.group_id, ".d错误参数").catch(NOP);
-      return;
+      return [CQ.text(".d错误参数")];
     }
-    event.bot.send_group_msg(event.context.group_id, CQBotCOC.dice(dice)).catch(NOP);
+    return [CQ.text(CQBotCOC.dice(dice))];
   }
   
   private static dice(str: string): string {
@@ -160,3 +140,5 @@ export = new class CQBotCOC extends Plug {
     return `${preRet}${str}=${sumNum}`;
   }
 }
+
+export = new CQBotCOC()

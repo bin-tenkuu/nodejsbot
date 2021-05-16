@@ -1,24 +1,26 @@
-import {CQ, CQEvent, CQWebSocket, message, messageNode} from "go-cqwebsocket";
+import {CQ, CQEvent, CQWebSocket} from "go-cqwebsocket";
 import {Status} from "go-cqwebsocket/out/Interfaces";
 import {adminGroup, adminId, CQWS} from "../config/config.json";
-import {privateMSG} from "../config/corpus.json";
+import {groupMSG, privateMSG} from "../config/corpus.json";
 import {Plug} from "../Plug";
 import {db} from "../utils/database";
 import {logger} from "../utils/logger";
-import {isAdminQQ, isAtMe, onlyText, parseMessage, sendForward, sendPrivate} from "../utils/Util";
+import {
+  deleteMsg, isAdminQQ, isAtMe, onlyText, parseMessage, sendForward, sendForwardQuick, sendGroup, sendPrivate,
+} from "../utils/Util";
 
 type GroFunList = ((this: void, event: CQEvent<"message.group">) => void);
+type Group = { regexp: RegExp, reply: string, forward: boolean, needAdmin: boolean, isOpen: boolean, delMSG: number }
+type Private = { regex: RegExp, reply: string, needAdmin: boolean, isOpen: boolean }
 
 class CQBot extends Plug {
   public bot: CQWebSocket;
   private readonly grouper: Map<Plug, GroFunList[]>;
-  private readonly helper: Map<string, message>;
   private sendStateInterval?: NodeJS.Timeout;
   
   private banSet: Set<number>;
-  readonly corpusPrivate: {
-    regex: RegExp, reply: string, needAdmin: boolean, isOpen: boolean
-  }[];
+  readonly corpusPrivate: Private[];
+  readonly corpusGroup: Group[];
   
   constructor() {
     super(module);
@@ -44,36 +46,22 @@ class CQBot extends Plug {
       logger.error(`${message.action}失败[${reason.retcode}]:${reason.wording}`);
     };
     this.grouper = new Map();
-    this.helper = new Map();
     this.corpusPrivate = privateMSG.map(msg => ({
       regex: new RegExp(msg.regexp),
       reply: msg.reply ?? "",
       needAdmin: msg.needAdmin === true,
       isOpen: msg.isOpen !== false,
     }));
+    this.corpusGroup = groupMSG.map(msg => ({
+      regexp: new RegExp(msg.regexp),
+      reply: msg.reply ?? "",
+      forward: msg.forward === true,
+      needAdmin: msg.needAdmin === true,
+      isOpen: msg.isOpen !== false,
+      delMSG: msg.delMSG ?? 0,
+    }));
     this.banSet = new Set<number>();
     this.init();
-  }
-  
-  setGroupHelper(name: string, node: message): void {
-    this.helper.set(name, node);
-  }
-  
-  delGroupHelper(name: string): void {
-    this.helper.delete(name);
-  }
-  
-  getGroup(plug: Plug): GroFunList[] {
-    let r = this.grouper.get(plug);
-    if (r === undefined) {
-      r = [];
-      this.grouper.set(plug, r);
-    }
-    return r;
-  }
-  
-  delGroup(plug: Plug): void {
-    this.grouper.delete(plug);
   }
   
   sendState(state: Status["stat"]) {
@@ -104,24 +92,40 @@ class CQBot extends Plug {
     }
   }
   
-  private groupMessage(event: CQEvent<"message.group">) {
+  private async groupMessage(event: CQEvent<"message.group">) {
     let userId = event.context.user_id;
     db.start(async db => {
-      let data = await db.get<{ id: number }>("select id from Members where id = ?;", userId);
-      if (data === undefined) {
-        await db.run("insert into Members(id, exp, time) values (?, 1, ?);", userId, Date.now());
-      } else {
-        await db.run("update Members set exp=exp + 1, time=? where id = ?;", Date.now(), userId);
-      }
+      await db.run("insert or ignore into Members(id, time) values (?, ?);", userId, Date.now());
+      await db.run("update Members set exp=exp + 1, time=? where id = ?;", Date.now(), userId);
       await db.close();
     }).catch(NOP);
     if (this.banSet.has(userId)) { return; }
-    let values = this.grouper.values();
-    for (let next = values.next(); !next.done; next = values.next()) {
-      for (let fun of next.value) {
-        fun(event);
-        if (event.isCanceled) return;
-      }
+    let text = onlyText(event);
+    let isAdmin = isAdminQQ(event);
+    for (const element of this.corpusGroup) {
+      if (!element.isOpen) { continue; }
+      if (element.needAdmin && !isAdmin) {continue;}
+      let exec = element.regexp.exec(text);
+      if (exec === null) {continue;}
+      if (event.isCanceled) return;
+      await parseMessage(element.reply, event, exec).then(tags => {
+        if (tags.length < 1) return;
+        if (element.forward) {
+          if (tags[0].tagName === "node") {
+            sendForward(event, tags).catch(NOP);
+          } else {
+            sendForwardQuick(event, [tags]).catch(NOP);
+          }
+        } else {
+          sendGroup(event, tags, element.delMSG > 0 ? (id) => {
+            deleteMsg(event, id.message_id, element.delMSG);
+          } : undefined);
+        }
+      }).catch(e => {
+        logger.warn(`群聊语料库转换失败:` + element.regexp);
+        console.error(e);
+      });
+      if (event.isCanceled) return;
     }
     // console.log(contextEvent.isAtMe, event.isCanceled);
     if (!isAtMe(event)) return;
@@ -138,6 +142,7 @@ class CQBot extends Plug {
       CQ.text(cqTags),
     ]).catch(NOP);
     return;
+    
   }
   
   async install() {
@@ -186,17 +191,6 @@ class CQBot extends Plug {
         this.privateMessage(event).catch(NOP);
       },
     });
-    this.getGroup(this).push(event => {
-      if (/^(?:帮助|help)$/.test(onlyText(event))) {
-        let tags = <messageNode>[];
-        this.helper.forEach((value, key) => {
-          tags.push(CQ.node(key, event.context.user_id, value));
-        });
-        sendForward(event, tags).catch(() => {
-          logger.warn("帮助文档发送失败");
-        });
-      }
-    });
     db.start(async db => {
       let all = await db.all<{ id: number }[]>(`select id from Members where baned = 1`);
       this.banSet = new Set(all.map(v => v.id));
@@ -205,4 +199,4 @@ class CQBot extends Plug {
   }
 }
 
-export = new CQBot()
+export = new CQBot();

@@ -2,7 +2,6 @@ import {CQ, CQEvent, CQTag} from "go-cqwebsocket";
 import {Plug} from "../Plug";
 import {canCallGroup, canCallPrivate} from "../utils/Annotation";
 import {db} from "../utils/database";
-import {isAdminQQ, onlyText, sendForward} from "../utils/Util";
 import bot from "./bot";
 
 class CQBotPlugin extends Plug {
@@ -43,6 +42,14 @@ class CQBotPlugin extends Plug {
             `${i}. ${p.installed} <- ${p.name}`).join("\n");
         return [CQ.text(s)];
       }
+      case "poke":
+        return db.start(async db => {
+          let all = await db.all<{ id: number, text: string }[]>("select id, text from pokeGroup");
+          let uin = event.context.self_id;
+          let map = all.map(v => CQ.node(String(v.id), uin, v.text));
+          await db.close();
+          return map;
+        });
       default:
         return [];
     }
@@ -138,25 +145,9 @@ class CQBotPlugin extends Plug {
   }
   
   async install() {
-    require("./bot").getGroup(this).push((event: CQEvent<"message.group">) => this.runGroup(event));
   }
   
   async uninstall() {
-    require("./bot").getGroup(this);
-  }
-  
-  private runGroup(event: CQEvent<"message.group">) {
-    if (!isAdminQQ(event)) return;
-    let text = onlyText(event);
-    if (!/^获取poke/.test(text)) {return; }
-    db.start(async db => {
-      let all = await db.all<{ id: number, text: string }[]>("select id, text from pokeGroup");
-      let uin = event.context.self_id;
-      let map = all.map(v => CQ.node(String(v.id), uin, v.text));
-      sendForward(event, map).catch(NOP);
-      await db.close();
-    }).catch(NOP);
-    return;
   }
   
   private setBanQQ(text: string, ban: 0 | 1) {
