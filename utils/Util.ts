@@ -117,11 +117,14 @@ async function parseFN(body: string, event: CQEvent<"message.group"> | CQEvent<"
 
 function parseCQ(body: string, event: CQEvent<"message.group"> | CQEvent<"message.private">,
     exec: RegExpExecArray): CQTag<any> {
+  let groups = exec.groups as { [key in string]?: string };
   switch (body) {
     case "reply":
       return CQ.reply(event.context.message_id);
     case "at":
       return CQ.at(event.context.user_id);
+    case "tts":
+      return groups.tts !== undefined ? CQ.tts(groups.tts) : CQ.text("未获取到tts");
     default:
       return CQ.text(body);
   }
