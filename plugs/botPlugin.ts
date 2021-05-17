@@ -25,24 +25,24 @@ class CQBotPlugin extends Plug {
     let {type} = execArray.groups as { type?: string } ?? {};
     if (type === undefined) return [];
     switch (type) {
-      case "群列表":
+      case "群":
         return event.bot.get_group_list().then(list => {
           let s = list.map(group => `(${group.group_id})${group.group_name}`).join("\n");
           return [CQ.text(s)];
         });
-      case "好友列表":
+      case "好友":
         return event.bot.get_friend_list().then(list => {
           let s = list.map(friend => `(${friend.user_id})${friend.nickname}:(${friend.remark})`).join("\n");
           return [CQ.text(s)];
         });
-      case "ban列表":
+      case "ban":
         return db.start(async db => {
           let list = await db.all<{ id: number }[]>(`select id from Members where baned = 1`);
           await db.close();
           let s = list.map(v => v.id).join("\n");
           return [CQ.text(s)];
         });
-      case "插件列表": {
+      case "插件": {
         let s = [...Plug.plugs.values()].map((p, i) =>
             `${i}. ${p.installed} <- ${p.name}`).join("\n");
         return [CQ.text(s)];
@@ -83,14 +83,6 @@ class CQBotPlugin extends Plug {
   async pluginList(event: CQEvent<"message.private"> | CQEvent<"message.group">, execArray: RegExpExecArray) {
     event.stopPropagation();
     let {type, open} = execArray.groups as { type?: "私聊" | "群聊", open?: "开" | "关" } ?? {};
-    let list: Corpus[];
-    if (type === "私聊") {
-      list = bot.corpusPrivate;
-    } else if (type === "群聊") {
-      return [CQ.text("未做完")];
-    } else {
-      return [];
-    }
     let isOpen: boolean;
     if (open === "开") {
       isOpen = true;
@@ -99,11 +91,11 @@ class CQBotPlugin extends Plug {
     } else {
       return [];
     }
-    let filter = list.map((msg, index) => ({regex: msg.regexp, isOpen: msg.isOpen, index}))
-        .filter(msg => msg.isOpen === isOpen)
-        .map(({regex, index}) => `${index} :${regex}`)
-        .join("\n");
-    return [CQ.text(filter)];
+    return CQBotPlugin.getList(type).map((msg, index) =>
+        ({name: msg.name, isOpen: msg.isOpen, index}),
+    ).filter(msg => msg.isOpen === isOpen,
+    ).map(({name, index}) => CQ.text(`${index} :${name}\n`),
+    );
   }
   
   /**
@@ -115,8 +107,8 @@ class CQBotPlugin extends Plug {
       execArray: RegExpExecArray): Promise<CQTag<any>[]> {
     event.stopPropagation();
     let {
-      open, nums,
-    } = execArray.groups as { open?: "开" | "关", nums?: string } ?? {};
+      type, open, nums,
+    } = execArray.groups as { type?: "私聊" | "群聊", open?: "开" | "关", nums?: string } ?? {};
     if (nums === undefined) return [];
     let number = +nums;
     let s: boolean;
@@ -127,7 +119,7 @@ class CQBotPlugin extends Plug {
     } else {
       return [];
     }
-    let element = bot.corpusPrivate[number];
+    let element = CQBotPlugin.getList(type)[number];
     if (element === undefined) return [];
     element.isOpen = s;
     return [CQ.text("回复变动id:" + number)];
@@ -139,14 +131,32 @@ class CQBotPlugin extends Plug {
       execArray: RegExpExecArray): Promise<CQTag<any>[]> {
     event.stopPropagation();
     let {
-      nums,
-    } = execArray.groups as { nums?: string } ?? {};
+      type, nums,
+    } = execArray.groups as { type?: "私聊" | "群聊", nums?: string } ?? {};
     if (nums === undefined) return [];
-    let element = bot.corpusPrivate[+nums];
+    let list: Corpus[];
+    if (type === "私聊") {
+      list = bot.corpusPrivate;
+    } else if (type === "群聊") {
+      list = bot.corpusGroup;
+    } else {
+      return [];
+    }
+    let element = list[+nums];
     if (element === undefined) return [];
     return [CQ.text(`RegExp: ${element.regexp.toString()
     }\n isOpen: ${element.isOpen}\n needAdmin: ${element.needAdmin
     }\n reply: ${element.reply}`)];
+  }
+  
+  private static getList(type?: "私聊" | "群聊"): Corpus[] {
+    if (type === "私聊") {
+      return bot.corpusPrivate;
+    } else if (type === "群聊") {
+      return bot.corpusGroup;
+    } else {
+      return [];
+    }
   }
   
   async install() {

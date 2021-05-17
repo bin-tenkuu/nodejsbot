@@ -15,7 +15,7 @@
       "reply": "[FN:CQBotCOC.getDiceSet]"
     }, {
       "name": "获取<type>列表",
-      "regexp": "^获取(?<type>[^ ]+)$",
+      "regexp": "^获取(?<type>[^ ]+)列表$",
       "reply": "[FN:CQBotPlugin.getter]",
       "needAdmin": true,
       "forward": true
@@ -31,19 +31,19 @@
       "needAdmin": true,
       "isOpen": false
     }, {
-      "name": "<私聊|群聊>列表<open>",
+      "name": "<type>列表<open>",
       "regexp": "^(?<type>私聊|群聊)列表(?<open>开|关)$",
       "reply": "[FN:CQBotPlugin.pluginList]",
       "needAdmin": true,
       "forward": true
     }, {
-      "name": "私聊列表<open><nums>",
-      "regexp": "^私聊列表(?<open>[开|关])(?<nums>\\s?\\d+)$",
+      "name": "<type>列表<open><nums>",
+      "regexp": "^(?<type>私聊|群聊)列表(?<open>[开|关])(?<nums>\\s?\\d+)$",
       "reply": "[FN:CQBotPlugin.pluginStat]",
       "needAdmin": true
     }, {
-      "name": "私聊列表<nums>",
-      "regexp": "^私聊列表(?<nums>\\s?\\d+)$",
+      "name": "<type>列表<nums>",
+      "regexp": "^(?<type>私聊|群聊)列表(?<nums>\\s?\\d+)$",
       "reply": "[FN:CQBotPlugin.pluginInfo]",
       "needAdmin": true
     }, {
