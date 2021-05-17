@@ -13,7 +13,7 @@
       "type": "string",
       "description": "字符串格式消息段",
       "pattern": "^(\\[(CQ:\\w+|FN:\\w+\\.\\w+)\\]|[^\\[]+)+$",
-      "default": null
+      "default": ""
     },
     "CQ": {
       "type": "string",
@@ -33,12 +33,16 @@
       "type": "array",
       "items": {
         "properties": {
+          "name": {
+            "type": "string",
+            "description": "名称兼职帮助",
+            "default": ""
+          },
           "regexp": {
             "$ref": "#/definitions/regexp"
           },
           "reply": {
-            "$ref": "#/definitions/MSG",
-            "default": ""
+            "$ref": "#/definitions/MSG"
           },
           "forward": {
             "type": "boolean",
@@ -67,36 +71,16 @@
       "description": "私聊消息",
       "type": "array",
       "items": {
-        "properties": {
-          "regexp": {
-            "$ref": "#/definitions/regexp"
-          },
-          "reply": {
-            "$ref": "#/definitions/MSG",
-            "default": ""
-          },
-          "needAdmin": {
-            "type": "boolean",
-            "description": "是否需要管理员",
-            "default": true
-          },
-          "isOpen": {
-            "type": "boolean",
-            "description": "是否开启",
-            "default": false
-          }
-        },
-        "required": ["regexp"]
+        "$ref": "#/properties/groupMSG/items"
+      },
+      "pokeGroup": {
+        "description": "群聊戳一戳消息",
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/CQ"
+        }
       }
     },
-    "pokeGroup": {
-      "description": "群聊戳一戳消息",
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/CQ"
-      }
-    }
-  },
-  "required": [],
-  "additionalProperties": false
+    "additionalProperties": false
+  }
 }

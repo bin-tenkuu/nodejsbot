@@ -1,0 +1,120 @@
+{
+  "$schema": "schema/corpus.schema.json",
+  "privateMSG": [
+    {
+      "name": ".d <表达式> <...>:骰子",
+      "regexp": "^\\.d +([^ ]+)",
+      "reply": "[FN:CQBotCOC.getDice]"
+    }, {
+      "name": ".dstat:查看全部简写",
+      "regexp": "^\\.dstat$",
+      "reply": "[FN:CQBotCOC.getDiceStat]"
+    }, {
+      "name": ".dset <key>[=<value>]:设置/删除简写",
+      "regexp": "^\\.dset +(?<key>\\w[\\w\\d]+)(?:=(?<value>[+\\-*d0-9#]+))?",
+      "reply": "[FN:CQBotCOC.getDiceSet]"
+    }, {
+      "name": "获取<type>列表",
+      "regexp": "^获取(?<type>[^ ]+)$",
+      "reply": "[FN:CQBotPlugin.getter]",
+      "needAdmin": true,
+      "forward": true
+    }, {
+      "name": "设置<type> <other>",
+      "regexp": "^设置(?<type>[^ ]+) (?<other>.+)$",
+      "reply": "[FN:CQBotPlugin.setter]",
+      "needAdmin": true
+    }, {
+      "name": "<设置|删除>poke<other>",
+      "regexp": "^(?<control>设置|删除)poke(?<other>.*)$",
+      "reply": "[FN:CQBotPokeGroup.runPrivate]",
+      "needAdmin": true,
+      "isOpen": false
+    }, {
+      "name": "<私聊|群聊>列表<open>",
+      "regexp": "^(?<type>私聊|群聊)列表(?<open>开|关)$",
+      "reply": "[FN:CQBotPlugin.pluginList]",
+      "needAdmin": true,
+      "forward": true
+    }, {
+      "name": "私聊列表<open><nums>",
+      "regexp": "^私聊列表(?<open>[开|关])(?<nums>\\s?\\d+)$",
+      "reply": "[FN:CQBotPlugin.pluginStat]",
+      "needAdmin": true
+    }, {
+      "name": "私聊列表<nums>",
+      "regexp": "^私聊列表(?<nums>\\s?\\d+)$",
+      "reply": "[FN:CQBotPlugin.pluginInfo]",
+      "needAdmin": true
+    }, {
+      "name": "来点[<r18>]<key>色图",
+      "regexp": "^[来來发發给給][张張个個幅点點份](?<r18>[Rr]18的?)?(?<keyword>.*?)?的?[色瑟][图圖]$",
+      "reply": "[FN:CQBotLoLiSeTu.getSeTu]",
+      "delMSG": 10
+    }, {
+      "name": "来点东方图",
+      "regexp": "^来点东方图$",
+      "reply": "[FN:CQBotTouHou.getTouHouPNG]",
+      "isOpen": false
+    }, {
+      "name": "看_p站<pid>[-<p>]",
+      "regexp": "^看{1,2}p站(?<pid>\\d+)(?:-(?<p>\\d+))?$",
+      "reply": "[FN:CQBotPixiv.getPixiv]"
+    }
+  ],
+  "groupMSG": [
+    {
+      "name": "为什么呢",
+      "regexp": "^为什么呢$",
+      "reply": "[CQ:reply]是啊，为什么呢，我也在寻找原因呢",
+      "forward": false
+    }, {
+      "name": "有病吧",
+      "regexp": "^有病吧$",
+      "reply": "你治得好么?"
+    }, {
+      "name": ".搜图",
+      "regexp": "^\\.搜图$",
+      "reply": "[FN:CQBotSauceNAOGroup.getSauceNAO]"
+    }, {
+      "name": "复读",
+      "regexp": "^.+$",
+      "reply": "[FN:BotRepeat.getRepeat]"
+    }, {
+      "name": "@复读AI",
+      "regexp": "^.*$",
+      "reply": "[FN:CQBot.MemeAI]"
+    }, {
+      "name": "保留值",
+      "regexp": "^$",
+      "isOpen": false,
+      "delMSG": 10,
+      "forward": true,
+      "needAdmin": true
+    }
+  ],
+  "pokeGroup": [
+    "别戳啦！",
+    "别戳我QAQ",
+    "谁戳我谁是猪",
+    "你在戳哪里啊笨蛋",
+    "再戳我就要哭了呜呜",
+    "再戳我把你头拧下来",
+    "你敢再戳一下试试！？",
+    "再戳我以后就不给你发色图了",
+    "哎呀\n[CQ:image,file=https://c2cpicdw.qpic.cn/offpic_new/0//2938137849-659786534-114EB8942E9CF20BC947B4446A56D6C7/0?term=2]",
+    "不许戳\n[CQ:image,file=https://c2cpicdw.qpic.cn/offpic_new/0//2938137849-347877598-7CD703F96C56467A9523B5D8A9E33A3B/0?term=2]",
+    "别戳！\n[CQ:image,file=https://c2cpicdw.qpic.cn/offpic_new/0//2938137849-2869141935-F11C7B48CDDA0FA052D4BC96C0F660C4/0?term=2]",
+    "嗯喵呀\n[CQ:image,file=https://c2cpicdw.qpic.cn/offpic_new/0//2938137849-1606905392-FAE66A6A361829D2EB557A7F7CD3A644/0?term=2]",
+    "[CQ:image,file=https://c2cpicdw.qpic.cn/offpic_new/2938137849//2938137849-1209220732-FAE66A6A361829D2EB557A7F7CD3A644/0?term=3]",
+    "不可以戳我\n[CQ:image,file=https://c2cpicdw.qpic.cn/offpic_new/0//2938137849-3349590811-B0F8B76436994DBBF0444AB3976AB167/0?term=2]",
+    "不能再戳了\n[CQ:image,file=https://c2cpicdw.qpic.cn/offpic_new/0//2938137849-3510323556-4D53F30B66C53583FCF863859FDB4F36/0?term=2]",
+    "为什么戳我\n[CQ:image,file=https://c2cpicdw.qpic.cn/offpic_new/0//2938137849-4205976505-06C54A1FA99298E70C45915CDBCA8EBD/0?term=2]",
+    "呜呜呜别戳了\n[CQ:image,file=https://c2cpicdw.qpic.cn/offpic_new/0//2938137849-258682041-B1B7E65E84CC0F1CA885F5DAFA7FCA0B/0?term=2]",
+    "嗯喵别再戳我了呀\n[CQ:image,file=https://c2cpicdw.qpic.cn/offpic_new/0//2938137849-1514513615-FB0FF71BC29187090063A2163FEAB3FF/0?term=2]",
+    "不要戳..不要..停\n[CQ:image,file=https://c2cpicdw.qpic.cn/offpic_new/0//2938137849-1889219140-88139C537D9B5928CC1681550A1AE3FB/0?term=2]",
+    "再戳我我就敲你头\n[CQ:image,file=https://c2cpicdw.qpic.cn/offpic_new/0//2938137849-3352843282-A994EC11BCC828E52987B6D9529C8182/0?term=2]",
+    "别戳了！砍死你！！！\n[CQ:image,file=https://c2cpicdw.qpic.cn/offpic_new/0//2938137849-1218126845-27D041C0F99CAFDEEF7294BDF27EBF15/0?term=2]",
+    "呜呜呜呜呜为什么呜呜为什么戳呜呜我\n[CQ:image,file=https://c2cpicdw.qpic.cn/offpic_new/0//2938137849-4187554356-DE877F35FE388CA8783AA16943AA0A57/0?term=2]"
+  ]
+}

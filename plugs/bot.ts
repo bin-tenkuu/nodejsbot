@@ -1,26 +1,27 @@
-import {CQ, CQEvent, CQWebSocket} from "go-cqwebsocket";
+import {CQ, CQEvent, CQTag, CQWebSocket} from "go-cqwebsocket";
 import {Status} from "go-cqwebsocket/out/Interfaces";
 import {adminGroup, adminId, CQWS} from "../config/config.json";
 import {groupMSG, privateMSG} from "../config/corpus.json";
 import {Plug} from "../Plug";
+import {canCallGroup} from "../utils/Annotation";
 import {db} from "../utils/database";
 import {logger} from "../utils/logger";
 import {
   deleteMsg, isAdminQQ, isAtMe, onlyText, parseMessage, sendForward, sendForwardQuick, sendGroup, sendPrivate,
 } from "../utils/Util";
 
-type GroFunList = ((this: void, event: CQEvent<"message.group">) => void);
-type Group = { regexp: RegExp, reply: string, forward: boolean, needAdmin: boolean, isOpen: boolean, delMSG: number }
-type Private = { regex: RegExp, reply: string, needAdmin: boolean, isOpen: boolean }
+type Corpus = {
+  name: string, regexp: RegExp, reply: string,
+  forward: boolean, needAdmin: boolean, isOpen: boolean, delMSG: number
+}
 
 class CQBot extends Plug {
   public bot: CQWebSocket;
-  private readonly grouper: Map<Plug, GroFunList[]>;
   private sendStateInterval?: NodeJS.Timeout;
   
   private banSet: Set<number>;
-  readonly corpusPrivate: Private[];
-  readonly corpusGroup: Group[];
+  readonly corpusPrivate: Corpus[];
+  readonly corpusGroup: Corpus[];
   
   constructor() {
     super(module);
@@ -45,14 +46,17 @@ class CQBot extends Plug {
     this.bot.messageFail = (reason, message) => {
       logger.error(`${message.action}失败[${reason.retcode}]:${reason.wording}`);
     };
-    this.grouper = new Map();
     this.corpusPrivate = privateMSG.map(msg => ({
-      regex: new RegExp(msg.regexp),
+      name: msg.name ?? "",
+      regexp: new RegExp(msg.regexp),
       reply: msg.reply ?? "",
+      forward: msg.forward === true,
       needAdmin: msg.needAdmin === true,
       isOpen: msg.isOpen !== false,
+      delMSG: msg.delMSG ?? 0,
     }));
     this.corpusGroup = groupMSG.map(msg => ({
+      name: msg.name ?? "",
       regexp: new RegExp(msg.regexp),
       reply: msg.reply ?? "",
       forward: msg.forward === true,
@@ -73,76 +77,57 @@ class CQBot extends Plug {
     });
   }
   
-  private async privateMessage(event: CQEvent<"message.private">) {
-    let text = onlyText(event);
-    let isAdmin = isAdminQQ(event);
-    for (const element of this.corpusPrivate) {
-      if (!element.isOpen) continue;
-      if (element.needAdmin && !isAdmin) continue;
-      let exec = element.regex.exec(text);
-      if (exec === null) continue;
-      if (event.isCanceled) return;
-      await parseMessage(element.reply, event, exec).then(tags => {
-        if (tags.length > 0) sendPrivate(event, tags);
-      }).catch(e => {
-        logger.error("语料库转换失败:" + element.reply.toString());
-        console.error(e);
-      });
-      if (event.isCanceled) return;
+  private static* getValues(corpus1: Corpus[], corpus2?: Corpus[]): Generator<Corpus, void> {
+    for (const corp of corpus1) {
+      yield corp;
+    }
+    if (corpus2 === undefined) return;
+    for (const corp of corpus2) {
+      yield corp;
     }
   }
   
-  private async groupMessage(event: CQEvent<"message.group">) {
-    let userId = event.context.user_id;
-    db.start(async db => {
-      await db.run("insert or ignore into Members(id, time) values (?, ?);", userId, Date.now());
-      await db.run("update Members set exp=exp + 1, time=? where id = ?;", Date.now(), userId);
-      await db.close();
-    }).catch(NOP);
-    if (this.banSet.has(userId)) { return; }
+  private static exec(element: Corpus, text: string, isAdmin: boolean): RegExpExecArray | null {
+    if (element.needAdmin && !isAdmin) return null;
+    if (!element.isOpen) return null;
+    return element.regexp.exec(text);
+  }
+  
+  private static sendCorpusTags(event: CQEvent<"message.private"> | CQEvent<"message.group">,
+      corpus: Iterable<Corpus>, callback: (this: void, tags: CQTag<any>[], element: Corpus) => void) {
     let text = onlyText(event);
     let isAdmin = isAdminQQ(event);
-    for (const element of this.corpusGroup) {
-      if (!element.isOpen) { continue; }
-      if (element.needAdmin && !isAdmin) {continue;}
-      let exec = element.regexp.exec(text);
-      if (exec === null) {continue;}
+    for (const element of corpus) {
+      let exec = CQBot.exec(element, text, isAdmin);
+      if (exec === null) continue;
       if (event.isCanceled) return;
-      await parseMessage(element.reply, event, exec).then(tags => {
-        if (tags.length < 1) return;
-        if (element.forward) {
-          if (tags[0].tagName === "node") {
-            sendForward(event, tags).catch(NOP);
-          } else {
-            sendForwardQuick(event, [tags]).catch(NOP);
-          }
-        } else {
-          sendGroup(event, tags, element.delMSG > 0 ? (id) => {
-            deleteMsg(event, id.message_id, element.delMSG);
-          } : undefined);
-        }
-      }).catch(e => {
-        logger.warn(`群聊语料库转换失败:` + element.regexp);
+      parseMessage(element.reply, event, exec).catch(e => {
+        logger.error("语料库转换失败:" + element.name);
         console.error(e);
+        return [CQ.text("error:" + element.name + "\n")];
+      }).then(msg => {
+        callback(msg, element);
       });
       if (event.isCanceled) return;
     }
-    // console.log(contextEvent.isAtMe, event.isCanceled);
-    if (!isAtMe(event)) return;
+    return;
+  }
+  
+  @canCallGroup()
+  async MemeAI(event: CQEvent<"message.group">, execArray: RegExpExecArray) {
+    if (!isAtMe(event)) return [];
     event.stopPropagation();
-    let {group_id, message_id} = event.context;
-    let cqTags = onlyText(event).replace(/吗/g, "")
+    let {message_id, user_id} = event.context;
+    let cqTags = execArray[0].replace(/吗/g, "")
         .replace(/不/g, "很")
         .replace(/你/g, "我")
         .replace(/(?<!没)有/g, "没有")
         .replace(/[？?]/g, "!");
-    this.bot.send_group_msg(group_id, [
+    return [
       CQ.reply(message_id),
-      CQ.at(userId),
+      CQ.at(user_id),
       CQ.text(cqTags),
-    ]).catch(NOP);
-    return;
-    
+    ];
   }
   
   async install() {
@@ -185,10 +170,32 @@ class CQBot extends Plug {
   init() {
     this.bot.bind("on", {
       "message.group": (event) => {
-        this.groupMessage(event);
+        let userId = event.context.user_id;
+        db.start(async db => {
+          await db.run("insert or ignore into Members(id, time) values (?, ?);", userId, Date.now());
+          await db.run("update Members set exp=exp + 1, time=? where id = ?;", Date.now(), userId);
+          await db.close();
+        }).catch(NOP);
+        if (this.banSet.has(userId)) { return; }
+        CQBot.sendCorpusTags(event, CQBot.getValues(this.corpusPrivate, this.corpusGroup), (tags, element) => {
+          if (tags.length < 1) return;
+          if (element.forward) {
+            if (tags[0].tagName === "node") {
+              sendForward(event, tags).catch(NOP);
+            } else {
+              sendForwardQuick(event, [tags]).catch(NOP);
+            }
+          } else {
+            sendGroup(event, tags, element.delMSG > 0 ? (id) => {
+              deleteMsg(event, id.message_id, element.delMSG);
+            } : undefined);
+          }
+        });
       },
       "message.private": (event) => {
-        this.privateMessage(event).catch(NOP);
+        CQBot.sendCorpusTags(event, this.corpusPrivate, tags => {
+          if (tags.length > 0) sendPrivate(event, tags);
+        });
       },
     });
     db.start(async db => {

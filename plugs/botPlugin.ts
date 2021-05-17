@@ -4,6 +4,11 @@ import {canCallGroup, canCallPrivate} from "../utils/Annotation";
 import {db} from "../utils/database";
 import bot from "./bot";
 
+type Corpus = {
+  name: string, regexp: RegExp, reply: string,
+  forward: boolean, needAdmin: boolean, isOpen: boolean, delMSG: number
+}
+
 class CQBotPlugin extends Plug {
   
   constructor() {
@@ -78,7 +83,7 @@ class CQBotPlugin extends Plug {
   async pluginList(event: CQEvent<"message.private"> | CQEvent<"message.group">, execArray: RegExpExecArray) {
     event.stopPropagation();
     let {type, open} = execArray.groups as { type?: "私聊" | "群聊", open?: "开" | "关" } ?? {};
-    let list: { regex: RegExp, reply: string, isOpen: boolean }[];
+    let list: Corpus[];
     if (type === "私聊") {
       list = bot.corpusPrivate;
     } else if (type === "群聊") {
@@ -94,7 +99,7 @@ class CQBotPlugin extends Plug {
     } else {
       return [];
     }
-    let filter = list.map((msg, index) => ({regex: msg.regex, isOpen: msg.isOpen, index}))
+    let filter = list.map((msg, index) => ({regex: msg.regexp, isOpen: msg.isOpen, index}))
         .filter(msg => msg.isOpen === isOpen)
         .map(({regex, index}) => `${index} :${regex}`)
         .join("\n");
@@ -139,7 +144,7 @@ class CQBotPlugin extends Plug {
     if (nums === undefined) return [];
     let element = bot.corpusPrivate[+nums];
     if (element === undefined) return [];
-    return [CQ.text(`RegExp: ${element.regex.toString()
+    return [CQ.text(`RegExp: ${element.regexp.toString()
     }\n isOpen: ${element.isOpen}\n needAdmin: ${element.needAdmin
     }\n reply: ${element.reply}`)];
   }

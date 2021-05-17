@@ -1,4 +1,4 @@
-import {CQ, CQEvent} from "../../go-cqwebsocket";
+import {CQ, CQEvent} from "go-cqwebsocket";
 import {Plug} from "../Plug";
 import {canCallGroup} from "../utils/Annotation";
 import {RepeatCache} from "../utils/repeat";
