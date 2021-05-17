@@ -17,11 +17,12 @@ type Corpus = {
 
 class CQBot extends Plug {
   public bot: CQWebSocket;
-  private sendStateInterval?: NodeJS.Timeout;
   
-  private banSet: Set<number>;
-  readonly corpusPrivate: Corpus[];
-  readonly corpusGroup: Corpus[];
+  banSet: Set<number>;
+  corpusPrivate: Corpus[];
+  corpusGroup: Corpus[];
+  
+  private sendStateInterval?: NodeJS.Timeout;
   
   constructor() {
     super(module);
@@ -46,24 +47,7 @@ class CQBot extends Plug {
     this.bot.messageFail = (reason, message) => {
       logger.error(`${message.action}失败[${reason.retcode}]:${reason.wording}`);
     };
-    this.corpusPrivate = privateMSG.map(msg => ({
-      name: msg.name ?? "",
-      regexp: new RegExp(msg.regexp),
-      reply: msg.reply ?? "",
-      forward: msg.forward === true,
-      needAdmin: msg.needAdmin === true,
-      isOpen: msg.isOpen !== false,
-      delMSG: msg.delMSG ?? 0,
-    }));
-    this.corpusGroup = groupMSG.map(msg => ({
-      name: msg.name ?? "",
-      regexp: new RegExp(msg.regexp),
-      reply: msg.reply ?? "",
-      forward: msg.forward === true,
-      needAdmin: msg.needAdmin === true,
-      isOpen: msg.isOpen !== false,
-      delMSG: msg.delMSG ?? 0,
-    }));
+    this.corpusPrivate = this.corpusGroup = [];
     this.banSet = new Set<number>();
     this.init();
   }
@@ -168,6 +152,24 @@ class CQBot extends Plug {
   }
   
   init() {
+    this.corpusPrivate = privateMSG.map(msg => ({
+      name: msg.name ?? "",
+      regexp: new RegExp(msg.regexp ?? "$^"),
+      reply: msg.reply ?? "",
+      forward: msg.forward === true,
+      needAdmin: msg.needAdmin === true,
+      isOpen: msg.isOpen !== false,
+      delMSG: msg.delMSG ?? 0,
+    }));
+    this.corpusGroup = groupMSG.map(msg => ({
+      name: msg.name ?? "",
+      regexp: new RegExp(msg.regexp ?? "$^"),
+      reply: msg.reply ?? "",
+      forward: msg.forward === true,
+      needAdmin: msg.needAdmin === true,
+      isOpen: msg.isOpen !== false,
+      delMSG: msg.delMSG ?? 0,
+    }));
     this.bot.bind("on", {
       "message.group": (event) => {
         let userId = event.context.user_id;

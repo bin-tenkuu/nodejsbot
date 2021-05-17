@@ -86,7 +86,7 @@
       "reply": "[FN:CQBot.MemeAI]"
     }, {
       "name": "保留值",
-      "regexp": "^$",
+      "regexp": "$^",
       "isOpen": false,
       "delMSG": 10,
       "forward": true,
