@@ -17,13 +17,10 @@ class BotRepeat extends Plug {
   async getRepeat(event: CQEvent<"message.group">) {
     let {group_id, user_id, raw_message} = event.context;
     this.repeatCache.addData(group_id, user_id, raw_message);
-    console.log(event.cqTags);
     if (event.cqTags.some(tag => tag.tagName !== "text")) return [];
     let msg = event.cqTags.join("");
-    console.log(msg);
     if (/^[-+$%^&*.]/.test(msg)) return [];
     if (this.repeatCache.check(group_id, 4)) {
-      console.log(msg);
       event.stopPropagation();
       if (msg.length < 3) {
         return [CQ.text(msg)];

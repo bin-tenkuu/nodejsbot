@@ -2,6 +2,10 @@
   "$schema": "schema/corpus.schema.json",
   "privateMSG": [
     {
+      "name": ".ping",
+      "regexp": "^\\.ping$",
+      "reply": ".pong!"
+    }, {
       "name": ".dall1:打开全1模式",
       "regexp": "^\\.dall1$",
       "reply": "[FN:CQBotCOC.setCheater]"

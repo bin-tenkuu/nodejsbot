@@ -136,9 +136,11 @@ class CQBotPlugin extends Plug {
     if (nums === undefined) return [];
     let element = CQBotPlugin.getList(type)[+nums];
     if (element === undefined) return [];
-    return [CQ.text(`RegExp: ${element.regexp.toString()
-    }\n isOpen: ${element.isOpen}\n needAdmin: ${element.needAdmin
-    }\n reply: ${element.reply}`)];
+    let stringify = JSON.stringify(element, (key, value) => {
+      if (value instanceof RegExp) return value.toString();
+      return value;
+    }, 1);
+    return [CQ.text(stringify)];
   }
   
   private static getList(type?: "私聊" | "群聊"): Corpus[] {

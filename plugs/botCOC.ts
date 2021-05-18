@@ -75,7 +75,7 @@ class CQBotCOC extends Plug {
   @canCallPrivate()
   async setCheater() {
     this.cheater = !this.cheater;
-    return [CQ.text("全1" + this.cheater ? "开" : "关")];
+    return [CQ.text("全1" + (this.cheater ? "开" : "关"))];
   }
   
   private readShortKey() {
@@ -101,12 +101,14 @@ class CQBotCOC extends Plug {
       let num: number | number[] = +(groups.num ?? 1);
       let op = groups.op ?? "+";
       if (groups.max) {
-        let dices = dice(num, +groups.max);
+        let dices: { num: number, list: number[] };
         if (cheater) {
           dices = {
-            list: dices.list.map(() => 1),
-            num: dices.list.length,
+            list: new Array(num).fill(1),
+            num: num,
           };
+        } else {
+          dices = dice(num, +groups.max);
         }
         return {
           origin: value,

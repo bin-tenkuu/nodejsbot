@@ -44,9 +44,6 @@ class HttpOption extends Plug {
   async exit() {
     Promise.all([...(Plug.plugs.values())].map((p) => p.uninstall())).then(() => {
       logger.info(">>>>>>>>>> 全部卸载完成 <<<<<<<<<<");
-      setTimeout(() => {
-        process.exit();
-      }, 1000);
     });
     return [];
   }
