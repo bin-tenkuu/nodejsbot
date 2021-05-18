@@ -23,8 +23,7 @@ class CQBotLoLiSeTu extends Plug {
       exec: RegExpExecArray): Promise<CQTag<any>[]> {
     event.stopPropagation();
     if (this.isCalling) {
-      logger.info("冷却中");
-      return [];
+      return [CQ.text("冷却中")];
     }
     this.isCalling = true;
     let groups = {

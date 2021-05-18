@@ -9,7 +9,7 @@ Promise.resolve().then(async () => {
   await require("./plugs/httpOption").install();
   await require("./plugs/bot").install();
   
-  await require("./plugs/botCOC").install();
+  await require("./plugs/botCOC");
   await require("./plugs/botEvents").install();
   await require("./plugs/botPixiv");
   await require("./plugs/botPlugin");

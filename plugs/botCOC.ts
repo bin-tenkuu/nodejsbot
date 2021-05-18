@@ -7,19 +7,21 @@ import {logger} from "../utils/logger";
 
 class CQBotCOC extends Plug {
   shortKey = new Map<string, string>();
+  cheater: boolean;
   
   constructor() {
     super(module);
     this.name = "QQ群聊-COC跑团相关";
     this.description = "一些跑团常用功能";
     this.version = 1;
+    this.cheater = false;
     
     this.readShortKey();
   }
   
   @canCallGroup()
   @canCallPrivate()
-  async getDiceStat(event: CQEvent<"message.group"> | CQEvent<"message.private">) {
+  async getDiceStat(event: CQEvent<"message.group"> | CQEvent<"message.private">): Promise<CQTag<any>[]> {
     event.stopPropagation();
     let str = "";
     this.shortKey.forEach((value, key) => {
@@ -31,7 +33,7 @@ class CQBotCOC extends Plug {
   
   @canCallGroup()
   @canCallPrivate()
-  private async getDiceSet(event: CQEvent<"message.group"> | CQEvent<"message.private">,
+  async getDiceSet(event: CQEvent<"message.group"> | CQEvent<"message.private">,
       execArray: RegExpExecArray): Promise<CQTag<any>[]> {
     event.stopPropagation();
     let {key, value} = execArray.groups as { key?: string, value?: string } ?? {};
@@ -53,18 +55,6 @@ class CQBotCOC extends Plug {
     return [CQ.text(`添加key:${key}=${value}`)];
   }
   
-  async install() {}
-  
-  async uninstall() {}
-  
-  private readShortKey() {
-    db.start(async db => {
-      let all = await db.all<{ key: string, value: string }[]>(`select key, value from COCShortKey`);
-      all.forEach(({key, value}) => this.shortKey.set(key, value));
-      await db.close();
-    }).catch(NOP);
-  }
-  
   @canCallGroup()
   @canCallPrivate()
   async getDice(event: CQEvent<"message.group"> | CQEvent<"message.private">,
@@ -78,25 +68,46 @@ class CQBotCOC extends Plug {
     if (/[^+\-*d0-9#]/.test(dice)) {
       return [CQ.text(".d错误参数")];
     }
-    return [CQ.text(CQBotCOC.dice(dice))];
+    return [CQ.text(CQBotCOC.dice(dice, this.cheater))];
   }
   
-  private static dice(str: string): string {
+  @canCallGroup()
+  @canCallPrivate()
+  async setCheater() {
+    this.cheater = !this.cheater;
+    return [CQ.text("全1" + this.cheater ? "开" : "关")];
+  }
+  
+  private readShortKey() {
+    db.start(async db => {
+      let all = await db.all<{ key: string, value: string }[]>(`select key, value from COCShortKey`);
+      all.forEach(({key, value}) => this.shortKey.set(key, value));
+      await db.close();
+    }).catch(NOP);
+  }
+  
+  private static dice(str: string, cheater: boolean): string {
     let handles = str.split(/(?=[+\-*])/).map<{
       op: "+" | "-" | "*"
       num: number
       list?: number[]
       origin?: string
     }>(value => {
-      let groups = (/^(?<op>[+\-*])?(?<num>\d+)?(d(?<max>\d+))?$/.exec(value)?.groups ?? {}) as {
+      let groups = (/^(?<op>[+\-*])?(?<num>\d+)?(d(?<max>\d+))?$/.exec(value)?.groups) as {
         op?: "+" | "-" | "*"
         num?: string
         max?: string
-      };
+      } ?? {};
       let num: number | number[] = +(groups.num ?? 1);
       let op = groups.op ?? "+";
       if (groups.max) {
         let dices = dice(num, +groups.max);
+        if (cheater) {
+          dices = {
+            list: dices.list.map(() => 1),
+            num: dices.list.length,
+          };
+        }
         return {
           origin: value,
           op,

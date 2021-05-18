@@ -1,5 +1,4 @@
-import {CQEvent} from "go-cqwebsocket";
-import {CQTag} from "go-cqwebsocket/out/tags";
+import {CQEvent, CQTag} from "go-cqwebsocket";
 import "reflect-metadata";
 import {Plug} from "../Plug";
 
@@ -7,8 +6,10 @@ type Constructor = { new(...args: any[]): any };
 type FunctionDecorator<T extends Function = Function, O extends Object = Object, Key extends PropertyKey = PropertyKey> =
     <F extends T = T>(target: O, propertyKey: Key, descriptor: TypedPropertyDescriptor<F>) => void;
 type ConstructorDecorator<T extends Constructor = Constructor> = (constructor: T) => T | void;
-type PropertyDecorator = (target: Object, propertyKey: PropertyKey) => void;
-type ParameterDecorator = (target: Object, propertyKey: PropertyKey, parameterIndex: number) => void;
+type PropertyDecorator<O extends Object = Object, Key extends PropertyKey = PropertyKey> =
+    (target: O, propertyKey: Key) => void;
+type ParameterDecorator<O extends Object = Object, Key extends PropertyKey = PropertyKey> =
+    (target: O, propertyKey: Key, parameterIndex: number) => void;
 
 export enum Design {
   type = "design:type",

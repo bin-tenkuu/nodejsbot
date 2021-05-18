@@ -99,7 +99,6 @@ async function parseFN(body: string, event: CQEvent<"message.group"> | CQEvent<"
   let plugFunc: Function = Reflect.get(plug, funName);
   if (typeof plugFunc !== "function") return [CQ.text(`插件${plugName}的${funName}不是方法`)];
   try {
-    logger.info(`调用${body}`);
     if (event.contextType === "message.private" &&
         Reflect.getMetadata(canCallPrivate.name, plugFunc) === true) {
       return (await (plugFunc as canCallPrivateType).call(plug, event, exec) as CQTag<any>[]);
@@ -107,6 +106,7 @@ async function parseFN(body: string, event: CQEvent<"message.group"> | CQEvent<"
         Reflect.getMetadata(canCallGroup.name, plugFunc) === true) {
       return (await (plugFunc as canCallGroupType).call(plug, event, exec) as CQTag<any>[]);
     } else {
+      logger.info(`不可调用[${body}]`);
       return [CQ.text(`插件${plugName}的${funName}方法不可在${event.contextType}环境下调用`)];
     }
   } catch (e) {

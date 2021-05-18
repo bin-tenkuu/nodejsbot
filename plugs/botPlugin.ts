@@ -134,15 +134,7 @@ class CQBotPlugin extends Plug {
       type, nums,
     } = execArray.groups as { type?: "私聊" | "群聊", nums?: string } ?? {};
     if (nums === undefined) return [];
-    let list: Corpus[];
-    if (type === "私聊") {
-      list = bot.corpusPrivate;
-    } else if (type === "群聊") {
-      list = bot.corpusGroup;
-    } else {
-      return [];
-    }
-    let element = list[+nums];
+    let element = CQBotPlugin.getList(type)[+nums];
     if (element === undefined) return [];
     return [CQ.text(`RegExp: ${element.regexp.toString()
     }\n isOpen: ${element.isOpen}\n needAdmin: ${element.needAdmin

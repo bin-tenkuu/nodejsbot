@@ -14,8 +14,9 @@ export abstract class Plug {
   public name: string;
   public description: string;
   public version: number;
-  protected declare readonly __proto__: Readonly<this>;
   public error?: any;
+  // public canAutoCall: Set<keyof ThisType<this>>;
+  protected declare readonly __proto__: Readonly<this>;
   
   #state: State;
   
@@ -28,6 +29,7 @@ export abstract class Plug {
     this.name = key;
     this.description = "这个插件没有描述";
     this.version = -1;
+    this.#state = State.uninstalled;
     this.install = async function () {
       try {
         if (this.#state === State.error) return;
@@ -56,7 +58,6 @@ export abstract class Plug {
         this.module.children = [];
       }
     };
-    this.#state = State.uninstalled;
   }
   
   public async install(): Promise<void> {}

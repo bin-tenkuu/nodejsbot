@@ -13,12 +13,6 @@ class CQBotPixiv extends Plug {
     this.version = 0;
   }
   
-  async install() {
-  }
-  
-  async uninstall() {
-  }
-  
   @canCallGroup()
   @canCallPrivate()
   async getPixiv(event: CQEvent<"message.group"> | CQEvent<"message.private">,

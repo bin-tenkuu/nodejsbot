@@ -2,6 +2,10 @@
   "$schema": "schema/corpus.schema.json",
   "privateMSG": [
     {
+      "name": ".dall1:打开全1模式",
+      "regexp": "^\\.dall1$",
+      "reply": "[FN:CQBotCOC.setCheater]"
+    }, {
       "name": ".d <表达式> <...>:骰子",
       "regexp": "^\\.d +([^ ]+)",
       "reply": "[FN:CQBotCOC.getDice]"
@@ -13,6 +17,11 @@
       "name": ".dset <key>[=<value>]:设置/删除简写",
       "regexp": "^\\.dset +(?<key>\\w[\\w\\d]+)(?:=(?<value>[+\\-*d0-9#]+))?",
       "reply": "[FN:CQBotCOC.getDiceSet]"
+    }, {
+      "name": "帮助",
+      "regexp": "^(help|帮助)$",
+      "reply": ".d <表达式> <...>:骰子\n.dstat:查看全部简写\n.dset <key>(=<value>):设置/删除简写\n来点(<r18>)<key>色图\n看_p站<pid>(-<p>)\n.搜图<图片>",
+      "forward": true
     }, {
       "name": "获取<type>列表",
       "regexp": "^获取(?<type>[^ ]+)列表$",
