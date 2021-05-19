@@ -87,7 +87,7 @@ class CQBot extends Plug {
       if (event.isCanceled) return;
       parseMessage(element.reply, event, exec).catch(e => {
         logger.error("语料库转换失败:" + element.name);
-        console.error(e);
+        logger.error(e);
         return [CQ.text("error:" + element.name + "\n")];
       }).then(msg => {
         callback(msg, element);
@@ -172,6 +172,7 @@ class CQBot extends Plug {
     }));
     this.bot.bind("on", {
       "message.group": (event) => {
+        let hrtime = process.hrtime();
         let userId = event.context.user_id;
         db.start(async db => {
           await db.run("insert or ignore into Members(id, time) values (?, ?);", userId, Date.now());
@@ -181,6 +182,7 @@ class CQBot extends Plug {
         if (this.banSet.has(userId)) { return; }
         CQBot.sendCorpusTags(event, CQBot.getValues(this.corpusPrivate, this.corpusGroup), (tags, element) => {
           if (tags.length < 1) return;
+          logger.info(`本次请求耗时:${process.hrtime(hrtime)[1]}纳秒`);
           if (element.forward) {
             if (tags[0].tagName === "node") {
               sendForward(event, tags).catch(NOP);
@@ -195,8 +197,11 @@ class CQBot extends Plug {
         });
       },
       "message.private": (event) => {
+        let hrtime = process.hrtime();
         CQBot.sendCorpusTags(event, this.corpusPrivate, tags => {
-          if (tags.length > 0) sendPrivate(event, tags);
+          if (tags.length < 1) return;
+          logger.info(`本次请求耗时:${process.hrtime(hrtime)[1]}纳秒`);
+          sendPrivate(event, tags);
         });
       },
     });

@@ -16,7 +16,7 @@
   "type": "commonjs",
   "scripts": {
     "build": "tsc",
-    "test": "node --inspect index.js",
+    "debug": "node --inspect-brk index.js",
     "stop": "curl 127.0.0.1:40000/exit",
     "start": "node index.js"
   },
@@ -30,7 +30,8 @@
   },
   "dependencies": {
     "axios": "^0.21.1",
-    "go-cqwebsocket": "latest",
+    "go-cqwebsocket": "^5.0.4",
+    "safe-regex": "^2.1.1",
     "log4js": "^6.3.0",
     "node-cache": "^5.1.2",
     "reflect-metadata": "^0.1.13",

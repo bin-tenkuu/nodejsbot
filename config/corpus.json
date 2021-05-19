@@ -61,7 +61,7 @@
       "needAdmin": true
     }, {
       "name": "来点[<r18>]<key>色图",
-      "regexp": "^[来來发發给給][张張个個幅点點份](?<r18>[Rr]18的?)?(?<keyword>.*?)?的?[色瑟][图圖]$",
+      "regexp": "^[来來发發给給][张張个個幅点點份](?<r18>[Rr]18的?)?(?<keyword>.*)?[色瑟][图圖]$",
       "reply": "[FN:CQBotLoLiSeTu.getSeTu]",
       "delMSG": 10
     }, {
