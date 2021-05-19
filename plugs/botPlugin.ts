@@ -2,7 +2,7 @@ import {CQ, CQEvent, CQTag} from "go-cqwebsocket";
 import {Plug} from "../Plug";
 import {canCallGroup, canCallPrivate} from "../utils/Annotation";
 import {db} from "../utils/database";
-import bot from "./bot";
+import {default as bot} from "./bot";
 
 type Corpus = {
   name: string, regexp: RegExp, reply: string,
@@ -145,11 +145,11 @@ class CQBotPlugin extends Plug {
   
   private static getList(type?: "私聊" | "群聊"): Corpus[] {
     if (type === "私聊") {
-      return bot.corpusPrivate;
+      return bot.corpora.filter(c => c.canPrivate);
     } else if (type === "群聊") {
-      return bot.corpusGroup;
+      return bot.corpora.filter(c => c.canPrivate);
     } else {
-      return [];
+      return bot.corpora;
     }
   }
   
@@ -171,4 +171,4 @@ class CQBotPlugin extends Plug {
   }
 }
 
-export = new CQBotPlugin();
+export default new CQBotPlugin();

@@ -1,7 +1,7 @@
 import {CQ, CQEvent, CQTag, CQWebSocket} from "go-cqwebsocket";
 import {Status} from "go-cqwebsocket/out/Interfaces";
 import {adminGroup, adminId, CQWS} from "../config/config.json";
-import {groupMSG, privateMSG} from "../config/corpus.json";
+import {corpora} from "../config/corpus.json";
 import {Plug} from "../Plug";
 import {canCallGroup} from "../utils/Annotation";
 import {db} from "../utils/database";
@@ -12,15 +12,16 @@ import {
 
 type Corpus = {
   name: string, regexp: RegExp, reply: string,
-  forward: boolean, needAdmin: boolean, isOpen: boolean, delMSG: number
+  forward: boolean, needAdmin: boolean, isOpen: boolean, delMSG: number,
+  canGroup: boolean, canPrivate: boolean
 }
+type Filter<T> = (obj: T) => boolean
 
 class CQBot extends Plug {
   public bot: CQWebSocket;
   
   banSet: Set<number>;
-  corpusPrivate: Corpus[];
-  corpusGroup: Corpus[];
+  corpora: Corpus[];
   
   private sendStateInterval?: NodeJS.Timeout;
   
@@ -47,7 +48,7 @@ class CQBot extends Plug {
     this.bot.messageFail = (reason, message) => {
       logger.error(`${message.action}失败[${reason.retcode}]:${reason.wording}`);
     };
-    this.corpusPrivate = this.corpusGroup = [];
+    this.corpora = [];
     this.banSet = new Set<number>();
     this.init();
   }
@@ -61,28 +62,17 @@ class CQBot extends Plug {
     });
   }
   
-  private static* getValues(corpus1: Corpus[], corpus2?: Corpus[]): Generator<Corpus, void> {
-    for (const corp of corpus1) {
-      yield corp;
+  private static* getValues(corpora: Corpus[], filter: Filter<Corpus>): Generator<Corpus, void> {
+    for (const corpus of corpora) {
+      if (filter(corpus)) yield corpus;
     }
-    if (corpus2 === undefined) return;
-    for (const corp of corpus2) {
-      yield corp;
-    }
-  }
-  
-  private static exec(element: Corpus, text: string, isAdmin: boolean): RegExpExecArray | null {
-    if (element.needAdmin && !isAdmin) return null;
-    if (!element.isOpen) return null;
-    return element.regexp.exec(text);
   }
   
   private static sendCorpusTags(event: CQEvent<"message.private"> | CQEvent<"message.group">,
       corpus: Iterable<Corpus>, callback: (this: void, tags: CQTag<any>[], element: Corpus) => void) {
     let text = onlyText(event);
-    let isAdmin = isAdminQQ(event);
     for (const element of corpus) {
-      let exec = CQBot.exec(element, text, isAdmin);
+      let exec = element.regexp.exec(text);
       if (exec === null) continue;
       if (event.isCanceled) return;
       parseMessage(element.reply, event, exec).catch(e => {
@@ -94,7 +84,6 @@ class CQBot extends Plug {
       });
       if (event.isCanceled) return;
     }
-    return;
   }
   
   @canCallGroup()
@@ -152,7 +141,7 @@ class CQBot extends Plug {
   }
   
   init() {
-    this.corpusPrivate = privateMSG.map(msg => ({
+    this.corpora = corpora.map(msg => ({
       name: msg.name ?? "",
       regexp: new RegExp(msg.regexp ?? "$^"),
       reply: msg.reply ?? "",
@@ -160,15 +149,8 @@ class CQBot extends Plug {
       needAdmin: msg.needAdmin === true,
       isOpen: msg.isOpen !== false,
       delMSG: msg.delMSG ?? 0,
-    }));
-    this.corpusGroup = groupMSG.map(msg => ({
-      name: msg.name ?? "",
-      regexp: new RegExp(msg.regexp ?? "$^"),
-      reply: msg.reply ?? "",
-      forward: msg.forward === true,
-      needAdmin: msg.needAdmin === true,
-      isOpen: msg.isOpen !== false,
-      delMSG: msg.delMSG ?? 0,
+      canGroup: msg.canGroup !== false,
+      canPrivate: msg.canPrivate !== false,
     }));
     this.bot.bind("on", {
       "message.group": (event) => {
@@ -180,27 +162,28 @@ class CQBot extends Plug {
           await db.close();
         }).catch(NOP);
         if (this.banSet.has(userId)) { return; }
-        CQBot.sendCorpusTags(event, CQBot.getValues(this.corpusPrivate, this.corpusGroup), (tags, element) => {
-          if (tags.length < 1) return;
-          logger.info(`本次请求耗时:${process.hrtime(hrtime)[1]}纳秒`);
-          if (element.forward) {
-            if (tags[0].tagName === "node") {
-              sendForward(event, tags).catch(NOP);
-            } else {
-              sendForwardQuick(event, [tags]).catch(NOP);
-            }
-          } else {
-            sendGroup(event, tags, element.delMSG > 0 ? (id) => {
-              deleteMsg(event, id.message_id, element.delMSG);
-            } : undefined);
-          }
-        });
+        CQBot.sendCorpusTags(event, CQBot.getValues(this.corpora, this.filterGroup(event)),
+            (tags, element) => {
+              if (tags.length < 1) return;
+              logger.info(`本次请求耗时:${process.hrtime(hrtime)[0]}毫秒`);
+              if (element.forward) {
+                if (tags[0].tagName === "node") {
+                  sendForward(event, tags).catch(NOP);
+                } else {
+                  sendForwardQuick(event, [tags]).catch(NOP);
+                }
+              } else {
+                sendGroup(event, tags, element.delMSG > 0 ? (id) => {
+                  deleteMsg(event, id.message_id, element.delMSG);
+                } : undefined);
+              }
+            });
       },
       "message.private": (event) => {
         let hrtime = process.hrtime();
-        CQBot.sendCorpusTags(event, this.corpusPrivate, tags => {
+        CQBot.sendCorpusTags(event, CQBot.getValues(this.corpora, this.filterPrivate(event)), tags => {
           if (tags.length < 1) return;
-          logger.info(`本次请求耗时:${process.hrtime(hrtime)[1]}纳秒`);
+          logger.info(`本次请求耗时:${process.hrtime(hrtime)[0]}毫秒`);
           sendPrivate(event, tags);
         });
       },
@@ -211,6 +194,20 @@ class CQBot extends Plug {
       await db.close();
     }).catch(NOP);
   }
+  
+  filterPrivate(event: CQEvent<"message.private">): Filter<Corpus> {
+    if (isAdminQQ(event)) {
+      return (c: Corpus) => c.isOpen && c.canPrivate;
+    }
+    return (c: Corpus) => c.isOpen && !c.needAdmin && c.canPrivate;
+  }
+  
+  filterGroup(event: CQEvent<"message.group">): Filter<Corpus> {
+    if (isAdminQQ(event)) {
+      return (c: Corpus) => c.isOpen && c.canGroup;
+    }
+    return (c: Corpus) => c.isOpen && !c.needAdmin && c.canGroup;
+  }
 }
 
-export = new CQBot();
+export default new CQBot();

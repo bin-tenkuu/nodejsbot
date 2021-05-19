@@ -4,7 +4,7 @@ import {Plug} from "../Plug";
 import {canCallGroup, canCallPrivate} from "../utils/Annotation";
 import {db} from "../utils/database";
 import {logger} from "../utils/logger";
-import {sendAdminQQ, sendGroup} from "../utils/Util";
+import {isAdminQQ, sendAdminQQ, sendGroup} from "../utils/Util";
 
 class CQBotPokeGroup extends Plug {
   private header?: PartialSocketHandle;
@@ -24,7 +24,7 @@ class CQBotPokeGroup extends Plug {
   
   async install() {
     this.init();
-    this.header = (<CQWebSocket>require("./bot").bot).bind("on", {
+    this.header = (<CQWebSocket>require("./bot").default.bot).bind("on", {
       "notice.notify.poke.group": (event) => {
         let target_id = event.context.target_id;
         if (target_id !== event.bot.qq) {return;}
@@ -36,13 +36,13 @@ class CQBotPokeGroup extends Plug {
         setTimeout(() => {
           this.pokeGroupInner = false;
           logger.info("pokeGroupInner = false");
-        }, 1000 * 10);
+        }, 1000 * 60);
       },
     });
   }
   
   async uninstall() {
-    require("./bot").bot.unbind(this.header);
+    require("./bot").default.bot.unbind(this.header);
   }
   
   private init() {
@@ -68,6 +68,7 @@ class CQBotPokeGroup extends Plug {
     switch (control) {
       case "设置":
         event.bot.once("message.private", event => {
+          if (!isAdminQQ(event)) {return; }
           let tags = event.cqTags.map(tag => {
             if (tag.tagName === "text") return tag;
             if (tag.tagName === "image") return CQ.image(tag.get("url"));
@@ -85,7 +86,7 @@ class CQBotPokeGroup extends Plug {
       case "删除":
         return db.start(async db => {
           if (other === undefined) return [];
-          let matches = other.match(/\d+(?=\s)?/g) ?? [];
+          let matches = other.match(/\s+\d+/g) ?? [];
           let statement = await db.prepare("delete from pokeGroup where id=?");
           for (let match of matches) {
             await statement.run(matches);
@@ -102,4 +103,4 @@ class CQBotPokeGroup extends Plug {
   }
 }
 
-export = new CQBotPokeGroup()
+export default new CQBotPokeGroup();

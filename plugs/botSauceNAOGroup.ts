@@ -124,4 +124,4 @@ class CQBotSauceNAOGroup extends Plug {
   }
 }
 
-export = new CQBotSauceNAOGroup()
+export default new CQBotSauceNAOGroup();

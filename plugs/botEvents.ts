@@ -3,7 +3,7 @@ import {PartialSocketHandle} from "go-cqwebsocket/out/Interfaces";
 import {Plug} from "../Plug";
 import {sendAdminQQ} from "../utils/Util";
 
-export = new class CQBotPokeGroup extends Plug {
+class CQBotPokeGroup extends Plug {
   private header?: PartialSocketHandle;
   
   constructor() {
@@ -16,7 +16,7 @@ export = new class CQBotPokeGroup extends Plug {
   }
   
   async install() {
-    this.header = (<CQWebSocket>require("./bot").bot).bind("on", {
+    this.header = (<CQWebSocket>require("./bot").default.bot).bind("on", {
       "notice.group_increase": (event) => {
         event.stopPropagation();
         let {operator_id, user_id, sub_type, group_id} = event.context;
@@ -59,6 +59,8 @@ export = new class CQBotPokeGroup extends Plug {
   }
   
   async uninstall() {
-    require("./bot").bot.unbind(this.header);
+    require("./bot").default.bot.unbind(this.header);
   }
 }
+
+export default new CQBotPokeGroup();

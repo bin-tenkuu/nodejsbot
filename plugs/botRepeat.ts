@@ -46,4 +46,4 @@ class BotRepeat extends Plug {
   }
 }
 
-export = new BotRepeat();
+export default new BotRepeat();

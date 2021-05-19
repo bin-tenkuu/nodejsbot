@@ -28,15 +28,14 @@
       "type": "string",
       "format": "uri"
     },
-    "groupMSG": {
-      "description": "群消息",
+    "corpora": {
+      "description": "语料库",
       "type": "array",
       "items": {
         "properties": {
           "name": {
             "type": "string",
-            "description": "名称兼职帮助",
-            "default": ""
+            "description": "名称兼职帮助"
           },
           "regexp": {
             "$ref": "#/definitions/regexp"
@@ -46,39 +45,43 @@
           },
           "forward": {
             "type": "boolean",
-            "description": "是否为合并转发消息",
+            "description": "是否为合并转发消息,默认为false",
             "default": true
           },
           "needAdmin": {
             "type": "boolean",
-            "description": "是否需要管理员",
+            "description": "是否需要管理员,默认为false",
             "default": true
           },
           "isOpen": {
             "type": "boolean",
-            "description": "是否开启",
+            "description": "是否开启,默认为true",
             "default": false
           },
           "delMSG": {
             "type": "number",
-            "description": "秒为单位"
+            "description": "秒为单位,默认为0"
+          },
+          "canPrivate": {
+            "type": "boolean",
+            "description": "私聊可用,默认为true",
+            "default": false
+          },
+          "canGroup": {
+            "type": "boolean",
+            "description": "群聊可用,默认为true",
+            "default": false
           }
         },
-        "required": ["name", "regexp"]
+        "required": ["name", "regexp"],
+        "additionalProperties": false
       }
     },
-    "privateMSG": {
-      "description": "私聊消息",
+    "pokeGroup": {
+      "description": "群聊戳一戳消息",
       "type": "array",
       "items": {
-        "$ref": "#/properties/groupMSG/items"
-      },
-      "pokeGroup": {
-        "description": "群聊戳一戳消息",
-        "type": "array",
-        "items": {
-          "$ref": "#/definitions/CQ"
-        }
+        "$ref": "#/definitions/CQ"
       }
     },
     "additionalProperties": false

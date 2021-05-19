@@ -46,4 +46,4 @@ class CQBotTouHou extends Plug {
   }
 }
 
-export = new CQBotTouHou()
+export default new CQBotTouHou();

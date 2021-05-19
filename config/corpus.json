@@ -1,6 +1,6 @@
 {
   "$schema": "schema/corpus.schema.json",
-  "privateMSG": [
+  "corpora": [
     {
       "name": ".ping",
       "regexp": "^\\.ping$",
@@ -27,36 +27,36 @@
       "reply": ".d <表达式> <...>:骰子\n.dstat:查看全部简写\n.dset <key>(=<value>):设置/删除简写\n来点(<r18>)<key>色图\n看_p站<pid>(-<p>)\n.搜图<图片>",
       "forward": true
     }, {
-      "name": "获取<type>列表",
-      "regexp": "^获取(?<type>[^ ]+)列表$",
+      "name": ".获取<type>列表",
+      "regexp": "^\\.获取(?<type>[^ ]+)列表$",
       "reply": "[FN:CQBotPlugin.getter]",
       "needAdmin": true,
       "forward": true
     }, {
-      "name": "设置<type> <other>",
-      "regexp": "^设置(?<type>[^ ]+) (?<other>.+)$",
+      "name": ".设置<type> <other>",
+      "regexp": "^\\.设置(?<type>[^ ]+) (?<other>.+)$",
       "reply": "[FN:CQBotPlugin.setter]",
       "needAdmin": true
     }, {
-      "name": "<设置|删除>poke<other>",
-      "regexp": "^(?<control>设置|删除)poke(?<other>.*)$",
+      "name": ".<设置|删除>poke<other>",
+      "regexp": "^\\.(?<control>设置|删除)poke(?<other>.*)$",
       "reply": "[FN:CQBotPokeGroup.runPrivate]",
       "needAdmin": true,
       "isOpen": false
     }, {
-      "name": "<type>列表<open>",
-      "regexp": "^(?<type>私聊|群聊)列表(?<open>开|关)$",
+      "name": ".语料库<type><open>",
+      "regexp": "^\\.语料库(?<type>私聊|群聊)?(?<open>开|关)$",
       "reply": "[FN:CQBotPlugin.pluginList]",
       "needAdmin": true,
       "forward": true
     }, {
-      "name": "<type>列表<open><nums>",
-      "regexp": "^(?<type>私聊|群聊)列表(?<open>[开|关])(?<nums>\\s?\\d+)$",
+      "name": ".语料库<type><open><nums>",
+      "regexp": "^\\.语料库(?<type>私聊|群聊)?(?<open>[开|关])(?<nums>\\s?\\d+)$",
       "reply": "[FN:CQBotPlugin.pluginStat]",
       "needAdmin": true
     }, {
-      "name": "<type>列表<nums>",
-      "regexp": "^(?<type>私聊|群聊)列表(?<nums>\\s?\\d+)$",
+      "name": ".语料库<type><nums>",
+      "regexp": "^\\.语料库(?<type>私聊|群聊)?(?<nums>\\s?\\d+)$",
       "reply": "[FN:CQBotPlugin.pluginInfo]",
       "needAdmin": true
     }, {
@@ -73,18 +73,17 @@
       "name": "看_p站<pid>[-<p>]",
       "regexp": "^看{1,2}p站(?<pid>\\d+)(?:-(?<p>\\d+))?$",
       "reply": "[FN:CQBotPixiv.getPixiv]"
-    }
-  ],
-  "groupMSG": [
-    {
+    }, {
       "name": "为什么呢",
       "regexp": "^为什么呢$",
       "reply": "[CQ:reply]是啊，为什么呢，我也在寻找原因呢",
-      "forward": false
+      "forward": false,
+      "canPrivate": false
     }, {
       "name": "有病吧",
       "regexp": "^有病吧$",
-      "reply": "你治得好么?"
+      "reply": "你治得好么?",
+      "canPrivate": false
     }, {
       "name": ".搜图",
       "regexp": "^\\.搜图$",
@@ -92,18 +91,23 @@
     }, {
       "name": "复读",
       "regexp": "^.+$",
-      "reply": "[FN:BotRepeat.getRepeat]"
+      "reply": "[FN:BotRepeat.getRepeat]",
+      "canPrivate": false
     }, {
       "name": "@复读AI",
       "regexp": "^.*$",
-      "reply": "[FN:CQBot.MemeAI]"
+      "reply": "[FN:CQBot.MemeAI]",
+      "canPrivate": false
     }, {
       "name": "保留值",
       "regexp": "$^",
+      "reply": ".",
       "isOpen": false,
       "delMSG": 10,
       "forward": true,
-      "needAdmin": true
+      "needAdmin": true,
+      "canPrivate": false,
+      "canGroup": false
     }
   ],
   "pokeGroup": [

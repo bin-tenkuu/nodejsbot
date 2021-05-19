@@ -1,7 +1,7 @@
 import {Plug} from "../Plug";
 import {logger} from "../utils/logger";
 
-export = new class test extends Plug {
+class test extends Plug {
   constructor() {
     super(module);
     this.name = "测试";
@@ -18,3 +18,5 @@ export = new class test extends Plug {
     logger.info(this.toString());
   }
 }
+
+export default new test;

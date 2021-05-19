@@ -55,4 +55,4 @@ class CQBotPixiv extends Plug {
   }
 }
 
-export = new CQBotPixiv()
+export default new CQBotPixiv();

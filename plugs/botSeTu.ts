@@ -103,4 +103,4 @@ class CQBotLoLiSeTu extends Plug {
   
 }
 
-export = new CQBotLoLiSeTu()
+export default new CQBotLoLiSeTu();

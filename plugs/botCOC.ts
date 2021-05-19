@@ -154,4 +154,4 @@ class CQBotCOC extends Plug {
   }
 }
 
-export = new CQBotCOC()
+export default new CQBotCOC();
