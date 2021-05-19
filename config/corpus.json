@@ -68,7 +68,7 @@
       "name": "来点东方图",
       "regexp": "^来点东方图$",
       "reply": "[FN:CQBotTouHou.getTouHouPNG]",
-      "isOpen": false
+      "needAdmin": true
     }, {
       "name": "看_p站<pid>[-<p>]",
       "regexp": "^看{1,2}p站(?<pid>\\d+)(?:-(?<p>\\d+))?$",
