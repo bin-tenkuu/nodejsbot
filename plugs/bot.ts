@@ -169,7 +169,7 @@ class CQBot extends Plug {
             if (tags[0].tagName === "node") {
               sendForward(event, tags).catch(NOP);
             } else {
-              sendForwardQuick(event, [tags]).catch(NOP);
+              sendForwardQuick(event, tags).catch(NOP);
             }
           } else {
             sendGroup(event, tags, element.delMSG > 0 ? (id) => {

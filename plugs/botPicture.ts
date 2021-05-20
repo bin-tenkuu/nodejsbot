@@ -2,19 +2,24 @@ import {CQ, CQEvent, CQTag} from "go-cqwebsocket";
 import {Plug} from "../Plug.js";
 import {canCallGroup, canCallPrivate} from "../utils/Annotation.js";
 import {logger} from "../utils/logger.js";
-import {lolicon} from "../utils/Search.js";
+import {lolicon, paulzzhTouHou, pixivCat} from "../utils/Search.js";
 import {sendAdminQQ, sendAuto, sendForward} from "../utils/Util.js";
 
 
-class CQBotLoLiSeTu extends Plug {
+class CQBotPicture extends Plug {
   private isCalling: boolean;
+  
+  #isRandomToho: boolean;
   
   constructor() {
     super(module);
-    this.name = "QQ群聊-色图";
-    this.description = "QQ群聊发送合并转发色图";
+    this.name = "QQ群聊-图片相关";
+    this.description = "QQ群聊发送各种图片";
     this.version = 0;
     this.isCalling = false;
+    
+    
+    this.#isRandomToho = false;
   }
   
   @canCallGroup()
@@ -34,7 +39,7 @@ class CQBotLoLiSeTu extends Plug {
     try {
       let data = await lolicon(groups.keyword, groups.r18);
       if (data.code !== 0) {
-        let message = CQBotLoLiSeTu.code(data.code);
+        let message = CQBotPicture.code(data.code);
         logger.warn(`开始色图异常：异常返回码(${data.code})：${message}`);
         this.isCalling = false;
         return [CQ.text(message)];
@@ -63,11 +68,11 @@ class CQBotLoLiSeTu extends Plug {
         logger.info("解除锁定 %s", this.name);
       };
       if (data.quota < 5) {
-        setTimeout(unlock, 2000 * Number(data.quota_min_ttl));
+        setTimeout(unlock, 1000 * Number(data.quota_min_ttl));
       } else {
-        setTimeout(unlock, 1000);
+        setTimeout(unlock, 1000 * 5);
       }
-      return [CQ.image(first.url)];
+      return [CQ.image(CQBotPicture.get1200(first.url))];
     } catch (reason) {
       sendAdminQQ(event, "色图坏了");
       logger.info(reason);
@@ -75,11 +80,64 @@ class CQBotLoLiSeTu extends Plug {
     }
   }
   
-  
-  async install() {
+  @canCallGroup()
+  @canCallPrivate()
+  async getPixiv(event: CQEvent<"message.group"> | CQEvent<"message.private">,
+      exec: RegExpExecArray): Promise<CQTag<any>[]> {
+    event.stopPropagation();
+    let {pid, p} = (exec.groups as { pid?: string, p?: string }) ?? {};
+    logger.debug(`p站图片请求：pid:${pid},p:${p}`);
+    if (pid === undefined) {
+      return [CQ.text("pid获取失败")];
+    }
+    try {
+      let data = await pixivCat(pid);
+      if (!data.success) {
+        logger.info(`请求失败`);
+        return [CQ.text(data.error)];
+      }
+      logger.info(`多张图片:${data.multiple}`);
+      if (data.multiple) {
+        let urlsProxy = data.original_urls_proxy;
+        if (p === undefined) {
+          return urlsProxy.map(url => CQ.image(CQBotPicture.get1200(url)));
+        } else {
+          let ps: number = +p > length ? length - 1 : +p;
+          return [
+            CQ.image(CQBotPicture.get1200(urlsProxy[ps])),
+          ];
+        }
+      } else {
+        return [CQ.image(CQBotPicture.get1200(data.original_url_proxy))];
+      }
+    } catch (e) {
+      sendAdminQQ(event, "p站图片加载出错");
+      return [CQ.text("网络请求错误或内部错误")];
+    }
   }
   
-  async uninstall() {
+  @canCallGroup()
+  @canCallPrivate()
+  async getTouHouPNG(event: CQEvent<"message.group"> | CQEvent<"message.private">): Promise<CQTag<any>[]> {
+    if (this.#isRandomToho) {
+      return [CQ.text(`冷却中`)];
+    }
+    this.#isRandomToho = true;
+    console.log("开始东方");
+    sendAuto(event, "随机东方图加载中");
+    try {
+      let json = await paulzzhTouHou();
+      setTimeout(() => {
+        this.#isRandomToho = false;
+      }, 1000 * 60);
+      return [CQ.image((json.url)), CQ.text("作者:" + json.author)];
+    } catch (e) {
+      return [CQ.text(`东方图API调用错误`)];
+    }
+  }
+  
+  private static get1200(str: string) {
+    return str.replace("original", "master").replace(/(.\w+)$/, "_master1200.jpg");
   }
   
   static code(code: number) {
@@ -103,4 +161,4 @@ class CQBotLoLiSeTu extends Plug {
   
 }
 
-export default new CQBotLoLiSeTu();
+export default new CQBotPicture();

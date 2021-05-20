@@ -77,9 +77,9 @@ export function sendForward<T>({bot, context: {group_id = adminGroup}}: hasGroup
 }
 
 export function sendForwardQuick<T>({bot, context: {group_id = adminGroup, sender}}: CQEvent<"message.group">,
-    message: CQTag<any>[][]) {
+    message: CQTag<any>[]) {
   let {user_id: userId, nickname: name} = sender;
-  let map: messageNode = message.map(tags => CQ.node(name, userId, tags));
+  let map: messageNode = message.map(tags => CQ.node(name, userId, [tags]));
   return bot.send_group_forward_msg(group_id, map);
 }
 

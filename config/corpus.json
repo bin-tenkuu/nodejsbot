@@ -68,23 +68,22 @@
     }, {
       "name": "来点[<r18>]<key>色图",
       "regexp": "^[来來发發给給][张張个個幅点點份](?<r18>[Rr]18的?)?(?<keyword>.*)?[色瑟][图圖]$",
-      "reply": "[FN:CQBotLoLiSeTu.getSeTu]",
+      "reply": "[FN:CQBotPicture.getSeTu]",
       "delMSG": 20
     }, {
       "name": "来点东方图",
       "regexp": "^来点东方图$",
-      "reply": "[FN:CQBotTouHou.getTouHouPNG]",
-      "needAdmin": true
+      "reply": "[FN:CQBotPicture.getTouHouPNG]"
     }, {
       "name": "看_p站<pid>[-<p>]",
       "regexp": "^看{1,2}p站(?<pid>\\d+)(?:-(?<p>\\d+))?$",
-      "reply": "[FN:CQBotPixiv.getPixiv]",
-      "delMSG": 60
+      "reply": "[FN:CQBotPicture.getPixiv]",
+      "delMSG": 60,
+      "forward": true
     }, {
       "name": "为什么呢",
       "regexp": "^为什么呢$",
       "reply": "[CQ:reply]是啊，为什么呢，我也在寻找原因呢",
-      "forward": false,
       "canPrivate": false
     }, {
       "name": "有病吧",

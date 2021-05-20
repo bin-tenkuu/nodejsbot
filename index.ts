@@ -17,10 +17,10 @@ Promise.resolve().then(async () => {
   await require("./plugs/botPokeGroup").default.install();
   await require("./plugs/botRepeat").default;
   await require("./plugs/botSauceNAOGroup").default;
-  await require("./plugs/botSeTu").default;
+  await require("./plugs/botPicture.js").default;
   await require("./plugs/botTouHouPNG").default;
   await require("./plugs/test").default;
 }).then(() => {
-  logger.info("安装完成");
+  logger.info("启动完成");
   module.children = [];
 });//*/
