@@ -30,9 +30,12 @@ class CQBotPokeGroup extends Plug {
         if (target_id !== event.bot.qq) {return;}
         if (this.pokeGroupInner) return;
         this.pokeGroupInner = true;
+        let hrtime = process.hrtime();
         event.stopPropagation();
         let str = this.pokeGroup[Math.random() * this.pokeGroup.length | 0];
-        sendGroup(event, str);
+        sendGroup(event, str, () => {
+          logger.info(`本次请求耗时:${process.hrtime(hrtime)[1]}纳秒`);
+        });
         setTimeout(() => {
           this.pokeGroupInner = false;
           logger.info("pokeGroupInner = false");
