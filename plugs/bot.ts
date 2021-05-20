@@ -162,22 +162,21 @@ class CQBot extends Plug {
           await db.close();
         }).catch(NOP);
         if (this.banSet.has(userId)) { return; }
-        CQBot.sendCorpusTags(event, CQBot.getValues(this.corpora, this.filterGroup(event)),
-            (tags, element) => {
-              if (tags.length < 1) return;
-              logger.info(`本次请求耗时:${process.hrtime(hrtime)[1]}纳秒`);
-              if (element.forward) {
-                if (tags[0].tagName === "node") {
-                  sendForward(event, tags).catch(NOP);
-                } else {
-                  sendForwardQuick(event, [tags]).catch(NOP);
-                }
-              } else {
-                sendGroup(event, tags, element.delMSG > 0 ? (id) => {
-                  deleteMsg(event, id.message_id, element.delMSG);
-                } : undefined);
-              }
-            });
+        CQBot.sendCorpusTags(event, CQBot.getValues(this.corpora, this.filterGroup(event)), (tags, element) => {
+          if (tags.length < 1) return;
+          logger.info(`本次请求耗时:${process.hrtime(hrtime)[1]}纳秒`);
+          if (element.forward) {
+            if (tags[0].tagName === "node") {
+              sendForward(event, tags).catch(NOP);
+            } else {
+              sendForwardQuick(event, [tags]).catch(NOP);
+            }
+          } else {
+            sendGroup(event, tags, element.delMSG > 0 ? (id) => {
+              deleteMsg(event, id.message_id, element.delMSG);
+            } : undefined);
+          }
+        });
       },
       "message.private": (event) => {
         let hrtime = process.hrtime();
