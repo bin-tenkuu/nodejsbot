@@ -1,7 +1,7 @@
 import http from "http";
-import {Plug} from "../Plug";
-import {canCallGroup, canCallPrivate} from "../utils/Annotation";
-import {logger} from "../utils/logger";
+import {Plug} from "../Plug.js";
+import {canCallGroup, canCallPrivate} from "../utils/Annotation.js";
+import {logger} from "../utils/logger.js";
 
 class HttpOption extends Plug {
   private header?: http.Server;

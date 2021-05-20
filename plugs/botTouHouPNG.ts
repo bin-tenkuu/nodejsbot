@@ -1,9 +1,9 @@
 import {CQ, CQEvent} from "go-cqwebsocket";
 import {CQTag} from "go-cqwebsocket/out/tags";
-import {Plug} from "../Plug";
-import {canCallGroup, canCallPrivate} from "../utils/Annotation";
-import {paulzzhTouHou} from "../utils/Search";
-import {sendAuto} from "../utils/Util";
+import {Plug} from "../Plug.js";
+import {canCallGroup, canCallPrivate} from "../utils/Annotation.js";
+import {paulzzhTouHou} from "../utils/Search.js";
+import {sendAuto} from "../utils/Util.js";
 
 class CQBotTouHou extends Plug {
   #isRandom: boolean;

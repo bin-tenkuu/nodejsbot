@@ -1,10 +1,10 @@
 import {CQ, CQEvent, CQTag, CQWebSocket} from "go-cqwebsocket";
 import {PartialSocketHandle} from "go-cqwebsocket/out/Interfaces";
-import {Plug} from "../Plug";
-import {canCallGroup, canCallPrivate} from "../utils/Annotation";
-import {db} from "../utils/database";
-import {logger} from "../utils/logger";
-import {isAdminQQ, sendAdminQQ, sendGroup} from "../utils/Util";
+import {Plug} from "../Plug.js";
+import {canCallGroup, canCallPrivate} from "../utils/Annotation.js";
+import {db} from "../utils/database.js";
+import {logger} from "../utils/logger.js";
+import {isAdminQQ, sendAdminQQ, sendGroup} from "../utils/Util.js";
 
 class CQBotPokeGroup extends Plug {
   private header?: PartialSocketHandle;

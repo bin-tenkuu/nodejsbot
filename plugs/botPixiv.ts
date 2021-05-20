@@ -1,9 +1,9 @@
 import {CQ, CQEvent, CQTag} from "go-cqwebsocket";
-import {Plug} from "../Plug";
-import {canCallGroup, canCallPrivate} from "../utils/Annotation";
-import {logger} from "../utils/logger";
-import {pixivCat} from "../utils/Search";
-import {sendAdminQQ} from "../utils/Util";
+import {Plug} from "../Plug.js";
+import {canCallGroup, canCallPrivate} from "../utils/Annotation.js";
+import {logger} from "../utils/logger.js";
+import {pixivCat} from "../utils/Search.js";
+import {sendAdminQQ} from "../utils/Util.js";
 
 class CQBotPixiv extends Plug {
   constructor() {

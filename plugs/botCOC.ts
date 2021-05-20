@@ -1,9 +1,9 @@
 import {CQ, CQEvent, CQTag} from "go-cqwebsocket";
-import {Plug} from "../Plug";
-import {canCallGroup, canCallPrivate} from "../utils/Annotation";
-import {dice} from "../utils/COCUtils";
-import {db} from "../utils/database";
-import {logger} from "../utils/logger";
+import {Plug} from "../Plug.js";
+import {canCallGroup, canCallPrivate} from "../utils/Annotation.js";
+import {dice} from "../utils/COCUtils.js";
+import {db} from "../utils/database.js";
+import {logger} from "../utils/logger.js";
 
 class CQBotCOC extends Plug {
   shortKey = new Map<string, string>();
@@ -87,12 +87,7 @@ class CQBotCOC extends Plug {
   }
   
   private static dice(str: string, cheater: boolean): string {
-    let handles = str.split(/(?=[+\-*])/).map<{
-      op: "+" | "-" | "*"
-      num: number
-      list?: number[]
-      origin?: string
-    }>(value => {
+    let handles = str.split(/(?=[+\-*])/).map<calc>(value => {
       let groups = (/^(?<op>[+\-*])?(?<num>\d+)?(d(?<max>\d+))?$/.exec(value)?.groups) as {
         op?: "+" | "-" | "*"
         num?: string
@@ -101,10 +96,10 @@ class CQBotCOC extends Plug {
       let num: number | number[] = +(groups.num ?? 1);
       let op = groups.op ?? "+";
       if (groups.max) {
-        let dices: { num: number, list: number[] };
+        let dices: { num: number, list: Uint16Array };
         if (cheater) {
           dices = {
-            list: new Array(num).fill(1),
+            list: new Uint16Array(num).fill(1),
             num: num,
           };
         } else {
@@ -119,15 +114,21 @@ class CQBotCOC extends Plug {
         return {
           op: op,
           num: num,
+          list: null,
+          origin: null,
         };
       }
     });
-    
-    let preRet = handles.filter(v => v.list).map((v) => {
-      return `${v.origin}：[${v.list!.join()}]=${v.num}\n`;
+    let preRet = handles.filter(v => v.list !== null).map((v) => {
+      return `${v.origin}：[${v.list}]=${v.num}\n`;
     }).join("");
+    let sumNum = this.calculate(handles);
+    return `${preRet}${str}=${sumNum}`;
+  }
+  
+  private static calculate(handles: calc[]): number {
     let cache = 1;
-    let sumNum = handles.reduceRight<number>((sum, v) => {
+    return handles.reduceRight<number>((sum, v) => {
       switch (v.op) {
         case "*": {
           cache *= v.num;
@@ -145,13 +146,14 @@ class CQBotCOC extends Plug {
         }
         default: {
           let op: never = v.op;
-          logger.info(op);
+          logger.warn("未知的运算符:" + op);
           return sum;
         }
       }
     }, 0);
-    return `${preRet}${str}=${sumNum}`;
   }
 }
+
+type calc = { op: "+" | "-" | "*", num: number, list: Uint16Array | null, origin: string | null }
 
 export default new CQBotCOC();

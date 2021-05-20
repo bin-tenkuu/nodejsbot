@@ -1,7 +1,7 @@
 import {CQ, CQEvent} from "go-cqwebsocket";
-import {Plug} from "../Plug";
-import {canCallGroup} from "../utils/Annotation";
-import {RepeatCache} from "../utils/repeat";
+import {Plug} from "../Plug.js";
+import {canCallGroup} from "../utils/Annotation.js";
+import {RepeatCache} from "../utils/repeat.js";
 
 class BotRepeat extends Plug {
   private repeatCache = new RepeatCache<string>();

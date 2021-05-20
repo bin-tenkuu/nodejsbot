@@ -1,9 +1,9 @@
 import {CQ, CQEvent, CQTag} from "go-cqwebsocket";
-import {Plug} from "../Plug";
-import {canCallGroup, canCallPrivate} from "../utils/Annotation";
-import {logger} from "../utils/logger";
-import {lolicon} from "../utils/Search";
-import {sendAdminQQ, sendAuto, sendForward} from "../utils/Util";
+import {Plug} from "../Plug.js";
+import {canCallGroup, canCallPrivate} from "../utils/Annotation.js";
+import {logger} from "../utils/logger.js";
+import {lolicon} from "../utils/Search.js";
+import {sendAdminQQ, sendAuto, sendForward} from "../utils/Util.js";
 
 
 class CQBotLoLiSeTu extends Plug {

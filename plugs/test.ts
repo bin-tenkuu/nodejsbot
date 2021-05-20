@@ -1,5 +1,5 @@
-import {Plug} from "../Plug";
-import {logger} from "../utils/logger";
+import {Plug} from "../Plug.js";
+import {logger} from "../utils/logger.js";
 
 class test extends Plug {
   constructor() {

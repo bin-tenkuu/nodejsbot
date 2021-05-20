@@ -1,11 +1,10 @@
 import {CQ, CQEvent} from "go-cqwebsocket";
 import {CQTag, image} from "go-cqwebsocket/out/tags";
-import {Plug} from "../Plug";
-import {canCallGroup} from "../utils/Annotation";
-import {logger} from "../utils/logger";
-
-import {sauceNAO} from "../utils/Search";
-import {sendAuto, sendForward} from "../utils/Util";
+import {Plug} from "../Plug.js";
+import {canCallGroup} from "../utils/Annotation.js";
+import {logger} from "../utils/logger.js";
+import {sauceNAO} from "../utils/Search.js";
+import {sendAuto, sendForward} from "../utils/Util.js";
 
 class CQBotSauceNAOGroup extends Plug {
   

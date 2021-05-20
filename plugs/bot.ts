@@ -2,10 +2,10 @@ import {CQ, CQEvent, CQTag, CQWebSocket} from "go-cqwebsocket";
 import {Status} from "go-cqwebsocket/out/Interfaces";
 import {adminGroup, adminId, CQWS} from "../config/config.json";
 import {corpora} from "../config/corpus.json";
-import {Plug} from "../Plug";
-import {canCallGroup} from "../utils/Annotation";
-import {db} from "../utils/database";
-import {logger} from "../utils/logger";
+import {Plug} from "../Plug.js";
+import {canCallGroup} from "../utils/Annotation.js";
+import {db} from "../utils/database.js";
+import {logger} from "../utils/logger.js";
 import {
   deleteMsg, isAdminQQ, isAtMe, onlyText, parseMessage, sendForward, sendForwardQuick, sendGroup, sendPrivate,
 } from "../utils/Util";
@@ -165,7 +165,7 @@ class CQBot extends Plug {
         CQBot.sendCorpusTags(event, CQBot.getValues(this.corpora, this.filterGroup(event)),
             (tags, element) => {
               if (tags.length < 1) return;
-              logger.info(`本次请求耗时:${process.hrtime(hrtime)[0]}毫秒`);
+              logger.info(`本次请求耗时:${process.hrtime(hrtime)[1]}纳秒`);
               if (element.forward) {
                 if (tags[0].tagName === "node") {
                   sendForward(event, tags).catch(NOP);
@@ -183,7 +183,7 @@ class CQBot extends Plug {
         let hrtime = process.hrtime();
         CQBot.sendCorpusTags(event, CQBot.getValues(this.corpora, this.filterPrivate(event)), tags => {
           if (tags.length < 1) return;
-          logger.info(`本次请求耗时:${process.hrtime(hrtime)[0]}毫秒`);
+          logger.info(`本次请求耗时:${process.hrtime(hrtime)[1]}纳秒`);
           sendPrivate(event, tags);
         });
       },

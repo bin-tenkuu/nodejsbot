@@ -1,7 +1,7 @@
 import {CQWebSocket} from "go-cqwebsocket";
 import {PartialSocketHandle} from "go-cqwebsocket/out/Interfaces";
-import {Plug} from "../Plug";
-import {sendAdminQQ} from "../utils/Util";
+import {Plug} from "../Plug.js";
+import {sendAdminQQ} from "../utils/Util.js";
 
 class CQBotPokeGroup extends Plug {
   private header?: PartialSocketHandle;

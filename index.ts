@@ -1,4 +1,4 @@
-import {logger} from "./utils/logger";
+import {logger} from "./utils/logger.js";
 
 declare global {
   function NOP(): void

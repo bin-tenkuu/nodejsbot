@@ -1,5 +1,5 @@
 import {readdirSync} from "fs";
-import {logger} from "./utils/logger";
+import {logger} from "./utils/logger.js";
 
 enum State {
   create,

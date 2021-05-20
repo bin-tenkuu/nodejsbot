@@ -1,6 +1,6 @@
 import {CQEvent, CQTag} from "go-cqwebsocket";
 import "reflect-metadata";
-import {Plug} from "../Plug";
+import {Plug} from "../Plug.js";
 
 type Constructor = { new(...args: any[]): any };
 type FunctionDecorator<T extends Function = Function, O extends Object = Object, Key extends PropertyKey = PropertyKey> =

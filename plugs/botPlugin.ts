@@ -1,8 +1,8 @@
 import {CQ, CQEvent, CQTag} from "go-cqwebsocket";
-import {Plug} from "../Plug";
-import {canCallGroup, canCallPrivate} from "../utils/Annotation";
-import {db} from "../utils/database";
-import {default as bot} from "./bot";
+import {Plug} from "../Plug.js";
+import {canCallGroup, canCallPrivate} from "../utils/Annotation.js";
+import {db} from "../utils/database.js";
+import {default as bot} from "./bot.js";
 
 type Corpus = {
   name: string, regexp: RegExp, reply: string,

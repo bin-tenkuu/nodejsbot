@@ -1,10 +1,10 @@
-import {CQ, CQEvent, CQWebSocket, messageNode} from "go-cqwebsocket";
-import {at, CQTag} from "go-cqwebsocket/out/tags";
-import {MessageId} from "../../go-cqwebsocket/out/Interfaces";
+import {CQ, CQEvent, CQTag, CQWebSocket, messageNode} from "go-cqwebsocket";
+import {MessageId} from "go-cqwebsocket/out/Interfaces";
+import {at} from "go-cqwebsocket/out/tags";
 import {adminGroup, adminId} from "../config/config.json";
-import {Plug} from "../Plug";
-import {canCallGroup, canCallGroupType, canCallPrivate, canCallPrivateType} from "./Annotation";
-import {logger} from "./logger";
+import {Plug} from "../Plug.js";
+import {canCallGroup, canCallGroupType, canCallPrivate, canCallPrivateType} from "./Annotation.js";
+import {logger} from "./logger.js";
 
 export function isAt({cqTags}: CQEvent<"message.group">): boolean {
   if (cqTags.length === 0) { return false; }
