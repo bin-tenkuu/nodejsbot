@@ -49,4 +49,4 @@ class HttpOption extends Plug {
   }
 }
 
-export default new HttpOption;
+export default new HttpOption();

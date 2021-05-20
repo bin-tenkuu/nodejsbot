@@ -13,10 +13,10 @@ class CQBotPokeGroup extends Plug {
   
   constructor() {
     super(module);
-    this.name = "QQ其他-事件";
-    this.description = "QQ的各种事件，非群聊";
+    this.name = "QQ群聊-戳一戳";
+    this.description = "QQ群聊的戳一戳事件";
     this.version = 0.1;
-    
+  
     this.header = undefined;
     this.pokeGroupInner = false;
     this.pokeGroup = [];

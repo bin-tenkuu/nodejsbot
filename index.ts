@@ -5,6 +5,7 @@ declare global {
 }
 global.NOP = () => {};
 
+//*
 Promise.resolve().then(async () => {
   await require("./plugs/httpOption").default.install();
   await require("./plugs/bot").default.install();
@@ -22,4 +23,4 @@ Promise.resolve().then(async () => {
 }).then(() => {
   logger.info("安装完成");
   module.children = [];
-});
+});//*/

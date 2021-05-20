@@ -89,23 +89,26 @@ export function logParam(): ParameterDecorator {
 }
 
 export type canCallGroupType = (event: CQEvent<"message.group">, exec: RegExpExecArray) => Promise<CQTag<any>[]>
+export type canCallPrivateType = (event: CQEvent<"message.private">, exec: RegExpExecArray) => Promise<CQTag<any>[]>
 
 export function canCallGroup(): FunctionDecorator<canCallGroupType, Plug, string> {
   return (target, propertyKey, descriptor) => {
     if (descriptor.value === undefined) {
       throw new Error("canCallGroup() can Only Decorator Function");
     }
+    target.canAutoCall ??= new Set<string>();
+    target.canAutoCall.add(propertyKey);
     Reflect.defineMetadata(canCallGroup.name, true, descriptor.value);
   };
 }
-
-export type canCallPrivateType = (event: CQEvent<"message.private">, exec: RegExpExecArray) => Promise<CQTag<any>[]>
 
 export function canCallPrivate(): FunctionDecorator<canCallPrivateType, Plug, string> {
   return (target, propertyKey, descriptor) => {
     if (descriptor.value === undefined) {
       throw new Error("canCallPrivate() can Only Decorator Function");
     }
+    target.canAutoCall ??= new Set<string>();
+    target.canAutoCall.add(propertyKey);
     Reflect.defineMetadata(canCallPrivate.name, true, descriptor.value);
   };
 }

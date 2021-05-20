@@ -11,12 +11,12 @@ enum State {
 export abstract class Plug {
   public static readonly plugs: Map<string, Plug> = new Map<string, Plug>();
   public readonly module: NodeModule;
+  public canAutoCall: Set<string>;
   public name: string;
   public description: string;
   public version: number;
-  public error?: any;
-  // public canAutoCall: Set<keyof ThisType<this>>;
-  protected declare readonly __proto__: Readonly<this>;
+  public error: any;
+  public declare readonly __proto__: Readonly<this>;
   
   #state: State;
   
@@ -29,7 +29,6 @@ export abstract class Plug {
     this.name = key;
     this.description = "这个插件没有描述";
     this.version = -1;
-    this.#state = State.uninstalled;
     this.install = async function () {
       try {
         if (this.#state === State.error) return;
@@ -58,6 +57,9 @@ export abstract class Plug {
         this.module.children = [];
       }
     };
+    this.#state = State.uninstalled;
+    this.error = undefined;
+    this.canAutoCall ??= new Set<string>();
   }
   
   public async install(): Promise<void> {}

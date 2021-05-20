@@ -77,13 +77,6 @@
         "additionalProperties": false
       }
     },
-    "pokeGroup": {
-      "description": "群聊戳一戳消息",
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/CQ"
-      }
-    },
     "additionalProperties": false
   }
 }

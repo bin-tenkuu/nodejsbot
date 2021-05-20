@@ -55,9 +55,10 @@ export function sendAuto(event: CQEvent<"message.group"> | CQEvent<"message.priv
 }
 
 export function sendPrivate<T>({bot, context: {user_id = adminId}}: hasUser<T>,
-    message: CQTag<any>[] | string) {
+    message: CQTag<any>[] | string, callback?: (id: MessageId) => void) {
   if (typeof message === "string") message = CQ.parse(message);
-  bot.send_private_msg(user_id, message).catch(() => {
+  bot.send_private_msg(user_id, message).then(callback, () => {
+    bot.send_private_msg(user_id, "私聊消息发送失败").catch(NOP);
     logger.warn("私聊消息发送失败");
   });
 }
@@ -66,6 +67,7 @@ export function sendGroup<T>({bot, context: {group_id = adminGroup}}: hasGroup<T
     message: CQTag<any>[] | string, callback?: (id: MessageId) => void) {
   if (typeof message === "string") message = CQ.parse(message);
   bot.send_group_msg(group_id, message).then(callback, () => {
+    bot.send_group_msg(group_id, "群消息发送失败").catch(NOP);
     logger.warn("群消息发送失败");
   });
 }

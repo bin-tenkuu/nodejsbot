@@ -3,7 +3,7 @@ import {PartialSocketHandle} from "go-cqwebsocket/out/Interfaces";
 import {Plug} from "../Plug.js";
 import {sendAdminQQ} from "../utils/Util.js";
 
-class CQBotPokeGroup extends Plug {
+class CQBotEvent extends Plug {
   private header?: PartialSocketHandle;
   
   constructor() {
@@ -63,4 +63,4 @@ class CQBotPokeGroup extends Plug {
   }
 }
 
-export default new CQBotPokeGroup();
+export default new CQBotEvent();
