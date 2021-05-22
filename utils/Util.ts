@@ -1,5 +1,5 @@
 import {CQ, CQEvent, CQTag, CQWebSocket, messageNode} from "go-cqwebsocket";
-import {MessageId} from "go-cqwebsocket/out/Interfaces";
+import {MessageId, PromiseRes} from "go-cqwebsocket/out/Interfaces";
 import {at} from "go-cqwebsocket/out/tags";
 import {adminGroup, adminId} from "../config/config.json";
 import {Plug} from "../Plug.js";
@@ -48,46 +48,49 @@ export function sendAdminGroup({bot}: CQEvent<any>, message: CQTag<any>[] | stri
 export function sendAuto(event: CQEvent<"message.group"> | CQEvent<"message.private">,
     message: CQTag<any>[] | string) {
   if (event.contextType === "message.group") {
-    sendGroup(event, message);
+    sendGroup(event, message).catch(NOP);
   } else if (event.contextType === "message.private") {
-    sendPrivate(event, message);
+    sendPrivate(event, message).catch(NOP);
   }
 }
 
 export function sendPrivate<T>({bot, context: {user_id = adminId}}: hasUser<T>,
-    message: CQTag<any>[] | string, callback?: (id: MessageId) => void) {
+    message: CQTag<any>[] | string): PromiseRes<MessageId> {
   if (typeof message === "string") message = CQ.parse(message);
-  bot.send_private_msg(user_id, message).then(callback, () => {
-    bot.send_private_msg(user_id, "私聊消息发送失败").catch(NOP);
-    logger.warn("私聊消息发送失败");
+  return bot.send_private_msg(user_id, message).catch(() => {
+    return bot.send_private_msg(user_id, "私聊消息发送失败");
   });
 }
 
 export function sendGroup<T>({bot, context: {group_id = adminGroup}}: hasGroup<T>,
-    message: CQTag<any>[] | string, callback?: (id: MessageId) => void) {
+    message: CQTag<any>[] | string): PromiseRes<MessageId> {
   if (typeof message === "string") message = CQ.parse(message);
-  bot.send_group_msg(group_id, message).then(callback, () => {
-    bot.send_group_msg(group_id, "群消息发送失败").catch(NOP);
-    logger.warn("群消息发送失败");
+  return bot.send_group_msg(group_id, message).catch(() => {
+    return bot.send_group_msg(group_id, "群消息发送失败");
   });
 }
 
-export function sendForward<T>({bot, context: {group_id = adminGroup}}: hasGroup<T>, message: messageNode) {
-  return bot.send_group_forward_msg(group_id, message);
+export function sendForward<T>({bot, context: {group_id = adminGroup}}: hasGroup<T>,
+    message: messageNode): PromiseRes<MessageId> {
+  return bot.send_group_forward_msg(group_id, message).catch(() => {
+    return bot.send_group_msg(group_id, "合并转发消息发送失败");
+  });
 }
 
 export function sendForwardQuick<T>({bot, context: {group_id = adminGroup, sender}}: CQEvent<"message.group">,
-    message: CQTag<any>[]) {
+    message: CQTag<any>[]): PromiseRes<MessageId> {
   let {user_id: userId, nickname: name} = sender;
   let map: messageNode = message.map(tags => CQ.node(name, userId, [tags]));
-  return bot.send_group_forward_msg(group_id, map);
+  return bot.send_group_forward_msg(group_id, map).catch(() => {
+    return bot.send_group_msg(group_id, "合并转发消息发送失败");
+  });
 }
 
-export function deleteMsg({bot}: CQEvent<any>, id: number, delay: number = 0) {
+export function deleteMsg({bot}: CQEvent<any>, id: number, delay: number = 0): NodeJS.Timeout {
   if (delay < 0) {
     delay = 0;
   }
-  setTimeout(() => {
+  return setTimeout(() => {
     bot.delete_msg(id).catch(NOP);
   }, delay * 1000);
 }

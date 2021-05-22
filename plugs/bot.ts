@@ -1,11 +1,11 @@
 import {CQ, CQEvent, CQTag, CQWebSocket} from "go-cqwebsocket";
-import {Status} from "go-cqwebsocket/out/Interfaces";
+import {MessageId, PromiseRes, Status} from "go-cqwebsocket/out/Interfaces";
 import {adminGroup, adminId, CQWS} from "../config/config.json";
 import {corpora} from "../config/corpus.json";
 import {Plug} from "../Plug.js";
 import {canCallGroup} from "../utils/Annotation.js";
 import {db} from "../utils/database.js";
-import {logger} from "../utils/logger.js";
+import {hrtime, logger} from "../utils/logger.js";
 import {
   deleteMsg, isAdminQQ, isAtMe, onlyText, parseMessage, sendForward, sendForwardQuick, sendGroup, sendPrivate,
 } from "../utils/Util";
@@ -154,7 +154,7 @@ class CQBot extends Plug {
     }));
     this.bot.bind("on", {
       "message.group": (event) => {
-        let hrtime = process.hrtime();
+        let time = process.hrtime();
         let userId = event.context.user_id;
         db.start(async db => {
           await db.run("insert or ignore into Members(id, time) values (?, ?);", userId, Date.now());
@@ -164,25 +164,31 @@ class CQBot extends Plug {
         if (this.banSet.has(userId)) { return; }
         CQBot.sendCorpusTags(event, CQBot.getValues(this.corpora, this.filterGroup(event)), (tags, element) => {
           if (tags.length < 1) return;
-          logger.info(`本次请求耗时:${process.hrtime(hrtime)[1]}纳秒`);
-          if (element.forward) {
-            if (tags[0].tagName === "node") {
-              sendForward(event, tags).catch(NOP);
-            } else {
-              sendForwardQuick(event, tags).catch(NOP);
-            }
+          hrtime(time);
+          let pro: PromiseRes<MessageId>;
+          if (!element.forward) {
+            pro = sendGroup(event, tags);
           } else {
-            sendGroup(event, tags, element.delMSG > 0 ? (id) => {
-              deleteMsg(event, id.message_id, element.delMSG);
-            } : undefined);
+            if (tags[0].tagName === "node") {
+              pro = sendForward(event, tags);
+            } else {
+              pro = sendForwardQuick(event, tags);
+            }
+          }
+          if (element.delMSG > 0) {
+            pro.then(value => {
+              deleteMsg(event, value.message_id, element.delMSG);
+            }, NOP);
+          } else {
+            pro.catch(NOP);
           }
         });
       },
       "message.private": (event) => {
-        let hrtime = process.hrtime();
+        let time = process.hrtime();
         CQBot.sendCorpusTags(event, CQBot.getValues(this.corpora, this.filterPrivate(event)), tags => {
           if (tags.length < 1) return;
-          logger.info(`本次请求耗时:${process.hrtime(hrtime)[1]}纳秒`);
+          hrtime(time);
           sendPrivate(event, tags);
         });
       },

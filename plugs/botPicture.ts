@@ -100,10 +100,13 @@ class CQBotPicture extends Plug {
       if (data.multiple) {
         let urlsProxy = data.original_urls_proxy;
         if (p === undefined) {
-          return urlsProxy.map(url => CQ.image(CQBotPicture.get1200(url)));
+          return urlsProxy.filter((_, i) => i < 5).map(url => CQ.image(CQBotPicture.get1200(url)));
         } else {
+          let length = urlsProxy.length;
           let ps: number = +p > length ? length - 1 : +p;
           return [
+            CQ.text(`总共${length}张图片,这是第${p}张`),
+            CQ.image(CQBotPicture.get1200(urlsProxy[ps - 1])),
             CQ.image(CQBotPicture.get1200(urlsProxy[ps])),
           ];
         }

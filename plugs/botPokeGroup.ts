@@ -3,7 +3,7 @@ import {PartialSocketHandle} from "go-cqwebsocket/out/Interfaces";
 import {Plug} from "../Plug.js";
 import {canCallGroup, canCallPrivate} from "../utils/Annotation.js";
 import {db} from "../utils/database.js";
-import {logger} from "../utils/logger.js";
+import {hrtime, logger} from "../utils/logger.js";
 import {isAdminQQ, sendAdminQQ, sendGroup} from "../utils/Util.js";
 
 class CQBotPokeGroup extends Plug {
@@ -30,16 +30,14 @@ class CQBotPokeGroup extends Plug {
         if (target_id !== event.bot.qq) {return;}
         if (this.pokeGroupInner) return;
         this.pokeGroupInner = true;
-        let hrtime = process.hrtime();
+        let time = process.hrtime();
         event.stopPropagation();
         let str = this.pokeGroup[Math.random() * this.pokeGroup.length | 0];
-        sendGroup(event, str, () => {
-          logger.info(`本次请求耗时:${process.hrtime(hrtime)[1]}纳秒`);
-        });
+        sendGroup(event, str).finally(hrtime.bind(null, time));
         setTimeout(() => {
           this.pokeGroupInner = false;
           logger.info("pokeGroupInner = false");
-        }, 1000 * 60);
+        }, 1000 * 30);
       },
     });
   }
