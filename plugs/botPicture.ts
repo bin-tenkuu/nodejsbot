@@ -108,7 +108,7 @@ class CQBotPicture extends Plug {
             CQ.image(CQBotPicture.get1200(p1)),
           ];
         } else {
-          let ps: number = +p > length ? length - 1 : +p;
+          let ps: number = +p >= length ? length - 1 : +p;
           return [
             CQ.text(`总共${length}张图片,这是第${p}-1,${p}张`),
             CQ.image(CQBotPicture.get1200(urlsProxy[ps - 1])),
