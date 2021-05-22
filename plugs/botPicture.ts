@@ -99,13 +99,18 @@ class CQBotPicture extends Plug {
       logger.info(`多张图片:${data.multiple}`);
       if (data.multiple) {
         let urlsProxy = data.original_urls_proxy;
+        let length = urlsProxy.length;
         if (p === undefined) {
-          return urlsProxy.filter((_, i) => i < 5).map(url => CQ.image(CQBotPicture.get1200(url)));
+          let {0: p0, 1: p1} = urlsProxy;
+          return [
+            CQ.text(`总共${length}张图片,这是第0,1张`),
+            CQ.image(CQBotPicture.get1200(p0)),
+            CQ.image(CQBotPicture.get1200(p1)),
+          ];
         } else {
-          let length = urlsProxy.length;
           let ps: number = +p > length ? length - 1 : +p;
           return [
-            CQ.text(`总共${length}张图片,这是第${p}张`),
+            CQ.text(`总共${length}张图片,这是第${p}-1,${p}张`),
             CQ.image(CQBotPicture.get1200(urlsProxy[ps - 1])),
             CQ.image(CQBotPicture.get1200(urlsProxy[ps])),
           ];
