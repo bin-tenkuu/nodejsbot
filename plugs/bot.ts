@@ -92,10 +92,13 @@ class CQBot extends Plug {
     event.stopPropagation();
     let {message_id, user_id} = event.context;
     let cqTags = execArray[0].replace(/吗/g, "")
-        .replace(/不/g, "很")
-        .replace(/你/g, "我")
-        .replace(/(?<!没)有/g, "没有")
-        .replace(/[？?]/g, "!");
+        .replace(/(?<!\\)不/g, "\\很")
+        .replace(/(?<!\\)你/g, "\\我")
+        .replace(/(?<!\\)我/g, "\\你")
+        .replace(/(?<![没\\])有/g, "\\没有")
+        .replace(/(?<!\\)没有/g, "\\有")
+        .replace(/[？?]/g, "!")
+        .replace(/\\/g, "");
     return [
       CQ.reply(message_id),
       CQ.at(user_id),

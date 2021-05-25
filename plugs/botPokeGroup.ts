@@ -33,7 +33,9 @@ class CQBotPokeGroup extends Plug {
         let time = process.hrtime();
         event.stopPropagation();
         let str = this.pokeGroup[Math.random() * this.pokeGroup.length | 0];
-        sendGroup(event, str).finally(hrtime.bind(null, time));
+        sendGroup(event, str).finally(() => {
+          hrtime(time);
+        });
         setTimeout(() => {
           this.pokeGroupInner = false;
           logger.info("pokeGroupInner = false");

@@ -29,14 +29,12 @@ export const logger = configure({
 }).getLogger("default");
 
 export function hrtime(time: [number, number]): void {
-  let hrtime = process.hrtime(time)[1] | 0;
-  let sec = "纳秒";
-  if (hrtime < 1000) return logger.info("本次请求耗时:" + hrtime + sec);
-  hrtime = hrtime / 1000 | 0;
-  sec = "毫秒";
-  if (hrtime < 1000) return logger.info("本次请求耗时:" + hrtime + sec);
-  hrtime = hrtime / 1000 | 0;
-  sec = "秒";
-  return logger.info("本次请求耗时:" + hrtime + sec);
+  let [s, ns] = process.hrtime(time);
+  ns = ns / 1e3 | 0;
+  if (ns < 1000) {
+    return logger.info(`本次请求耗时:${s}秒${ns}微秒`);
+  }
+  ns = ns / 1e3 | 0;
+  return logger.info(`本次请求耗时:${s}秒${ns}毫秒`);
 }
 
