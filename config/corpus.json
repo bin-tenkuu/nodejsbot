@@ -23,7 +23,7 @@
       "reply": "[FN:CQBotCOC.getDiceSet]"
     }, {
       "name": ".ran <num>[<times>]:获取多重分布随机数",
-      "regexp": "^\\.ran +(?<num>\\d+)(?<times> +\\d{1,9})?",
+      "regexp": "^\\.ran +(?<num>\\d+)(?<times> +\\d{1,2})?",
       "reply": "[FN:CQBotCOC.getRandom]"
     }, {
       "name": "帮助",
