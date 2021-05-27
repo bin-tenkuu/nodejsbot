@@ -31,14 +31,14 @@ export function isAdminGroup<T>({context: {group_id}}: hasGroup<T>): boolean {
   return group_id === adminGroup;
 }
 
-export function sendAdminQQ({bot}: CQEvent<any>, message: CQTag<any>[] | string) {
+export function sendAdminQQ({bot}: CQEvent<any>, message: CQTag<any>[] | string): void {
   if (typeof message === "string") message = CQ.parse(message);
   bot.send_private_msg(adminId, message).catch(() => {
     logger.warn("管理员消息发送失败");
   });
 }
 
-export function sendAdminGroup({bot}: CQEvent<any>, message: CQTag<any>[] | string) {
+export function sendAdminGroup({bot}: CQEvent<any>, message: CQTag<any>[] | string): void {
   if (typeof message === "string") message = CQ.parse(message);
   bot.send_group_msg(adminGroup, message).catch(() => {
     logger.warn("管理群消息发送失败");
@@ -46,7 +46,7 @@ export function sendAdminGroup({bot}: CQEvent<any>, message: CQTag<any>[] | stri
 }
 
 export function sendAuto(event: CQEvent<"message.group"> | CQEvent<"message.private">,
-    message: CQTag<any>[] | string) {
+    message: CQTag<any>[] | string): void {
   if (event.contextType === "message.group") {
     sendGroup(event, message).catch(NOP);
   } else if (event.contextType === "message.private") {

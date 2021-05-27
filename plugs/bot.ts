@@ -120,7 +120,7 @@ class CQBot extends Plug {
         "socket.close": () => reject(),
       });
       this.bot.connect();
-      process.on("exit", () => {
+      process.on("beforeExit", () => {
         this.bot.disconnect();
       });
     });

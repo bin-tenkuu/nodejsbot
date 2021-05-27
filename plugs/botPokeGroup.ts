@@ -3,49 +3,51 @@ import {PartialSocketHandle} from "go-cqwebsocket/out/Interfaces";
 import {Plug} from "../Plug.js";
 import {canCallGroup, canCallPrivate} from "../utils/Annotation.js";
 import {db} from "../utils/database.js";
-import {hrtime, logger} from "../utils/logger.js";
+import {hrtime} from "../utils/logger.js";
 import {isAdminQQ, sendAdminQQ, sendGroup} from "../utils/Util.js";
 
 class CQBotPokeGroup extends Plug {
   private header?: PartialSocketHandle;
-  private pokeGroupInner: boolean;
   private pokeGroup: string[];
+  private pokedSet: Set<number>;
+  private resetTime?: NodeJS.Timeout;
   
   constructor() {
     super(module);
     this.name = "QQ群聊-戳一戳";
     this.description = "QQ群聊的戳一戳事件";
     this.version = 0.1;
-  
+    
     this.header = undefined;
-    this.pokeGroupInner = false;
     this.pokeGroup = [];
+    this.pokedSet = new Set<number>();
   }
   
   async install() {
     this.init();
     this.header = (<CQWebSocket>require("./bot").default.bot).bind("on", {
       "notice.notify.poke.group": (event) => {
-        let target_id = event.context.target_id;
+        let {target_id, user_id} = event.context;
         if (target_id !== event.bot.qq) {return;}
-        if (this.pokeGroupInner) return;
-        this.pokeGroupInner = true;
+        if (this.pokedSet.has(user_id)) { return; }
+        this.pokedSet.add(user_id);
         let time = process.hrtime();
         event.stopPropagation();
         let str = this.pokeGroup[Math.random() * this.pokeGroup.length | 0];
-        sendGroup(event, str).finally(() => {
+        sendGroup(event, str).catch(NOP).finally(() => {
           hrtime(time);
         });
-        setTimeout(() => {
-          this.pokeGroupInner = false;
-          logger.info("pokeGroupInner = false");
-        }, 1000 * 30);
       },
     });
+    this.resetTime = setInterval(() => {
+      this.pokedSet.clear();
+    }, 1000 * 60 * 30);
   }
   
   async uninstall() {
     require("./bot").default.bot.unbind(this.header);
+    if (this.resetTime !== undefined) clearInterval(this.resetTime);
+    this.pokedSet.clear();
   }
   
   private init() {
@@ -89,7 +91,7 @@ class CQBotPokeGroup extends Plug {
       case "删除":
         return db.start(async db => {
           if (other === undefined) return [];
-          let matches = other.match(/\s+\d+/g) ?? [];
+          let matches = other.match(/\d+\s+/g) ?? [];
           let statement = await db.prepare("delete from pokeGroup where id=?");
           for (let match of matches) {
             await statement.run(matches);
