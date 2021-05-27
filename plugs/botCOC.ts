@@ -1,7 +1,7 @@
 import {CQ, CQEvent, CQTag} from "go-cqwebsocket";
 import {Plug} from "../Plug.js";
 import {canCallGroup, canCallPrivate} from "../utils/Annotation.js";
-import {dice} from "../utils/COCUtils.js";
+import {dice, distribution} from "../utils/COCUtils.js";
 import {db} from "../utils/database.js";
 import {logger} from "../utils/logger.js";
 
@@ -69,6 +69,16 @@ class CQBotCOC extends Plug {
       return [CQ.text(".d错误参数")];
     }
     return [CQ.text(CQBotCOC.dice(dice, this.cheater))];
+  }
+  
+  @canCallGroup()
+  @canCallPrivate()
+  async getRandom(event: CQEvent<"message.group"> | CQEvent<"message.private">,
+      execArray: RegExpExecArray): Promise<CQTag<any>[]> {
+    let {num, times = 2} = execArray.groups as { num?: string, times?: string } ?? {};
+    if (num === undefined) return [];
+    let number = distribution(+times) * +num | 0;
+    return [CQ.text(`${times}重随机数:${number}`)];
   }
   
   @canCallGroup()

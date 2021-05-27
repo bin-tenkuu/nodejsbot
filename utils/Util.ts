@@ -18,7 +18,7 @@ export function isAtMe({context: {self_id}, cqTags}: CQEvent<"message.group">): 
 
 export function onlyText({context: {raw_message}}: CQEvent<"message.group" | "message.private">): string {
   if (raw_message !== undefined) {
-    return raw_message.replace(/\[[^\]]+]/g, "").trim();
+    return CQ.unescape(raw_message.replace(/\[[^\]]+]/g, "").trim());
   }
   return "";
 }
@@ -87,9 +87,7 @@ export function sendForwardQuick<T>({bot, context: {group_id = adminGroup, sende
 }
 
 export function deleteMsg({bot}: CQEvent<any>, id: number, delay: number = 0): NodeJS.Timeout {
-  if (delay < 0) {
-    delay = 0;
-  }
+  if (delay < 0) { delay = 0; }
   return setTimeout(() => {
     bot.delete_msg(id).catch(NOP);
   }, delay * 1000);

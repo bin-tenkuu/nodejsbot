@@ -16,4 +16,14 @@ export function dice(times: number, max: number): { num: number, list: Uint16Arr
   };
 }
 
+export function normalDistribution(range = 1) {
+  return (distribution(12) - 0.5) * range;
+}
+
+export function distribution(times = 12) {
+  if (times === 0) return 0;
+  let sum = 0;
+  for (let t = times; t > 0; t--) sum += Math.random();
+  return sum / times;
+}
 

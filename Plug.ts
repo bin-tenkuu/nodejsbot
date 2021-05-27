@@ -1,4 +1,3 @@
-import {readdirSync} from "fs";
 import {logger} from "./utils/logger.js";
 
 enum State {
@@ -82,34 +81,3 @@ export abstract class Plug {
     return {"name": this.name, "version": this.version, "State": this.state};
   }
 }
-
-export var PlugLoader = new class PlugLoader extends Plug {
-  
-  constructor() {
-    super(module);
-    this.name = "插件加载器";
-    this.description = "专门用于加载插件的插件";
-    this.version = 1;
-  }
-  
-  async install(): Promise<void> {
-    logger.info("开始加载插件列表");
-    let plugPath = `./plugs`;
-    let files = readdirSync("./src/plugs", {
-      encoding: "utf-8",
-    });
-    for (let file of files) {
-      let filePath = `${plugPath}/${file}`;
-      let plug = require(filePath);
-      if (plug instanceof Plug) {
-        logger.info("fix: ", filePath);
-        continue;
-      }
-      logger.error("error: ", filePath);
-    }
-    module.children = [];
-  }
-  
-  async uninstall(): Promise<void> {
-  }
-};

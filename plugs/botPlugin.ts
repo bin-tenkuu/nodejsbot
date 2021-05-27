@@ -149,8 +149,7 @@ class CQBotPlugin extends Plug {
     let {other} = execArray.groups as { other?: string } ?? {};
     if (other === undefined) return [];
     if (other === "") {
-      let str = [...Plug.plugs.keys()].map((p, i) =>
-          `${i}. ${p}`).join("\n");
+      let str = [...Plug.plugs.keys()].map((p, i) => `${i}. ${p}`).join("\n");
       return [CQ.text(str)];
     }
     let plugin = Plug.plugs.get(other);

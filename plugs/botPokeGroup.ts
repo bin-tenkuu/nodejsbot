@@ -39,7 +39,7 @@ class CQBotPokeGroup extends Plug {
         });
       },
     });
-    this.resetTime = setInterval(() => {
+    this.resetTime = this.resetTime ?? setInterval(() => {
       this.pokedSet.clear();
     }, 1000 * 60 * 30);
   }
@@ -47,6 +47,7 @@ class CQBotPokeGroup extends Plug {
   async uninstall() {
     require("./bot").default.bot.unbind(this.header);
     if (this.resetTime !== undefined) clearInterval(this.resetTime);
+    this.resetTime = undefined;
     this.pokedSet.clear();
   }
   

@@ -22,6 +22,10 @@
       "regexp": "^\\.dset +(?<key>\\w[\\w\\d]+)(?:=(?<value>[+\\-*d0-9#]+))?",
       "reply": "[FN:CQBotCOC.getDiceSet]"
     }, {
+      "name": ".ran <num>[<times>]:获取多重分布随机数",
+      "regexp": "^\\.ran +(?<num>\\d+)(?<times> +\\d{1,9})?",
+      "reply": "[FN:CQBotCOC.getRandom]"
+    }, {
       "name": "帮助",
       "regexp": "^(help|帮助)$",
       "reply": ".d <表达式> <...>:骰子\n.dstat:查看全部简写\n.dset <key>(=<value>):设置/删除简写\n来点(<r18>)<key>色图\n看_p站<pid>(-<p>)\n.搜图<图片>",
