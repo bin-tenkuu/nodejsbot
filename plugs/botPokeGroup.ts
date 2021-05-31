@@ -41,7 +41,7 @@ class CQBotPokeGroup extends Plug {
     });
     this.resetTime = this.resetTime ?? setInterval(() => {
       this.pokedSet.clear();
-    }, 1000 * 60 * 30);
+    }, 1000 * 60 * 60);
   }
   
   async uninstall() {

@@ -95,6 +95,11 @@
       "reply": "你治得好么?",
       "canPrivate": false
     }, {
+      "name": "太强了",
+      "regexp": "^(?:tql|太强了)$",
+      "reply": "[FN:CQBotPlugin.getTQL]",
+      "canPrivate": false
+    }, {
       "name": ".搜图",
       "regexp": "^\\.搜图$",
       "reply": "[FN:CQBotSauceNAOGroup.getSauceNAO]"
