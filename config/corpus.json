@@ -70,7 +70,7 @@
       "reply": "[FN:CQBotPlugin.corpusInfo]",
       "needAdmin": true
     }, {
-      "name": "随机图片",
+      "name": "来点色图(随机图片)",
       "regexp": "^[来來发發给給][张張个個幅点點份][色瑟][图圖]$",
       "reply": "[FN:CQBotRandomPicture.getRandomPicture]"
     }, {
