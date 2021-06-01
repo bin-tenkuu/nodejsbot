@@ -38,7 +38,7 @@ class CQBotRandomPicture extends Plug {
         logger.warn(`色图异常：异常返回码(${data.code})：${message}`);
         return [CQ.text(message)];
       }
-      if (data.count < 2) {
+      if (data.count < 1) {
         logger.warn(`色图异常：色图数量不足(${data.count})`);
         return [CQ.text("色图数量不足")];
       }
