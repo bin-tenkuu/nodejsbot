@@ -1,6 +1,6 @@
 import {CQ, CQEvent, CQTag, CQWebSocket, messageNode} from "go-cqwebsocket";
 import {MessageId, PromiseRes} from "go-cqwebsocket/out/Interfaces";
-import {at} from "go-cqwebsocket/out/tags";
+import {CQAt} from "go-cqwebsocket/out/tags";
 import {adminGroup, adminId} from "../config/config.json";
 import {Plug} from "../Plug.js";
 import {canCallGroup, canCallGroupType, canCallPrivate, canCallPrivateType} from "./Annotation.js";
@@ -8,12 +8,12 @@ import {logger} from "./logger.js";
 
 export function isAt({cqTags}: CQEvent<"message.group">): boolean {
   if (cqTags.length === 0) { return false; }
-  return cqTags.some((tag: CQTag<at>) => tag.tagName === "at");
+  return cqTags.some((tag: CQTag) => tag instanceof CQAt);
 }
 
 export function isAtMe({context: {self_id}, cqTags}: CQEvent<"message.group">): boolean {
   if (cqTags.length === 0) { return false; }
-  return cqTags.some((tag: CQTag<at>) => tag.tagName === "at" && +tag.get("qq") === self_id);
+  return cqTags.some((tag: CQTag) => tag instanceof CQAt && tag.qq === self_id);
 }
 
 export function onlyText({context: {raw_message}}: CQEvent<"message.group" | "message.private">): string {
@@ -31,16 +31,16 @@ export function isAdminGroup<T>({context: {group_id}}: hasGroup<T>): boolean {
   return group_id === adminGroup;
 }
 
-export function sendAdminQQ({bot}: CQEvent<any>, message: CQTag<any>[] | string): void {
+export function sendAdminQQ({bot}: CQEvent<any>, message: CQTag[] | string): void {
   if (typeof message === "string") message = CQ.parse(message);
-  bot.send_private_msg(adminId, message).catch(() => {
+  bot.send_private_msg(adminId, <any>message).catch(() => {
     logger.warn("管理员消息发送失败");
   });
 }
 
 export function sendAdminGroup({bot}: CQEvent<any>, message: CQTag<any>[] | string): void {
   if (typeof message === "string") message = CQ.parse(message);
-  bot.send_group_msg(adminGroup, message).catch(() => {
+  bot.send_group_msg(adminGroup, <any>message).catch(() => {
     logger.warn("管理群消息发送失败");
   });
 }
@@ -55,17 +55,17 @@ export function sendAuto(event: CQEvent<"message.group"> | CQEvent<"message.priv
 }
 
 export function sendPrivate<T>({bot, context: {user_id = adminId}}: hasUser<T>,
-    message: CQTag<any>[] | string): PromiseRes<MessageId> {
+    message: CQTag[] | string): PromiseRes<MessageId> {
   if (typeof message === "string") message = CQ.parse(message);
-  return bot.send_private_msg(user_id, message).catch(() => {
+  return bot.send_private_msg(user_id, <any>message).catch(() => {
     return bot.send_private_msg(user_id, "私聊消息发送失败");
   });
 }
 
 export function sendGroup<T>({bot, context: {group_id = adminGroup}}: hasGroup<T>,
-    message: CQTag<any>[] | string): PromiseRes<MessageId> {
+    message: CQTag[] | string): PromiseRes<MessageId> {
   if (typeof message === "string") message = CQ.parse(message);
-  return bot.send_group_msg(group_id, message).catch(() => {
+  return bot.send_group_msg(group_id, <any>message).catch(() => {
     return bot.send_group_msg(group_id, "群消息发送失败");
   });
 }

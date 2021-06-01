@@ -1,5 +1,5 @@
 import {CQ, CQEvent} from "go-cqwebsocket";
-import {CQTag, image} from "go-cqwebsocket/out/tags";
+import {CQImage, CQTag} from "go-cqwebsocket/out/tags";
 import {Plug} from "../Plug.js";
 import {canCallGroup} from "../utils/Annotation.js";
 import {logger} from "../utils/logger.js";
@@ -17,7 +17,7 @@ class CQBotSauceNAOGroup extends Plug {
   
   @canCallGroup()
   async getSauceNAO(event: CQEvent<"message.group">): Promise<CQTag<any>[]> {
-    let tag: CQTag<image> | undefined = event.cqTags.find(tag => tag.tagName === "image");
+    let tag: CQTag | undefined = event.cqTags.find(tag => tag instanceof CQImage);
     if (tag === undefined) return [CQ.text("请带上图片")];
     let url = tag.get("url");
     if (url === undefined) return [];

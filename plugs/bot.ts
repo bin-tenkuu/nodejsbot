@@ -1,4 +1,4 @@
-import {CQ, CQEvent, CQTag, CQWebSocket} from "go-cqwebsocket";
+import {CQ, CQEvent, CQTag, CQWebSocket, messageNode} from "go-cqwebsocket";
 import {MessageId, PromiseRes, Status} from "go-cqwebsocket/out/Interfaces";
 import {adminGroup, adminId, CQWS} from "../config/config.json";
 import {corpora} from "../config/corpus.json";
@@ -69,7 +69,7 @@ class CQBot extends Plug {
   }
   
   private static sendCorpusTags(event: CQEvent<"message.private"> | CQEvent<"message.group">,
-      corpus: Iterable<Corpus>, callback: (this: void, tags: CQTag<any>[], element: Corpus) => void) {
+      corpus: Iterable<Corpus>, callback: (this: void, tags: CQTag[], element: Corpus) => void) {
     let text = onlyText(event);
     for (const element of corpus) {
       let exec = element.regexp.exec(text);
@@ -173,7 +173,7 @@ class CQBot extends Plug {
             pro = sendGroup(event, tags);
           } else {
             if (tags[0].tagName === "node") {
-              pro = sendForward(event, tags);
+              pro = sendForward(event, tags as messageNode);
             } else {
               pro = sendForwardQuick(event, tags);
             }
