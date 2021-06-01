@@ -16,7 +16,7 @@ class CQBotEvent extends Plug {
   }
   
   async install() {
-    this.header = (<CQWebSocket>require("./bot").default.bot).bind("on", {
+    this.header = (<CQWebSocket>require("./CQBot.js").default.bot).bind("on", {
       "notice.group_increase": (event) => {
         event.stopPropagation();
         let {operator_id, user_id, sub_type, group_id} = event.context;
@@ -59,7 +59,7 @@ class CQBotEvent extends Plug {
   }
   
   async uninstall() {
-    require("./bot").default.bot.unbind(this.header);
+    require("./CQBot.js").default.bot.unbind(this.header);
   }
 }
 

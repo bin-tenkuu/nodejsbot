@@ -70,6 +70,11 @@
       "reply": "[FN:CQBotPlugin.corpusInfo]",
       "needAdmin": true
     }, {
+      "name": "随机图片",
+      "regexp": "^[来來发發给給][张張个個幅点點份][色瑟][图圖]$",
+      "reply": "[FN:CQBotRandomPicture.getRandomPicture]",
+      "delMSG": 20
+    }, {
       "name": "来点[<r18>]<key>色图",
       "regexp": "^[来來发發给給][张張个個幅点點份](?<r18>[Rr]18的?)?(?<keyword>.*)?[色瑟][图圖]$",
       "reply": "[FN:CQBotPicture.getSeTu]",
@@ -106,7 +111,7 @@
     }, {
       "name": "复读",
       "regexp": "^.+$",
-      "reply": "[FN:BotRepeat.getRepeat]",
+      "reply": "[FN:CQBotRepeat.getRepeat]",
       "canPrivate": false
     }, {
       "name": "@复读AI",

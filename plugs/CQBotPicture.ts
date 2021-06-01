@@ -25,7 +25,7 @@ class CQBotPicture extends Plug {
   @canCallGroup()
   @canCallPrivate()
   async getSeTu(event: CQEvent<"message.private"> | CQEvent<"message.group">,
-      exec: RegExpExecArray): Promise<CQTag<any>[]> {
+      exec: RegExpExecArray): Promise<CQTag[]> {
     event.stopPropagation();
     if (this.isCalling) {
       return [CQ.text("冷却中")];
@@ -83,7 +83,7 @@ class CQBotPicture extends Plug {
   @canCallGroup()
   @canCallPrivate()
   async getPixiv(event: CQEvent<"message.group"> | CQEvent<"message.private">,
-      exec: RegExpExecArray): Promise<CQTag<any>[]> {
+      exec: RegExpExecArray): Promise<CQTag[]> {
     event.stopPropagation();
     let {pid, p} = (exec.groups as { pid?: string, p?: string }) ?? {};
     logger.debug(`p站图片请求：pid:${pid},p:${p}`);
@@ -126,7 +126,7 @@ class CQBotPicture extends Plug {
   
   @canCallGroup()
   @canCallPrivate()
-  async getTouHouPNG(event: CQEvent<"message.group"> | CQEvent<"message.private">): Promise<CQTag<any>[]> {
+  async getTouHouPNG(event: CQEvent<"message.group"> | CQEvent<"message.private">): Promise<CQTag[]> {
     if (this.#isRandomToho) {
       return [CQ.text(`冷却中`)];
     }

@@ -25,7 +25,7 @@ class CQBotPokeGroup extends Plug {
   
   async install() {
     this.init();
-    this.header = (<CQWebSocket>require("./bot").default.bot).bind("on", {
+    this.header = (<CQWebSocket>require("./CQBot.js").default.bot).bind("on", {
       "notice.notify.poke.group": (event) => {
         let {target_id, user_id} = event.context;
         if (target_id !== event.bot.qq) {return;}
@@ -45,7 +45,7 @@ class CQBotPokeGroup extends Plug {
   }
   
   async uninstall() {
-    require("./bot").default.bot.unbind(this.header);
+    require("./CQBot.js").default.bot.unbind(this.header);
     if (this.resetTime !== undefined) clearInterval(this.resetTime);
     this.resetTime = undefined;
     this.pokedSet.clear();
@@ -67,7 +67,7 @@ class CQBotPokeGroup extends Plug {
   @canCallPrivate()
   @canCallGroup()
   async runPrivate(event: CQEvent<"message.private"> | CQEvent<"message.group">,
-      execArray: RegExpExecArray): Promise<CQTag<any>[]> {
+      execArray: RegExpExecArray): Promise<CQTag[]> {
     event.stopPropagation();
     let {control, other} = execArray.groups as { control?: string, other?: string } ?? {};
     if (control === undefined) return [];

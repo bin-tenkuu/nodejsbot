@@ -3,7 +3,7 @@ import {Plug} from "../Plug.js";
 import {canCallGroup} from "../utils/Annotation.js";
 import {RepeatCache} from "../utils/repeat.js";
 
-class BotRepeat extends Plug {
+class CQBotRepeat extends Plug {
   private repeatCache = new RepeatCache<string>();
   
   constructor() {
@@ -26,7 +26,7 @@ class BotRepeat extends Plug {
         return [CQ.text(msg)];
       }
       let slices = await event.bot.get_word_slices(msg);
-      return [CQ.text(BotRepeat.SendRandom(slices.slices))];
+      return [CQ.text(CQBotRepeat.SendRandom(slices.slices))];
       
     }
     return [];
@@ -46,4 +46,4 @@ class BotRepeat extends Plug {
   }
 }
 
-export default new BotRepeat();
+export default new CQBotRepeat();

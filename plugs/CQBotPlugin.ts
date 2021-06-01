@@ -2,7 +2,7 @@ import {CQ, CQEvent, CQTag} from "go-cqwebsocket";
 import {Plug} from "../Plug.js";
 import {canCallGroup, canCallPrivate} from "../utils/Annotation.js";
 import {db} from "../utils/database.js";
-import {default as bot} from "./bot.js";
+import {default as bot} from "./CQBot.js";
 
 type Corpus = {
   name: string, regexp: RegExp, reply: string,
@@ -21,7 +21,7 @@ class CQBotPlugin extends Plug {
   @canCallPrivate()
   @canCallGroup()
   async getter(event: CQEvent<"message.private"> | CQEvent<"message.group">,
-      execArray: RegExpExecArray): Promise<CQTag<any>[]> {
+      execArray: RegExpExecArray): Promise<CQTag[]> {
     event.stopPropagation();
     let {type} = execArray.groups as { type?: string } ?? {};
     if (type === undefined) return [];
@@ -59,7 +59,7 @@ class CQBotPlugin extends Plug {
   @canCallPrivate()
   @canCallGroup()
   async setter(event: CQEvent<"message.private"> | CQEvent<"message.group">,
-      execArray: RegExpExecArray): Promise<CQTag<any>[]> {
+      execArray: RegExpExecArray): Promise<CQTag[]> {
     event.stopPropagation();
     let {type, other = ""} = execArray.groups as { type?: string, other?: string } ?? {};
     switch (type) {
@@ -78,7 +78,7 @@ class CQBotPlugin extends Plug {
   @canCallPrivate()
   @canCallGroup()
   async corpusList(event: CQEvent<"message.private"> | CQEvent<"message.group">,
-      execArray: RegExpExecArray): Promise<CQTag<any>[]> {
+      execArray: RegExpExecArray): Promise<CQTag[]> {
     event.stopPropagation();
     let {type, open} = execArray.groups as { type?: "私聊" | "群聊", open?: "开" | "关" } ?? {};
     let isOpen: boolean;
@@ -102,7 +102,7 @@ class CQBotPlugin extends Plug {
   @canCallPrivate()
   @canCallGroup()
   async corpusStat(event: CQEvent<"message.private"> | CQEvent<"message.group">,
-      execArray: RegExpExecArray): Promise<CQTag<any>[]> {
+      execArray: RegExpExecArray): Promise<CQTag[]> {
     event.stopPropagation();
     let {
       type, open, nums,
@@ -126,7 +126,7 @@ class CQBotPlugin extends Plug {
   @canCallPrivate()
   @canCallGroup()
   async corpusInfo(event: CQEvent<"message.private"> | CQEvent<"message.group">,
-      execArray: RegExpExecArray): Promise<CQTag<any>[]> {
+      execArray: RegExpExecArray): Promise<CQTag[]> {
     event.stopPropagation();
     let {
       type, nums,
@@ -144,7 +144,7 @@ class CQBotPlugin extends Plug {
   @canCallPrivate()
   @canCallGroup()
   async pluginInfo(event: CQEvent<"message.private"> | CQEvent<"message.group">,
-      execArray: RegExpExecArray): Promise<CQTag<any>[]> {
+      execArray: RegExpExecArray): Promise<CQTag[]> {
     event.stopPropagation();
     let {other} = execArray.groups as { other?: string } ?? {};
     if (other === undefined) return [];
@@ -163,7 +163,7 @@ class CQBotPlugin extends Plug {
   
   @canCallPrivate()
   @canCallGroup()
-  async getTQL(): Promise<CQTag<any>[]> {
+  async getTQL(): Promise<CQTag[]> {
     if (Math.random() < 0.8) return [];
     return [
       CQ.text("也不看看我是谁呀"),

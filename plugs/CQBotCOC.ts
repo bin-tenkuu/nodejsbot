@@ -21,7 +21,7 @@ class CQBotCOC extends Plug {
   
   @canCallGroup()
   @canCallPrivate()
-  async getDiceStat(event: CQEvent<"message.group"> | CQEvent<"message.private">): Promise<CQTag<any>[]> {
+  async getDiceStat(event: CQEvent<"message.group"> | CQEvent<"message.private">): Promise<CQTag[]> {
     event.stopPropagation();
     let str = "";
     this.shortKey.forEach((value, key) => {
@@ -34,7 +34,7 @@ class CQBotCOC extends Plug {
   @canCallGroup()
   @canCallPrivate()
   async getDiceSet(event: CQEvent<"message.group"> | CQEvent<"message.private">,
-      execArray: RegExpExecArray): Promise<CQTag<any>[]> {
+      execArray: RegExpExecArray): Promise<CQTag[]> {
     event.stopPropagation();
     let {key, value} = execArray.groups as { key?: string, value?: string } ?? {};
     if (key === undefined || key.length > 5) return [CQ.text("key格式错误或长度大于5")];
@@ -58,7 +58,7 @@ class CQBotCOC extends Plug {
   @canCallGroup()
   @canCallPrivate()
   async getDice(event: CQEvent<"message.group"> | CQEvent<"message.private">,
-      execArray: RegExpExecArray): Promise<CQTag<any>[]> {
+      execArray: RegExpExecArray): Promise<CQTag[]> {
     event.stopPropagation();
     let dice = execArray[1];
     if (dice === undefined) return [];
@@ -74,7 +74,7 @@ class CQBotCOC extends Plug {
   @canCallGroup()
   @canCallPrivate()
   async getRandom(event: CQEvent<"message.group"> | CQEvent<"message.private">,
-      execArray: RegExpExecArray): Promise<CQTag<any>[]> {
+      execArray: RegExpExecArray): Promise<CQTag[]> {
     let {num, times = 2} = execArray.groups as { num?: string, times?: string } ?? {};
     if (num === undefined) return [];
     let number = distribution(+times) * +num | 0;
