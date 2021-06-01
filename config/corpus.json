@@ -72,8 +72,7 @@
     }, {
       "name": "随机图片",
       "regexp": "^[来來发發给給][张張个個幅点點份][色瑟][图圖]$",
-      "reply": "[FN:CQBotRandomPicture.getRandomPicture]",
-      "delMSG": 20
+      "reply": "[FN:CQBotRandomPicture.getRandomPicture]"
     }, {
       "name": "来点[<r18>]<key>色图",
       "regexp": "^[来來发發给給][张張个個幅点點份](?<r18>[Rr]18的?)?(?<keyword>.*)?[色瑟][图圖]$",
@@ -87,8 +86,7 @@
       "name": "看_p站<pid>[-<p>]",
       "regexp": "^看{1,2}p站(?<pid>\\d+)(?:-(?<p>\\d+))?$",
       "reply": "[FN:CQBotPicture.getPixiv]",
-      "delMSG": 60,
-      "forward": true
+      "delMSG": 60
     }, {
       "name": "为什么呢",
       "regexp": "^为什么呢$",

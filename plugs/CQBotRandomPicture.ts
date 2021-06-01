@@ -25,13 +25,14 @@ class CQBotRandomPicture extends Plug {
   @canCallGroup()
   @canCallPrivate()
   async getRandomPicture(event: CQEvent<"message.private"> | CQEvent<"message.group">) {
+    event.stopPropagation();
     this.callSet.add(event.context.user_id);
     return await this.generator.next().value();
   }
   
   async getSeTu(this: void): Promise<[CQTag]> {
     try {
-      let data = await lolicon();
+      let data = await lolicon("", false);
       if (data.code !== 0) {
         let message = CQBotRandomPicture.code(data.code);
         logger.warn(`色图异常：异常返回码(${data.code})：${message}`);
