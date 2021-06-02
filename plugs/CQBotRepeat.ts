@@ -1,4 +1,5 @@
 import {CQ, CQEvent} from "go-cqwebsocket";
+import {CQText} from "go-cqwebsocket/out/tags.js";
 import {Plug} from "../Plug.js";
 import {canCallGroup} from "../utils/Annotation.js";
 import {RepeatCache} from "../utils/repeat.js";
@@ -17,7 +18,7 @@ class CQBotRepeat extends Plug {
   async getRepeat(event: CQEvent<"message.group">) {
     let {group_id, user_id, raw_message} = event.context;
     this.repeatCache.addData(group_id, user_id, raw_message);
-    if (event.cqTags.some(tag => tag.tagName !== "text")) return [];
+    if (event.cqTags.some(tag => !(tag instanceof CQText))) return [];
     let msg = event.cqTags.join("");
     if (/^[-+$%^&*.]/.test(msg)) return [];
     if (this.repeatCache.check(group_id, 4)) {

@@ -1,5 +1,6 @@
 import {CQ, CQEvent, CQTag, CQWebSocket} from "go-cqwebsocket";
 import {PartialSocketHandle} from "go-cqwebsocket/out/Interfaces";
+import {CQImage, CQText} from "go-cqwebsocket/out/tags.js";
 import {Plug} from "../Plug.js";
 import {canCallGroup, canCallPrivate} from "../utils/Annotation.js";
 import {db} from "../utils/database.js";
@@ -76,8 +77,8 @@ class CQBotPokeGroup extends Plug {
         event.bot.once("message.private", event => {
           if (!isAdminQQ(event)) {return; }
           let tags = event.cqTags.map(tag => {
-            if (tag.tagName === "text") return tag;
-            if (tag.tagName === "image") return CQ.image(tag.get("url"));
+            if (tag instanceof CQText) return tag;
+            if (tag instanceof CQImage) return CQ.image(tag.url as string);
             return CQ.text(`未支持tag:` + tag.tagName);
           }).join("");
           db.start(async db => {

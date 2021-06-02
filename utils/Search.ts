@@ -18,7 +18,7 @@ export function sauceNAO(url: string): Promise<sauceNAOResult> {
       url: url,
       testmode: 1,
     },
-  }).then(value => value.data as sauceNAOResult);
+  }).then<sauceNAOResult>((r) => r.data);
 }
 
 /**TODO
@@ -42,7 +42,7 @@ export function paulzzhTouHou(): Promise<paulzzhTouHouType> {
     params: {
       type: "json",
     },
-  }).then(r => r.data as paulzzhTouHouType);
+  }).then<paulzzhTouHouType>((r) => r.data);
 }
 
 /**
@@ -58,11 +58,12 @@ export function lolicon(keyword?: string, r18 = false): Promise<loliconDate> {
       num: 1,
       size1200: true,
     },
-  }).then<loliconDate>(r => r.data as loliconDate);
+  }).then<loliconDate>((r) => r.data);
 }
 
 export function toubiec(): Promise<toubiecType> {
-  return axios.get(`https://acg.toubiec.cn/random.php?ret=json`);
+  return axios.get(`https://acg.toubiec.cn/random.php?ret=json`,
+  ).then<toubiecType>((r) => r.data[0]);
 }
 
 /**
@@ -72,7 +73,7 @@ export function toubiec(): Promise<toubiecType> {
 export function pixivCat(pid: string): Promise<pixivCatType> {
   return axios.post("https://api.pixiv.cat/v1/generate", {
     p: pid,
-  }).then(value => value.data);
+  }).then<pixivCatType>((r) => r.data);
 }
 
 

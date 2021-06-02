@@ -80,14 +80,14 @@ type setu = {
   /**作品标签，包含标签的中文翻译（有的话）*/
   tags: string[]
 }
-export type toubiecType = [{
+export type toubiecType = {
   id: string
   imgurl: string
   width: string
   height: string
   client_ip: string
   client_lsp: string
-}];
+};
 export type pixivCatType = {
   success: false
   error: string

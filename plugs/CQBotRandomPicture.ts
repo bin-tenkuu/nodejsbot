@@ -24,9 +24,11 @@ class CQBotRandomPicture extends Plug {
   
   @canCallGroup()
   @canCallPrivate()
-  async getRandomPicture(event: CQEvent<"message.private"> | CQEvent<"message.group">) {
+  async getRandomPicture(event: CQEvent<"message.private"> | CQEvent<"message.group">): Promise<CQTag[]> {
     event.stopPropagation();
-    this.callSet.add(event.context.user_id);
+    let userId = event.context.user_id;
+    if (this.callSet.has(userId)) { return []; }
+    this.callSet.add(userId);
     return await this.generator.next().value();
   }
   
@@ -63,7 +65,7 @@ class CQBotRandomPicture extends Plug {
   async getToubiec(this: void): Promise<[CQTag]> {
     try {
       let json = await toubiec();
-      return [CQ.image((json[0].imgurl))];
+      return [CQ.image((json.imgurl))];
     } catch (e) {
       return [CQ.text(`toubiec API调用错误`)];
     }
