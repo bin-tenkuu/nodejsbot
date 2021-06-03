@@ -1,7 +1,7 @@
 import {CQ, CQWebSocket} from "go-cqwebsocket";
 import {PartialSocketHandle} from "go-cqwebsocket/out/Interfaces";
 import {Plug} from "../Plug.js";
-import {sendAdminGroup, sendAdminQQ, sendPrivate} from "../utils/Util.js";
+import {sendAdminQQ, sendPrivate} from "../utils/Util.js";
 
 class CQBotEvent extends Plug {
   private header?: PartialSocketHandle;
@@ -63,7 +63,6 @@ class CQBotEvent extends Plug {
           }\n文件链接:${file.url}`),
         ];
         sendPrivate(event, message);
-        sendAdminGroup(event, message);
       },
     });
   }
