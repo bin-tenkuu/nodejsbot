@@ -52,7 +52,7 @@
       "regexp": "^\\.(?<control>设置|删除)poke(?<other>.*)$",
       "reply": "[FN:CQBotPokeGroup.runPrivate]",
       "needAdmin": true,
-      "isOpen": false
+      "isOpen": true
     }, {
       "name": ".语料库<type><open>",
       "regexp": "^\\.语料库(?<type>私聊|群聊)?(?<open>开|关)$",

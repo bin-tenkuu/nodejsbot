@@ -19,7 +19,7 @@ class CQBotRepeat extends Plug {
     let {group_id, user_id, raw_message} = event.context;
     this.repeatCache.addData(group_id, user_id, raw_message);
     if (event.cqTags.some(tag => !(tag instanceof CQText))) return [];
-    let msg = event.cqTags.join("");
+    let msg = (event.cqTags as CQText[]).map(t => t.text).join("");
     if (/^[-+$%^&*.]/.test(msg)) return [];
     if (this.repeatCache.check(group_id, 4)) {
       event.stopPropagation();

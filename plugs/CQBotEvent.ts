@@ -1,7 +1,7 @@
-import {CQWebSocket} from "go-cqwebsocket";
+import {CQ, CQWebSocket} from "go-cqwebsocket";
 import {PartialSocketHandle} from "go-cqwebsocket/out/Interfaces";
 import {Plug} from "../Plug.js";
-import {sendAdminQQ} from "../utils/Util.js";
+import {sendAdminGroup, sendAdminQQ, sendPrivate} from "../utils/Util.js";
 
 class CQBotEvent extends Plug {
   private header?: PartialSocketHandle;
@@ -54,6 +54,16 @@ class CQBotEvent extends Plug {
         let {flag, sub_type, group_id} = event.context;
         sendAdminQQ(event, `${group_id}请求入群`);
         event.bot.set_group_add_request(flag, sub_type, true);
+      },
+      "notice.offline_file": (event) => {
+        let file = event.context.file;
+        let message = [
+          CQ.text(`文件名:${file.name
+          }\n文件大小:${file.size
+          }\n文件链接:${file.url}`),
+        ];
+        sendPrivate(event, message);
+        sendAdminGroup(event, message);
       },
     });
   }
