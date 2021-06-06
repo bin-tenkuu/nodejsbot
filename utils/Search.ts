@@ -1,6 +1,8 @@
 import _axios from "axios";
 import {SauceNAOkey, SeTuApiKey} from "../config/config.json";
-import {loliconDate, paulzzhTouHouType, pixivCatType, sauceNAOResult, toubiecType} from "./SearchType";
+import {
+	DMXKType, loliconDate, paulzzhTouHouType, pixivCatType, sauceNAOResult, toubiecType, YHType,
+} from "./SearchType";
 
 export const axios = _axios.create({
 	timeout: 20000,
@@ -76,4 +78,21 @@ export function pixivCat(pid: string): Promise<pixivCatType> {
 	}).then<pixivCatType>((r) => r.data);
 }
 
+/**动漫星空随机图片*/
+export function dongManXingKong(): Promise<DMXKType> {
+	return axios.get("https://api.dongmanxingkong.com/suijitupian/acg/1080p/index.php?return=json",
+		 {},
+	).then<DMXKType>((data) => {
+		return data.data;
+	});
+}
+
+/**樱花随机二次元图片*/
+export function yingHua(): Promise<YHType> {
+	return axios.get("https://www.dmoe.cc/random.php?return=json",
+		 {},
+	).then<YHType>((data) => {
+		return data.data;
+	});
+}
 

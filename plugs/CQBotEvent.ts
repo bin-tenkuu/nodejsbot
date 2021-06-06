@@ -1,7 +1,7 @@
 import {CQ, CQWebSocket} from "go-cqwebsocket";
 import {PartialSocketHandle} from "go-cqwebsocket/out/Interfaces";
 import {Plug} from "../Plug.js";
-import {sendAdminQQ, sendPrivate} from "../utils/Util.js";
+import {sendAdminQQ, sendGroup, sendPrivate} from "../utils/Util.js";
 
 class CQBotEvent extends Plug {
 	private header?: PartialSocketHandle;
@@ -35,13 +35,16 @@ class CQBotEvent extends Plug {
 					sendAdminQQ(event, `群 ${group_id} 被踢出`);
 					return;
 				}
-				let str;
+				let str: string;
 				if (sub_type === "kick") {
-					str = `@${user_id} 被 管理员{@${operator_id}} 踢出本群`;
+					str = ` 被 管理员{@${operator_id}} 踢出本群`;
 				} else {
-					str = `@${user_id} 主动离开本群`;
+					str = ` 主动离开本群`;
 				}
-				event.bot.send_group_msg(group_id, str).catch(() => { });
+				event.bot.get_stranger_info(user_id, false).then(info => {
+					str = `@${info.nickname}(${info.user_id})${str}`;
+					sendGroup(event, [CQ.text(str)]);
+				});
 			},
 			"request.friend": (event) => {
 				event.stopPropagation();

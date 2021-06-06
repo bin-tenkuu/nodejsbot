@@ -2,7 +2,7 @@ import {CQ, CQEvent, CQTag} from "go-cqwebsocket";
 import {Plug} from "../Plug.js";
 import {canCallGroup, canCallPrivate} from "../utils/Annotation.js";
 import {logger} from "../utils/logger.js";
-import {lolicon, paulzzhTouHou, toubiec} from "../utils/Search.js";
+import {dongManXingKong, lolicon, paulzzhTouHou, toubiec, yingHua} from "../utils/Search.js";
 
 
 class CQBotRandomPicture extends Plug {
@@ -71,6 +71,24 @@ class CQBotRandomPicture extends Plug {
 		}
 	}
 
+	async getDMXK(this: void): Promise<[CQTag]> {
+		try {
+			let json = await dongManXingKong();
+			return [CQ.image((json.imgurl))];
+		} catch (e) {
+			return [CQ.text(`DMXK API调用错误`)];
+		}
+	}
+
+	async getYH(this: void): Promise<[CQTag]> {
+		try {
+			let json = await yingHua();
+			return [CQ.image((json.imgurl))];
+		} catch (e) {
+			return [CQ.text(`DMXK API调用错误`)];
+		}
+	}
+
 	private static get1200(str: string) {
 		return str.replace("original", "master").replace(/(.\w+)$/, "_master1200.jpg");
 	}
@@ -99,6 +117,8 @@ class CQBotRandomPicture extends Plug {
 			 this.getSeTu,
 			 this.getTouHouPNG,
 			 this.getToubiec,
+			 this.getDMXK,
+			 this.getYH,
 		);
 		setInterval(() => {
 			this.callSet.clear();

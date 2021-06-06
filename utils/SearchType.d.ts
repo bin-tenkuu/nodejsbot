@@ -29,7 +29,7 @@ export type sauceNAOResult = {
 			[key: string]: unknown
 		}
 	}[]
-}
+};
 export type paulzzhTouHouType = {
 	author: string
 	height: number
@@ -43,7 +43,7 @@ export type paulzzhTouHouType = {
 	timestamp: number
 	url: string
 	width: number
-}
+};
 export type loliconDate = {
 	/**返回码，可能值详见后续部分*/
 	code: number
@@ -57,7 +57,7 @@ export type loliconDate = {
 	count: number
 	/**色图数组*/
 	data: setu[]
-}
+};
 type setu = {
 	/**作品 PID*/
 	pid: number
@@ -79,7 +79,7 @@ type setu = {
 	height: number
 	/**作品标签，包含标签的中文翻译（有的话）*/
 	tags: string[]
-}
+};
 export type toubiecType = {
 	id: string
 	imgurl: string
@@ -104,7 +104,19 @@ export type pixivCatType = {
 	multiple: false
 	original_url: string
 	original_url_proxy: string
-}))
+}));
+export type DMXKType = {
+	"code": string,
+	"imgurl": string,
+	"width": string,
+	"height": string
+};
+export type YHType = {
+	"code": string,
+	"imgurl": string,
+	"width": string,
+	"height": string
+};
 
 interface Prom<T, U> extends PromiseLike<T> {
 	then<TR1 = T, TR2 = U>(
