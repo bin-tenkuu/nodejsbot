@@ -59,9 +59,9 @@ export function sendPrivate<T>({bot, context: {user_id = adminId}}: hasUser<T>,
 	if (typeof message === "string") message = CQ.parse(message);
 	let msg = message;
 	return bot.send_private_msg(user_id, <any>msg).catch(() => {
-		return bot.send_private_msg(user_id, cast2Text(msg)).catch(() => {
-			return bot.send_private_msg(user_id, "私聊消息发送失败");
-		});
+		return bot.send_private_msg(user_id, cast2Text(msg));
+	}).catch(() => {
+		return bot.send_private_msg(user_id, "私聊消息发送失败");
 	});
 }
 
@@ -69,10 +69,10 @@ export function sendGroup<T>({bot, context: {group_id = adminGroup}}: hasGroup<T
 	 message: CQTag[] | string): PromiseRes<MessageId> {
 	if (typeof message === "string") message = CQ.parse(message);
 	let msg = message;
-	return bot.send_group_msg(group_id, <any>message).catch(() => {
-		return bot.send_group_msg(group_id, cast2Text(msg)).catch(() => {
-			return bot.send_group_msg(group_id, "群消息发送失败");
-		});
+	return bot.send_group_msg(group_id, <any>msg).catch(() => {
+		return bot.send_group_msg(group_id, cast2Text(msg));
+	}).catch(() => {
+		return bot.send_group_msg(group_id, "群消息发送失败");
 	});
 }
 
@@ -89,9 +89,9 @@ export function sendForwardQuick<T>({bot, context: {group_id = adminGroup, sende
 	let map: messageNode = message.map(tags => CQ.node(name, userId, [tags]));
 	return bot.send_group_forward_msg(group_id, map).catch(() => {
 		let map: messageNode = message.map(tags => CQ.node(name, userId, cast2Text([tags])));
-		return bot.send_group_forward_msg(group_id, map).catch(() => {
-			return bot.send_group_msg(group_id, "合并转发消息发送失败");
-		});
+		return bot.send_group_forward_msg(group_id, map);
+	}).catch(() => {
+		return bot.send_group_msg(group_id, "合并转发消息发送失败");
 	});
 }
 
