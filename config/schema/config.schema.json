@@ -1,57 +1,57 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema",
-  "title": "基础配置文件",
-  "description": "基础配置文件",
-  "definitions": {
-  },
-  "type": "object",
-  "properties": {
-    "CQWS": {
-      "description": "基础连接配置",
-      "type": "object",
-      "properties": {
-        "baseUrl": {
-          "type": "string",
-          "description": "基础链接",
-          "anyOf": [
-            {
-              "enum": ["ws://127.0.0.1:6700"]
-            }, {
-              "pattern": "^wss?://[-_%\\w\\d.]+(:\\d)?"
-            }
-          ]
-        },
-        "accessToken": {
-          "type": "string",
-          "description": "访问密钥",
-          "default": ""
-        }
-      },
-      "required": ["baseUrl"]
-    },
-    "adminId": {
-      "$id": "QQNumber",
-      "description": "管理员qq号",
-      "type": "number",
-      "default": 0
-    },
-    "adminGroup": {
-      "description": "管理qq群号",
-      "type": "number",
-      "default": 0
-    },
-    "SauceNAOkey": {
-      "description": "SauceNAO 的 key",
-      "type": "string",
-      "pattern": "^[\\w\\d]{40}$"
-    },
-    "SeTuApiKey": {
-      "description": "LoLiAPI 的 key",
-      "type": "string",
-      "pattern": "^[\\w\\d]{22}$"
-    }
-  },
-  "required": [
-    "CQWS"
-  ]
+	"$schema": "http://json-schema.org/draft-07/schema",
+	"title": "基础配置文件",
+	"description": "基础配置文件",
+	"definitions": {
+	},
+	"type": "object",
+	"properties": {
+		"CQWS": {
+			"description": "基础连接配置",
+			"type": "object",
+			"properties": {
+				"baseUrl": {
+					"type": "string",
+					"description": "基础链接",
+					"anyOf": [
+						{
+							"enum": ["ws://127.0.0.1:6700"]
+						}, {
+							"pattern": "^wss?://[-_%\\w\\d.]+(:\\d)?"
+						}
+					]
+				},
+				"accessToken": {
+					"type": "string",
+					"description": "访问密钥",
+					"default": ""
+				}
+			},
+			"required": ["baseUrl"]
+		},
+		"adminId": {
+			"$id": "QQNumber",
+			"description": "管理员qq号",
+			"type": "number",
+			"default": 0
+		},
+		"adminGroup": {
+			"description": "管理qq群号",
+			"type": "number",
+			"default": 0
+		},
+		"SauceNAOkey": {
+			"description": "SauceNAO 的 key",
+			"type": "string",
+			"pattern": "^[\\w\\d]{40}$"
+		},
+		"SeTuApiKey": {
+			"description": "LoLiAPI 的 key",
+			"type": "string",
+			"pattern": "^[\\w\\d]{22}$"
+		}
+	},
+	"required": [
+		"CQWS"
+	]
 }

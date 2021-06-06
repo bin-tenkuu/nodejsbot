@@ -1,70 +1,70 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema",
-  "title": "事件过滤器架构",
-  "description": "事件过滤器架构文件",
-  "definitions": {
-    "object": {
-      "type": ["object", "number", "string", "boolean"],
-      "additionalProperties": {
-        "anyOf": [
-          {
-            "$ref": "#"
-          }
-        ]
-      }
-    },
-    "numberObject": {
-      "anyOf": [
-        {
-          "type": "number"
-        }, {
-          "$ref": "#"
-        }
-      ]
-    }
-  },
-  "type": "object",
-  "properties": {
-    ".not": {
-      "description": "非",
-      "$ref": "#/definitions/object"
-    },
-    ".and": {
-      "description": "与",
-      "$ref": "#/definitions/object"
-    },
-    ".or": {
-      "description": "或",
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/object"
-      },
-      "default": []
-    },
-    ".eq": {
-      "description": "等于",
-      "$ref": "#/definitions/object"
-    },
-    ".neq": {
-      "description": "不等于",
-      "$ref": "#/definitions/object"
-    },
-    ".in": {
-      "description": "在范围内",
-      "type": ["array", "string"],
-      "items": {
-        "$ref": "#/definitions/object"
-      }
-    },
-    ".contains": {
-      "description": "包含",
-      "type": "string"
-    },
-    ".regex": {
-      "description": "正则匹配",
-      "type": "string",
-      "format": "regex"
-    }
-  },
-  "default": true
+	"$schema": "http://json-schema.org/draft-07/schema",
+	"title": "事件过滤器架构",
+	"description": "事件过滤器架构文件",
+	"definitions": {
+		"object": {
+			"type": ["object", "number", "string", "boolean"],
+			"additionalProperties": {
+				"anyOf": [
+					{
+						"$ref": "#"
+					}
+				]
+			}
+		},
+		"numberObject": {
+			"anyOf": [
+				{
+					"type": "number"
+				}, {
+					"$ref": "#"
+				}
+			]
+		}
+	},
+	"type": "object",
+	"properties": {
+		".not": {
+			"description": "非",
+			"$ref": "#/definitions/object"
+		},
+		".and": {
+			"description": "与",
+			"$ref": "#/definitions/object"
+		},
+		".or": {
+			"description": "或",
+			"type": "array",
+			"items": {
+				"$ref": "#/definitions/object"
+			},
+			"default": []
+		},
+		".eq": {
+			"description": "等于",
+			"$ref": "#/definitions/object"
+		},
+		".neq": {
+			"description": "不等于",
+			"$ref": "#/definitions/object"
+		},
+		".in": {
+			"description": "在范围内",
+			"type": ["array", "string"],
+			"items": {
+				"$ref": "#/definitions/object"
+			}
+		},
+		".contains": {
+			"description": "包含",
+			"type": "string"
+		},
+		".regex": {
+			"description": "正则匹配",
+			"type": "string",
+			"format": "regex"
+		}
+	},
+	"default": true
 }
