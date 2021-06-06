@@ -1,5 +1,5 @@
 import {CQ, CQEvent, CQTag} from "go-cqwebsocket";
-import {CQImage, CQReply} from "../../go-cqwebsocket/out/tags.js";
+import {CQImage, CQReply} from "go-cqwebsocket/out/tags.js";
 import {Plug} from "../Plug.js";
 import {canCallGroup, canCallPrivate} from "../utils/Annotation.js";
 import {logger} from "../utils/logger.js";
