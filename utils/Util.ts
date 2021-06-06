@@ -1,6 +1,6 @@
 import {CQ, CQEvent, CQTag, CQWebSocket, messageNode} from "go-cqwebsocket";
 import {MessageId, PromiseRes} from "go-cqwebsocket/out/Interfaces";
-import {CQAt} from "go-cqwebsocket/out/tags";
+import {CQAt, CQImage, CQText} from "go-cqwebsocket/out/tags";
 import {adminGroup, adminId} from "../config/config.json";
 import {Plug} from "../Plug.js";
 import {canCallGroup, canCallGroupType, canCallPrivate, canCallPrivateType} from "./Annotation.js";
@@ -38,7 +38,7 @@ export function sendAdminQQ({bot}: CQEvent<any>, message: CQTag[] | string): voi
 	});
 }
 
-export function sendAdminGroup({bot}: CQEvent<any>, message: CQTag<any>[] | string): void {
+export function sendAdminGroup({bot}: CQEvent<any>, message: CQTag[] | string): void {
 	if (typeof message === "string") message = CQ.parse(message);
 	bot.send_group_msg(adminGroup, <any>message).catch(() => {
 		logger.warn("管理群消息发送失败");
@@ -46,7 +46,7 @@ export function sendAdminGroup({bot}: CQEvent<any>, message: CQTag<any>[] | stri
 }
 
 export function sendAuto(event: CQEvent<"message.group"> | CQEvent<"message.private">,
-	 message: CQTag<any>[] | string): void {
+	 message: CQTag[] | string): void {
 	if (event.contextType === "message.group") {
 		sendGroup(event, message).catch(NOP);
 	} else if (event.contextType === "message.private") {
@@ -57,16 +57,22 @@ export function sendAuto(event: CQEvent<"message.group"> | CQEvent<"message.priv
 export function sendPrivate<T>({bot, context: {user_id = adminId}}: hasUser<T>,
 	 message: CQTag[] | string): PromiseRes<MessageId> {
 	if (typeof message === "string") message = CQ.parse(message);
-	return bot.send_private_msg(user_id, <any>message).catch(() => {
-		return bot.send_private_msg(user_id, "私聊消息发送失败");
+	let msg = message;
+	return bot.send_private_msg(user_id, <any>msg).catch(() => {
+		return bot.send_private_msg(user_id, cast2Text(msg)).catch(() => {
+			return bot.send_private_msg(user_id, "私聊消息发送失败");
+		});
 	});
 }
 
 export function sendGroup<T>({bot, context: {group_id = adminGroup}}: hasGroup<T>,
 	 message: CQTag[] | string): PromiseRes<MessageId> {
 	if (typeof message === "string") message = CQ.parse(message);
+	let msg = message;
 	return bot.send_group_msg(group_id, <any>message).catch(() => {
-		return bot.send_group_msg(group_id, "群消息发送失败");
+		return bot.send_group_msg(group_id, cast2Text(msg)).catch(() => {
+			return bot.send_group_msg(group_id, "群消息发送失败");
+		});
 	});
 }
 
@@ -78,11 +84,14 @@ export function sendForward<T>({bot, context: {group_id = adminGroup}}: hasGroup
 }
 
 export function sendForwardQuick<T>({bot, context: {group_id = adminGroup, sender}}: CQEvent<"message.group">,
-	 message: CQTag<any>[]): PromiseRes<MessageId> {
+	 message: CQTag[]): PromiseRes<MessageId> {
 	let {user_id: userId, nickname: name} = sender;
 	let map: messageNode = message.map(tags => CQ.node(name, userId, [tags]));
 	return bot.send_group_forward_msg(group_id, map).catch(() => {
-		return bot.send_group_msg(group_id, "合并转发消息发送失败");
+		let map: messageNode = message.map(tags => CQ.node(name, userId, cast2Text([tags])));
+		return bot.send_group_forward_msg(group_id, map).catch(() => {
+			return bot.send_group_msg(group_id, "合并转发消息发送失败");
+		});
 	});
 }
 
@@ -93,8 +102,17 @@ export function deleteMsg({bot}: CQEvent<any>, id: number, delay: number = 0): N
 	}, delay * 1000);
 }
 
+function cast2Text(message: CQTag[]): CQText[] {
+	return message.map<CQText>(tag => {
+		if (tag instanceof CQImage) {
+			return CQ.text(`[图片:${tag.file}]`);
+		}
+		return <CQText>tag;
+	});
+}
+
 async function parseFN(body: string, event: CQEvent<"message.group"> | CQEvent<"message.private">,
-	 exec: RegExpExecArray): Promise<CQTag<any>[]> {
+	 exec: RegExpExecArray): Promise<CQTag[]> {
 	let [plugName, funName] = body.split(".");
 	if (funName === undefined) return [CQ.text(body)];
 	let plug: Plug | undefined = Plug.plugs.get(plugName);
@@ -104,10 +122,10 @@ async function parseFN(body: string, event: CQEvent<"message.group"> | CQEvent<"
 	try {
 		if (event.contextType === "message.private" &&
 			 Reflect.getMetadata(canCallPrivate.name, plugFunc) === true) {
-			return (await (plugFunc as canCallPrivateType).call(plug, event, exec) as CQTag<any>[]);
+			return (await (plugFunc as canCallPrivateType).call(plug, event, exec) as CQTag[]);
 		} else if (event.contextType === "message.group" &&
 			 Reflect.getMetadata(canCallGroup.name, plugFunc) === true) {
-			return (await (plugFunc as canCallGroupType).call(plug, event, exec) as CQTag<any>[]);
+			return (await (plugFunc as canCallGroupType).call(plug, event, exec) as CQTag[]);
 		} else {
 			logger.info(`不可调用[${body}]`);
 			return [CQ.text(`插件${plugName}的${funName}方法不可在${event.contextType}环境下调用`)];
@@ -119,7 +137,7 @@ async function parseFN(body: string, event: CQEvent<"message.group"> | CQEvent<"
 }
 
 function parseCQ(body: string, event: CQEvent<"message.group"> | CQEvent<"message.private">,
-	 exec: RegExpExecArray): CQTag<any> {
+	 exec: RegExpExecArray): CQTag {
 	let groups = exec.groups as { [key in string]?: string };
 	switch (body) {
 		case "reply":
@@ -134,9 +152,9 @@ function parseCQ(body: string, event: CQEvent<"message.group"> | CQEvent<"messag
 }
 
 export async function parseMessage(template: string, message: CQEvent<"message.group"> | CQEvent<"message.private">,
-	 execArray: RegExpExecArray): Promise<CQTag<any>[]> {
+	 execArray: RegExpExecArray): Promise<CQTag[]> {
 	let split = template.split(/(?<=])|(?=\[)/);
-	let tags: CQTag<any>[] = [];
+	let tags: CQTag[] = [];
 	for (let str of split) {
 		if (str.length === 0) continue;
 		if (!str.startsWith("[")) {
