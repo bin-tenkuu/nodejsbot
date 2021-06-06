@@ -1,131 +1,131 @@
 {
-  "$schema": "schema/corpus.schema.json",
-  "corpora": [
-    {
-      "name": ".ping",
-      "regexp": "^\\.ping$",
-      "reply": ".pong!"
-    }, {
-      "name": ".dall1:打开全1模式",
-      "regexp": "^\\.dall1$",
-      "reply": "[FN:CQBotCOC.setCheater]"
-    }, {
-      "name": ".d <表达式> <...>:骰子",
-      "regexp": "^\\.d +([^ ]+)",
-      "reply": "[FN:CQBotCOC.getDice]"
-    }, {
-      "name": ".dstat:查看全部简写",
-      "regexp": "^\\.dstat$",
-      "reply": "[FN:CQBotCOC.getDiceStat]"
-    }, {
-      "name": ".dset <key>[=<value>]:设置/删除简写",
-      "regexp": "^\\.dset +(?<key>\\w[\\w\\d]+)(?:=(?<value>[+\\-*d0-9#]+))?",
-      "reply": "[FN:CQBotCOC.getDiceSet]"
-    }, {
-      "name": ".ran <num>[<times>]:获取多重分布随机数",
-      "regexp": "^\\.ran +(?<num>\\d+)(?<times> +\\d{1,2})?",
-      "reply": "[FN:CQBotCOC.getRandom]"
-    }, {
-      "name": "帮助",
-      "regexp": "^(help|帮助)$",
-      "reply": ".d <表达式> <...>:骰子\n.dstat:查看全部简写\n.dset <key>(=<value>):设置/删除简写\n来点(<r18>)<key>色图\n看_p站<pid>(-<p>)\n.搜图<图片>",
-      "forward": true
-    }, {
-      "name": ".插件<other>",
-      "regexp": "^\\.插件(?<other>.*)$",
-      "reply": "[FN:CQBotPlugin.pluginInfo]",
-      "needAdmin": true,
-      "forward": true
-    }, {
-      "name": ".获取<type>列表<other>",
-      "regexp": "^\\.获取(?<type>[^ ]+)列表(?<other>.*)$",
-      "reply": "[FN:CQBotPlugin.getter]",
-      "needAdmin": true,
-      "forward": true
-    }, {
-      "name": ".设置<type> <other>",
-      "regexp": "^\\.设置(?<type>[^ ]+) (?<other>.+)$",
-      "reply": "[FN:CQBotPlugin.setter]",
-      "needAdmin": true
-    }, {
-      "name": ".<设置|删除>poke<other>",
-      "regexp": "^\\.(?<control>设置|删除)poke(?<other>.*)$",
-      "reply": "[FN:CQBotPokeGroup.runPrivate]",
-      "needAdmin": true,
-      "isOpen": true
-    }, {
-      "name": ".语料库<type><open>",
-      "regexp": "^\\.语料库(?<type>私聊|群聊)?(?<open>开|关)$",
-      "reply": "[FN:CQBotPlugin.corpusList]",
-      "needAdmin": true,
-      "forward": true
-    }, {
-      "name": ".语料库<type><open><nums>",
-      "regexp": "^\\.语料库(?<type>私聊|群聊)?(?<open>[开|关])(?<nums>\\s?\\d+)$",
-      "reply": "[FN:CQBotPlugin.corpusStat]",
-      "needAdmin": true
-    }, {
-      "name": ".语料库<type><nums>",
-      "regexp": "^\\.语料库(?<type>私聊|群聊)?(?<nums>\\s?\\d+)$",
-      "reply": "[FN:CQBotPlugin.corpusInfo]",
-      "needAdmin": true
-    }, {
-      "name": "来点色图(随机图片)",
-      "regexp": "^[来來发發给給][张張个個幅点點份][色瑟][图圖]$",
-      "reply": "[FN:CQBotRandomPicture.getRandomPicture]"
-    }, {
-      "name": "来点[<r18>]<key>色图",
-      "regexp": "^[来來发發给給][张張个個幅点點份](?<r18>[Rr]18的?)?(?<keyword>.*)?[色瑟][图圖]$",
-      "reply": "[FN:CQBotPicture.getSeTu]",
-      "delMSG": 20
-    }, {
-      "name": "来点东方图",
-      "regexp": "^来点东方图$",
-      "reply": "[FN:CQBotPicture.getTouHouPNG]"
-    }, {
-      "name": "看_p站<pid>[-<p>]",
-      "regexp": "^看{1,2}p站(?<pid>\\d+)(?:-(?<p>\\d+))?$",
-      "reply": "[FN:CQBotPicture.getPixiv]",
-      "delMSG": 60
-    }, {
-      "name": "为什么呢",
-      "regexp": "^为什么呢$",
-      "reply": "[CQ:reply]是啊，为什么呢，我也在寻找原因呢",
-      "canPrivate": false
-    }, {
-      "name": "有病吧",
-      "regexp": "^有病吧$",
-      "reply": "你治得好么?",
-      "canPrivate": false
-    }, {
-      "name": "太强了",
-      "regexp": "^(?:tql|太强了)$",
-      "reply": "[FN:CQBotPlugin.getTQL]",
-      "canPrivate": false
-    }, {
-      "name": ".搜图",
-      "regexp": "^\\.搜图$",
-      "reply": "[FN:CQBotSauceNAOGroup.getSauceNAO]"
-    }, {
-      "name": "复读",
-      "regexp": "^.+$",
-      "reply": "[FN:CQBotRepeat.getRepeat]",
-      "canPrivate": false
-    }, {
-      "name": "@复读AI",
-      "regexp": "^.*$",
-      "reply": "[FN:CQBot.MemeAI]",
-      "canPrivate": false
-    }, {
-      "name": "保留值",
-      "regexp": "$^",
-      "reply": ".",
-      "isOpen": false,
-      "delMSG": 10,
-      "forward": true,
-      "needAdmin": true,
-      "canPrivate": false,
-      "canGroup": false
-    }
-  ]
+	"$schema": "schema/corpus.schema.json",
+	"corpora": [
+		{
+			"name": ".ping",
+			"regexp": "^\\.ping$",
+			"reply": ".pong!"
+		}, {
+			"name": ".dall1:打开全1模式",
+			"regexp": "^\\.dall1$",
+			"reply": "[FN:CQBotCOC.setCheater]"
+		}, {
+			"name": ".d <表达式> <...>:骰子",
+			"regexp": "^\\.d +([^ ]+)",
+			"reply": "[FN:CQBotCOC.getDice]"
+		}, {
+			"name": ".dstat:查看全部简写",
+			"regexp": "^\\.dstat$",
+			"reply": "[FN:CQBotCOC.getDiceStat]"
+		}, {
+			"name": ".dset <key>[=<value>]:设置/删除简写",
+			"regexp": "^\\.dset +(?<key>\\w[\\w\\d]+)(?:=(?<value>[+\\-*d0-9#]+))?",
+			"reply": "[FN:CQBotCOC.getDiceSet]"
+		}, {
+			"name": ".ran <num>[<times>]:获取多重分布随机数",
+			"regexp": "^\\.ran +(?<num>\\d+)(?<times> +\\d{1,2})?",
+			"reply": "[FN:CQBotCOC.getRandom]"
+		}, {
+			"name": "帮助",
+			"regexp": "^(help|帮助)$",
+			"reply": ".d <表达式> <...>:骰子\n.dstat:查看全部简写\n.dset <key>(=<value>):设置/删除简写\n来点(<r18>)<key>色图\n看_p站<pid>(-<p>)\n.搜图<图片>",
+			"forward": true
+		}, {
+			"name": ".插件<other>",
+			"regexp": "^\\.插件(?<other>.*)$",
+			"reply": "[FN:CQBotPlugin.pluginInfo]",
+			"needAdmin": true,
+			"forward": true
+		}, {
+			"name": ".获取<type>列表<other>",
+			"regexp": "^\\.获取(?<type>[^ ]+)列表(?<other>.*)$",
+			"reply": "[FN:CQBotPlugin.getter]",
+			"needAdmin": true,
+			"forward": true
+		}, {
+			"name": ".设置<type> <other>",
+			"regexp": "^\\.设置(?<type>[^ ]+) (?<other>.+)$",
+			"reply": "[FN:CQBotPlugin.setter]",
+			"needAdmin": true
+		}, {
+			"name": ".<设置|删除>poke<other>",
+			"regexp": "^\\.(?<control>设置|删除)poke(?<other>.*)$",
+			"reply": "[FN:CQBotPokeGroup.runPrivate]",
+			"needAdmin": true,
+			"isOpen": true
+		}, {
+			"name": ".语料库<type><open>",
+			"regexp": "^\\.语料库(?<type>私聊|群聊)?(?<open>开|关)$",
+			"reply": "[FN:CQBotPlugin.corpusList]",
+			"needAdmin": true,
+			"forward": true
+		}, {
+			"name": ".语料库<type><open><nums>",
+			"regexp": "^\\.语料库(?<type>私聊|群聊)?(?<open>[开|关])(?<nums>\\s?\\d+)$",
+			"reply": "[FN:CQBotPlugin.corpusStat]",
+			"needAdmin": true
+		}, {
+			"name": ".语料库<type><nums>",
+			"regexp": "^\\.语料库(?<type>私聊|群聊)?(?<nums>\\s?\\d+)$",
+			"reply": "[FN:CQBotPlugin.corpusInfo]",
+			"needAdmin": true
+		}, {
+			"name": "来点图片(随机图片)",
+			"regexp": "^[来來发發给給][张張个個幅点點份][图圖]片?$",
+			"reply": "[FN:CQBotRandomPicture.getRandomPicture]"
+		}, {
+			"name": "来点[<r18>]<key>色图",
+			"regexp": "^[来來发發给給][张張个個幅点點份](?<r18>[Rr]18的?)?(?<keyword>.*)?[色瑟][图圖]$",
+			"reply": "[FN:CQBotPicture.getSeTu]",
+			"delMSG": 20
+		}, {
+			"name": "来点东方图",
+			"regexp": "^来点东方图$",
+			"reply": "[FN:CQBotPicture.getTouHouPNG]"
+		}, {
+			"name": "看_p站<pid>[-<p>]",
+			"regexp": "^看{1,2}p站(?<pid>\\d+)(?:-(?<p>\\d+))?$",
+			"reply": "[FN:CQBotPicture.getPixiv]",
+			"delMSG": 60
+		}, {
+			"name": "为什么呢",
+			"regexp": "^为什么呢$",
+			"reply": "[CQ:reply]是啊，为什么呢，我也在寻找原因呢",
+			"canPrivate": false
+		}, {
+			"name": "有病吧",
+			"regexp": "^有病吧$",
+			"reply": "你治得好么?",
+			"canPrivate": false
+		}, {
+			"name": "太强了",
+			"regexp": "^(?:tql|太强了)$",
+			"reply": "[FN:CQBotPlugin.getTQL]",
+			"canPrivate": false
+		}, {
+			"name": ".搜图",
+			"regexp": "^\\.搜图$",
+			"reply": "[FN:CQBotSauceNAOGroup.getSauceNAO]"
+		}, {
+			"name": "复读",
+			"regexp": "^.+$",
+			"reply": "[FN:CQBotRepeat.getRepeat]",
+			"canPrivate": false
+		}, {
+			"name": "@复读AI",
+			"regexp": "^.*$",
+			"reply": "[FN:CQBot.MemeAI]",
+			"canPrivate": false
+		}, {
+			"name": "保留值",
+			"regexp": "$^",
+			"reply": ".",
+			"isOpen": false,
+			"delMSG": 10,
+			"forward": true,
+			"needAdmin": true,
+			"canPrivate": false,
+			"canGroup": false
+		}
+	]
 }
