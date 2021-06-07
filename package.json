@@ -1,43 +1,43 @@
 {
-  "name": "nodejsbot",
-  "version": "1.0.0",
-  "description": "demo",
-  "engines": {
-    "node": ">=12"
-  },
-  "main": "index.js",
-  "files": [
-    "config/*.json",
-    "plugs/*.js",
-    "utils/*.js",
-    "index.js",
-    "Plug.js"
-  ],
-  "type": "commonjs",
-  "scripts": {
-    "build": "tsc",
-    "debug": "node --inspect-brk index.js",
-    "stop": "curl 127.0.0.1:40000/exit",
-    "start": "node index.js"
-  },
-  "keywords": [
-    "demo"
-  ],
-  "author": "bin",
-  "license": "MIT",
-  "devDependencies": {
-    "@types/node": "^14.14.25"
-  },
-  "dependencies": {
-    "axios": "^0.21.1",
-    "go-cqwebsocket": "^6.0.0",
-    "safe-regex": "^2.1.1",
-    "log4js": "^6.3.0",
-    "node-cache": "^5.1.2",
-    "reflect-metadata": "^0.1.13",
-    "sqlite": "^4.0.21",
-    "sqlite3": "^5.0.2",
-    "xmldom-ts": "^0.3.1"
-  },
-  "private": true
+	"name": "nodejsbot",
+	"version": "1.0.0",
+	"description": "demo",
+	"engines": {
+		"node": ">=12"
+	},
+	"main": "index.js",
+	"files": [
+		"config/*.json",
+		"plugs/*.js",
+		"utils/*.js",
+		"index.js",
+		"Plug.js"
+	],
+	"type": "commonjs",
+	"scripts": {
+		"build": "tsc",
+		"debug": "node --inspect-brk index.js",
+		"stop": "curl 127.0.0.1:40000/exit",
+		"start": "node index.js"
+	},
+	"keywords": [
+		"demo"
+	],
+	"author": "bin",
+	"license": "MIT",
+	"devDependencies": {
+		"@types/node": "^14.14.25"
+	},
+	"dependencies": {
+		"axios": "^0.21.1",
+		"go-cqwebsocket": "^6.0.0",
+		"safe-regex": "^2.1.1",
+		"log4js": "^6.3.0",
+		"node-cache": "^5.1.2",
+		"reflect-metadata": "^0.1.13",
+		"sqlite": "^4.0.21",
+		"sqlite3": "^5.0.2",
+		"xmldom-ts": "^0.3.1"
+	},
+	"private": true
 }

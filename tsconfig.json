@@ -1,68 +1,58 @@
 {
-  "$schema": "https://json.schemastore.org/tsconfig",
-  "compilerOptions": {
-    /* Visit https://aka.ms/tsconfig.json to read more about this file */
+	"$schema": "https://json.schemastore.org/tsconfig",
+	"compilerOptions": {
+		/* Visit https://aka.ms/tsconfig.json to read more about this file */
 
-    /* Basic Options */
-    // "incremental": true,                   /* Enable incremental compilation */
-    /* Specify ECMAScript target version: 'ES3' (default), 'ES5', 'ES2018', 'ES2019', 'ES2020', or 'ESNEXT'. */
-    "target": "ESNext",
-    "module": "CommonJS",
-    //     "lib": [],                             /* Specify library files to be included in the compilation. */
+		/* Basic Options */
+		// "incremental": true,                   /* Enable incremental compilation */
+		/* Specify ECMAScript target version: 'ES3' (default), 'ES5', 'ES2018', 'ES2019', 'ES2020', or 'ESNEXT'. */
+		"target": "ESNext",
+		"module": "CommonJS",
+		//     "lib": [],                             /* Specify library files to be included in the compilation. */
 
-    /* Report errors in .js files. */
-    //    "outDir": "./out",
-    //    "rootDir": "./src",
-    "resolveJsonModule": true,
-    // "composite": true,                     /* Enable project compilation */
-    // "tsBuildInfoFile": "./",               /* Specify file to store incremental compilation information */
-    "removeComments": true,
-    /* Do not emit comments to output. */
-    // "noEmit": true,                        /* Do not emit outputs. */
-    // "importHelpers": true,                 /* Import emit helpers from 'tslib'. */
-    // "downlevelIteration": true,            /* Provide full support for iterables in 'for-of', spread, and destructuring when targeting 'ES5' or 'ES3'. */
-    // "isolatedModules": true,               /* Transpile each file as a separate module (similar to 'ts.transpileModule'). */
+		/* Report errors in .js files. */
+		//		"outDir": ".",
+		"rootDir": ".",
+		"resolveJsonModule": true,
+		// "composite": true,                     /* Enable project compilation */
+		// "tsBuildInfoFile": "./",               /* Specify file to store incremental compilation information */
+		"removeComments": true,
+		/* Do not emit comments to output. */
+		"noEmit": true,
+		// "importHelpers": true,                 /* Import emit helpers from 'tslib'. */
+		// "isolatedModules": true,               /* Transpile each file as a separate module (similar to 'ts.transpileModule'). */
 
-    /* Strict Type-Checking Options */
-    "strict": true,
-    "noImplicitAny": true,
-    "noImplicitThis": true,
-    "alwaysStrict": true,
-    /* Additional Checks */
-    // "noUnusedLocals": true,                /* Report errors on unused locals. */
-    // "noUnusedParameters": true,            /* Report errors on unused parameters. */
-    // "noImplicitReturns": true,             /* Report error when not all code paths in function return a value. */
-    // "noFallthroughCasesInSwitch": true,    /* Report errors for fallthrough cases in switch statement. */
-    // "noUncheckedIndexedAccess": true,      /* Include 'undefined' in index signature results */
+		/* Strict Type-Checking Options */
+		"strict": true,
+		"noImplicitAny": true,
+		"noImplicitThis": true,
+		"alwaysStrict": true,
+		/* Additional Checks */
+		// "noUnusedLocals": true,                /* Report errors on unused locals. */
+		// "noUnusedParameters": true,            /* Report errors on unused parameters. */
+		// "noImplicitReturns": true,             /* Report error when not all code paths in function return a value. */
+		// "noFallthroughCasesInSwitch": true,    /* Report errors for fallthrough cases in switch statement. */
+		// "noUncheckedIndexedAccess": true,      /* Include 'undefined' in index signature results */
 
-    /* Module Resolution Options */
-    "moduleResolution": "node",
-    /* Specify module resolution strategy: 'node' (Node.js) or 'classic' (TypeScript pre-1.6). */
-    // "baseUrl": "./",                       /* Base directory to resolve non-absolute module names. */
-    // "paths": {},                           /* A series of entries which re-map imports to lookup locations relative to the 'baseUrl'. */
-    // "rootDirs": [],                        /* List of root folders whose combined content represents the structure of the project at runtime. */
-    // "typeRoots": [],                       /* List of folders to include type definitions from. */
-    // "types": [],                           /* Type declaration files to be included in compilation. */
-    "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true,
-    // "preserveSymlinks": true,              /* Do not resolve the real path of symlinks. */
-    // "allowUmdGlobalAccess": true,          /* Allow accessing UMD globals from modules. */
+		/* Module Resolution Options */
+		"moduleResolution": "node",
+		"baseUrl": "./",
+		// "paths": {},                           /* A series of entries which re-map imports to lookup locations relative to the 'baseUrl'. */
+		// "typeRoots": [],                       /* List of folders to include type definitions from. */
+		// "types": [],                           /* Type declaration files to be included in compilation. */
+		"allowSyntheticDefaultImports": true,
+		"esModuleInterop": true,
+		// "preserveSymlinks": true,              /* Do not resolve the real path of symlinks. */
+		// "allowUmdGlobalAccess": true,          /* Allow accessing UMD globals from modules. */
 
-    /* Source Map Options */
-    // "sourceRoot": "",                      /* Specify the location where debugger should locate TypeScript files instead of source locations. */
-    // "mapRoot": "",                         /* Specify the location where debugger should locate map files instead of generated locations. */
-    // "inlineSourceMap": true,               /* Emit a single file with source maps instead of having a separate file. */
-    // "inlineSources": true,                 /* Emit the source alongside the sourcemaps within a single file; requires '--inlineSourceMap' or '--sourceMap' to be set. */
-
-    /* Experimental Options */
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
-    /* Advanced Options */
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
-  },
-  "include": [
-    "**/*.ts",
-    "config/*.json"
-  ]
+		/* Experimental Options */
+		"experimentalDecorators": true,
+		"emitDecoratorMetadata": true,
+		/* Advanced Options */
+		"skipLibCheck": true,
+		"forceConsistentCasingInFileNames": true
+	},
+	"include": [
+		"./**/*.ts"
+	]
 }
