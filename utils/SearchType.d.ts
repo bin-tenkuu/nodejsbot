@@ -49,10 +49,10 @@ export type loliconDate = {
 	code: number
 	/**错误信息之类的*/
 	msg: string
-	/**剩余调用额度*/
-	quota: number
-	/**距离下一次调用额度恢复(+1)的秒数*/
-	quota_min_ttl: number
+	// /**剩余调用额度*/
+	// quota: number
+	// /**距离下一次调用额度恢复(+1)的秒数*/
+	// quota_min_ttl: number
 	/**结果数*/
 	count: number
 	/**色图数组*/

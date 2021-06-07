@@ -3,6 +3,7 @@ import {Plug} from "../Plug.js";
 import {canCallGroup, canCallPrivate} from "../utils/Annotation.js";
 import {logger} from "../utils/logger.js";
 import {dongManXingKong, lolicon, paulzzhTouHou, toubiec, yingHua} from "../utils/Search.js";
+import {getM1200} from "../utils/Util.js";
 
 
 class CQBotRandomPicture extends Plug {
@@ -45,8 +46,8 @@ class CQBotRandomPicture extends Plug {
 				return [CQ.text("色图数量不足")];
 			}
 			let first = data.data[0];
-			logger.info(`剩余次数：${data.quota}||剩余重置时间：${data.quota_min_ttl}s`);
-			return [CQ.image(CQBotRandomPicture.get1200(first.url))];
+			// logger.info(`剩余次数：${data.quota}||剩余重置时间：${data.quota_min_ttl}s`);
+			return [CQ.image(getM1200(first.url))];
 		} catch (reason) {
 			logger.info(reason);
 			return [CQ.text("未知错误,或网络错误")];
@@ -87,10 +88,6 @@ class CQBotRandomPicture extends Plug {
 		} catch (e) {
 			return [CQ.text(`DMXK API调用错误`)];
 		}
-	}
-
-	private static get1200(str: string) {
-		return str.replace("original", "master").replace(/(.\w+)$/, "_master1200.jpg");
 	}
 
 	private static code(code: number) {

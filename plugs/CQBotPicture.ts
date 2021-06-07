@@ -4,7 +4,7 @@ import {Plug} from "../Plug.js";
 import {canCallGroup, canCallPrivate} from "../utils/Annotation.js";
 import {logger} from "../utils/logger.js";
 import {lolicon, paulzzhTouHou, pixivCat} from "../utils/Search.js";
-import {isAtMe, sendAdminQQ, sendAuto, sendForward} from "../utils/Util.js";
+import {getM1200, isAtMe, sendAdminQQ, sendAuto, sendForward} from "../utils/Util.js";
 
 
 class CQBotPicture extends Plug {
@@ -58,7 +58,7 @@ class CQBotPicture extends Plug {
 				return [CQ.text("色图数量不足")];
 			}
 			let first = data.data[0];
-			logger.info(`剩余次数：${data.quota}||剩余重置时间：${data.quota_min_ttl}s`);
+			// logger.info(`剩余次数：${data.quota}||剩余重置时间：${data.quota_min_ttl}s`);
 			if (event.contextType === "message.group") {
 				let {
 					context: {message_id: messageId, sender: {nickname: nickname, user_id: userId}},
@@ -74,12 +74,12 @@ class CQBotPicture extends Plug {
 				this.isCalling = false;
 				logger.info("解除锁定 %s", this.name);
 			};
-			if (data.quota < 5) {
-				setTimeout(unlock, 1000 * Number(data.quota_min_ttl));
-			} else {
-				setTimeout(unlock, 1000 * 5);
-			}
-			return [CQ.image(CQBotPicture.get1200(first.url))];
+			// if (data.quota < 5) {
+			// 	setTimeout(unlock, 1000 * Number(data.quota_min_ttl));
+			// } else {
+			setTimeout(unlock, 1000 * 5);
+			// }
+			return [CQ.image(getM1200(first.url))];
 		} catch (reason) {
 			sendAdminQQ(event, "色图坏了");
 			logger.info(reason);
@@ -114,19 +114,19 @@ class CQBotPicture extends Plug {
 					let {0: p0, 1: p1} = urlsProxy;
 					return [
 						CQ.text(`总共${length}张图片,这是第0,1张`),
-						CQ.image(CQBotPicture.get1200(p0)),
-						CQ.image(CQBotPicture.get1200(p1)),
+						CQ.image(getM1200(p0)),
+						CQ.image(getM1200(p1)),
 					];
 				} else {
 					let ps: number = +p >= length ? length - 1 : +p;
 					return [
 						CQ.text(`总共${length}张图片,这是第${ps},${ps + 1}张`),
-						CQ.image(CQBotPicture.get1200(urlsProxy[ps - 1])),
-						CQ.image(CQBotPicture.get1200(urlsProxy[ps])),
+						CQ.image(getM1200(urlsProxy[ps - 1])),
+						CQ.image(getM1200(urlsProxy[ps])),
 					];
 				}
 			} else {
-				return [CQ.image(CQBotPicture.get1200(data.original_url_proxy))];
+				return [CQ.image(getM1200(data.original_url_proxy))];
 			}
 		} catch (e) {
 			sendAdminQQ(event, "p站图片加载出错");
@@ -171,11 +171,6 @@ class CQBotPicture extends Plug {
 		return parse.filter((tag) => {
 			return tag instanceof CQImage;
 		}).map((tag) => CQ.image(tag.get("url") as string));
-
-	}
-
-	private static get1200(str: string) {
-		return str.replace("original", "master").replace(/(.\w+)$/, "_master1200.jpg");
 	}
 
 	static code(code: number) {

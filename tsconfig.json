@@ -5,20 +5,17 @@
 
 		/* Basic Options */
 		// "incremental": true,                   /* Enable incremental compilation */
-		/* Specify ECMAScript target version: 'ES3' (default), 'ES5', 'ES2018', 'ES2019', 'ES2020', or 'ESNEXT'. */
 		"target": "ESNext",
 		"module": "CommonJS",
 		//     "lib": [],                             /* Specify library files to be included in the compilation. */
 
 		/* Report errors in .js files. */
 		//		"outDir": ".",
-		"rootDir": ".",
+		"rootDir": "./",
 		"resolveJsonModule": true,
 		// "composite": true,                     /* Enable project compilation */
 		// "tsBuildInfoFile": "./",               /* Specify file to store incremental compilation information */
 		"removeComments": true,
-		/* Do not emit comments to output. */
-		"noEmit": true,
 		// "importHelpers": true,                 /* Import emit helpers from 'tslib'. */
 		// "isolatedModules": true,               /* Transpile each file as a separate module (similar to 'ts.transpileModule'). */
 
@@ -43,7 +40,6 @@
 		"allowSyntheticDefaultImports": true,
 		"esModuleInterop": true,
 		// "preserveSymlinks": true,              /* Do not resolve the real path of symlinks. */
-		// "allowUmdGlobalAccess": true,          /* Allow accessing UMD globals from modules. */
 
 		/* Experimental Options */
 		"experimentalDecorators": true,
