@@ -188,5 +188,5 @@ type hasUser<T> = T extends { bot: CQWebSocket, context: { user_id: number } } ?
 type hasGroup<T> = T extends { bot: CQWebSocket, context: { group_id: number } } ? T : never;
 
 export function getM1200(url: string) {
-	return url.replace("original", "master").replace(/(?<!_master1200)\.\w+$/, "_master1200.jpg");
+	return url.replace("original", "master").replace(/(?<!1200)\.\w+$/, "_master1200.jpg");
 }

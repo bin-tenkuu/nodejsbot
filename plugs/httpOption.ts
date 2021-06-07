@@ -56,6 +56,7 @@ class HttpOption extends Plug {
 			logger.info(">>>>>>>>>> 全部卸载完成 <<<<<<<<<<");
 			if (process.execArgv.includes("--inspect")) { return; }
 			setTimeout(() => {
+				console.log("退出");
 				process.exit(0);
 			}, 500);
 		});
