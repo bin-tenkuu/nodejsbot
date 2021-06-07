@@ -3,7 +3,7 @@ import {Plug} from "../Plug.js";
 import {canCallGroup, canCallPrivate} from "../utils/Annotation.js";
 import {logger} from "../utils/logger.js";
 import {dongManXingKong, lolicon, paulzzhTouHou, toubiec, yingHua} from "../utils/Search.js";
-import {getM1200} from "../utils/Util.js";
+import {endlessGen, getM1200} from "../utils/Util.js";
 
 
 class CQBotRandomPicture extends Plug {
@@ -18,7 +18,7 @@ class CQBotRandomPicture extends Plug {
 		this.version = 0;
 		this.callList = [];
 		this.callSet = new Set<number>();
-		this.generator = this.getNext();
+		this.generator = endlessGen(this.callList);
 
 		this.init();
 	}
@@ -122,16 +122,6 @@ class CQBotRandomPicture extends Plug {
 		}, 1000 * 60 * 10);
 	}
 
-	* getNext(): Generator<() => Promise<[CQTag]>, never, never> {
-		let n = 0;
-		while (true) {
-			yield this.callList[n];
-			n++;
-			if (n >= this.callList.length) {
-				n = 0;
-			}
-		}
-	}
 }
 
 export default new CQBotRandomPicture();

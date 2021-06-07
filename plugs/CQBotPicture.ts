@@ -41,7 +41,10 @@ class CQBotPicture extends Plug {
 			keyword: exec.groups?.keyword,
 			r18: exec.groups?.r18 !== undefined,
 		};
-		if (this.setuSet.has(groups.keyword ?? "")) return [];
+		if (this.setuSet.has(groups.keyword ?? "")) {
+			this.isCalling = false;
+			return [];
+		}
 		logger.info("开始色图", groups);
 		try {
 			let data = await lolicon(groups.keyword, groups.r18);

@@ -17,25 +17,19 @@ class HttpOption extends Plug {
 		res.setHeader("Content-type", "text/html; charset=utf-8");
 		logger.info(`网页 '${req.url}' 收到请求`);
 		logger.info(`代理:\t${req.headers["x-forwarded-for"]}`);
-		let {
-			remoteFamily: family,
-			remoteAddress: address,
-			remotePort: port,
-		} = req.socket;
-		res.write(new Uint16Array(), "binary");
+		let {remoteFamily: family, remoteAddress: address, remotePort: port} = req.socket;
 		logger.info(`远程地址:\t${family} -> ${address} : ${port}`);
 		if (req.url !== "/exit") {
-			res.end("<a href='./exit'>http://127.0.0.1:40000/exit</a>");
-			return;
+			return res.end("<a href='./exit'>http://127.0.0.1:40000/exit</a>");
 		}
 		res.end("开始退出\n");
-		this.exit().catch(NOP);
+		this.allExit();
 	}
 
 	async install() {
 		let server = http.createServer((req, res) => {
 			this.handle(req, res);
-		}).listen(40000);
+		}).listen(40000, "127.0.0.1");
 		logger.info("快速结束已启动,点击 http://127.0.0.1:40000");
 		this.header = server;
 	}
