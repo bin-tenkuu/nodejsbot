@@ -63,7 +63,7 @@ class CQBotCOC extends Plug {
 		let dice = execArray[1];
 		if (dice === undefined) return [];
 		this.shortKey.forEach((value, key) => {
-			dice = dice.replace(new RegExp(key), value);
+			dice = dice.replace(new RegExp(key, "g"), value);
 		});
 		if (/[^+\-*d0-9#]/.test(dice)) {
 			return [CQ.text(".d错误参数")];
@@ -98,42 +98,54 @@ class CQBotCOC extends Plug {
 
 	private static dice(str: string, cheater: boolean): string {
 		let handles = str.split(/(?=[+\-*])/).map<calc>(value => {
-			let groups = (/^(?<op>[+\-*])?(?<num>\d+)?(d(?<max>\d+))?$/.exec(value)?.groups) as {
-				op?: "+" | "-" | "*"
-				num?: string
-				max?: string
-			} ?? {};
-			let num: number | number[] = +(groups.num ?? 1);
-			let op = groups.op ?? "+";
-			if (groups.max) {
-				let dices: { num: number, list: Uint16Array };
-				if (cheater) {
-					dices = {
-						list: new Uint16Array(num).fill(1),
-						num: num,
-					};
-				} else {
-					dices = dice(num, +groups.max);
-				}
-				return {
-					origin: value,
-					op,
-					...dices,
-				};
-			} else {
-				return {
-					op: op,
-					num: num,
-					list: null,
-					origin: null,
-				};
-			}
+			return this.castString(value, cheater);
 		});
 		let preRet = handles.filter(v => v.list !== null).map((v) => {
-			return `${v.origin}：[${v.list}]=${v.num}\n`;
-		}).join("");
+			return `${v.origin}：[${v.list}]=${v.num}`;
+		}).join("\n");
 		let sumNum = this.calculate(handles);
-		return `${preRet}${str}=${sumNum}`;
+		if (handles.length === 1) {
+			if (preRet !== "") {
+				return preRet;
+			} else {
+				return `${str}=${sumNum}`;
+			}
+		} else {
+			return `${preRet}\n${str}=${sumNum}`;
+		}
+	}
+
+	private static castString(value: string, cheater: boolean): calc {
+		let groups = (/^(?<op>[+\-*])?(?<num>\d+)?(d(?<max>\d+))?$/.exec(value)?.groups) as {
+			op?: "+" | "-" | "*"
+			num?: string
+			max?: string
+		} ?? {};
+		let num: number | number[] = +(groups.num ?? 1);
+		let op = groups.op ?? "+";
+		if (groups.max) {
+			let dices: { num: number, list: Uint16Array };
+			if (cheater) {
+				dices = {
+					list: new Uint16Array(num).fill(1),
+					num: num,
+				};
+			} else {
+				dices = dice(num, +groups.max);
+			}
+			return {
+				origin: value,
+				op,
+				...dices,
+			};
+		} else {
+			return {
+				op: op,
+				num: num,
+				list: null,
+				origin: null,
+			};
+		}
 	}
 
 	private static calculate(handles: calc[]): number {
