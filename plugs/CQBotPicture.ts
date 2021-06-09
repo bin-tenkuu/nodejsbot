@@ -116,12 +116,13 @@ class CQBotPicture extends Plug {
 				if (p === undefined) {
 					let {0: p0, 1: p1} = urlsProxy;
 					return [
-						CQ.text(`总共${length}张图片,这是第0,1张`),
+						CQ.text(`总共${length}张图片,这是第1,2张`),
 						CQ.image(getM1200(p0)),
 						CQ.image(getM1200(p1)),
 					];
 				} else {
-					let ps: number = +p >= length ? length - 1 : +p;
+					let ps: number = +p;
+					ps = ps >= length ? length - 1 : ps < 1 ? 1 : ps;
 					return [
 						CQ.text(`总共${length}张图片,这是第${ps},${ps + 1}张`),
 						CQ.image(getM1200(urlsProxy[ps - 1])),
