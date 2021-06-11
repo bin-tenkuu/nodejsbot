@@ -38,6 +38,11 @@ export class RepeatCache<T = unknown> {
 		return false;
 	}
 
+	getTimes(group: number): number {
+		let node = this.cache.get<Node<T>>(group);
+		return node !== undefined ? node.times : 0;
+	}
+
 	getNode(group: number, user: number, data: T): Node<T> {
 		let node = this.cache.get<Node<T>>(group);
 		if (node === undefined || node.msg !== data) {

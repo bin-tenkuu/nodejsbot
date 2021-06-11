@@ -1,13 +1,8 @@
 import {CQ, CQEvent, CQTag} from "go-cqwebsocket";
 import {Plug} from "../Plug.js";
 import {canCallGroup, canCallPrivate} from "../utils/Annotation.js";
-import {db} from "../utils/database.js";
-import {default as bot} from "./CQBot.js";
+import CQData, {Corpus} from "./CQData.js";
 
-type Corpus = {
-	name: string, regexp: RegExp, reply: string,
-	forward: boolean, needAdmin: boolean, isOpen: boolean, delMSG: number
-}
 
 class CQBotPlugin extends Plug {
 
@@ -37,20 +32,18 @@ class CQBotPlugin extends Plug {
 					return [CQ.text(s)];
 				});
 			case "ban":
-				return db.start(async db => {
-					let list = await db.all<{ id: number }[]>(`select id from Members where baned = 1`);
-					await db.close();
-					let s = list.map(v => v.id).join("\n");
-					return [CQ.text(s)];
-				});
+				let banList: number[] = [];
+				for (let memberMap of CQData.memberMap) {
+					let [number, {baned}] = memberMap;
+					if (baned === 1) {
+						banList.push(number);
+					}
+				}
+				let s = banList.join("\n");
+				return [CQ.text(s)];
 			case "poke":
-				return db.start(async db => {
-					let all = await db.all<{ id: number, text: string }[]>("select id, text from pokeGroup");
-					let uin = event.context.self_id;
-					let map = all.map(v => CQ.node(String(v.id), uin, v.text));
-					await db.close();
-					return map;
-				});
+				let uin = event.context.self_id;
+				return CQData.pokeGroup.map(v => CQ.node(String(v.id), uin, v.text));
 			default:
 				return [];
 		}
@@ -64,9 +57,9 @@ class CQBotPlugin extends Plug {
 		let {type, other = ""} = execArray.groups as { type?: string, other?: string } ?? {};
 		switch (type) {
 			case "ban":
-				return [CQ.text(this.setBanQQ(other, 1))];
+				return [CQ.text(CQBotPlugin.setBanQQ(other, 1))];
 			case "unban":
-				return [CQ.text(this.setBanQQ(other, 0))];
+				return [CQ.text(CQBotPlugin.setBanQQ(other, 0))];
 			default:
 				return [];
 		}
@@ -173,22 +166,19 @@ class CQBotPlugin extends Plug {
 
 	private static getCorpusList(type?: "私聊" | "群聊"): Corpus[] {
 		if (type === "私聊") {
-			return bot.corpora.filter(c => c.canPrivate);
+			return CQData.corpora.filter(c => c.canPrivate);
 		} else if (type === "群聊") {
-			return bot.corpora.filter(c => c.canPrivate);
+			return CQData.corpora.filter(c => c.canPrivate);
 		} else {
-			return bot.corpora;
+			return CQData.corpora;
 		}
 	}
 
-	private setBanQQ(text: string, ban: 0 | 1) {
+	private static setBanQQ(text: string, ban: 0 | 1) {
 		let matches = text.match(/\d+/g) ?? [];
-		db.start(async db => {
-			for (const value of matches) {
-				await db.run(`update Members set baned = ? where id = ?;`, ban, value);
-			}
-			await db.close();
-		}).catch(NOP);
+		for (const value of matches) {
+			CQData.getMember(+value).baned = ban;
+		}
 		return matches.join("\n");
 	}
 }

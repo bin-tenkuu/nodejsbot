@@ -4,7 +4,7 @@ import {Database as Db3, Statement} from "sqlite3";
 
 type DatabaseHandle<T = any> = (this: void, db: Database<Db3, Statement>) => Promise<T>;
 
-export var db = new class SQLControl {
+class SQLControl {
 	private readonly config: ISqlite.Config;
 
 	constructor(path = "./db.db") {
@@ -24,4 +24,6 @@ export var db = new class SQLControl {
 	public async start<T = any>(fun: DatabaseHandle<T>): Promise<T> {
 		return openSqlite(this.config).then(fun);
 	}
-};
+}
+
+export var db = new SQLControl();

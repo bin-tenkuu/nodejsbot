@@ -7,17 +7,18 @@ global.NOP = () => {};
 
 //*
 Promise.resolve().then(async () => {
+	await require("./plugs/CQData").default.install();
 	await require("./plugs/httpOption").default.install();
-	await require("./plugs/CQBot.js").default.install();
+	await require("./plugs/CQBot").default.install();
 
-	await require("./plugs/CQBotCOC.js").default;
-	await require("./plugs/CQBotEvent.js").default.install();
-	await require("./plugs/CQBotPlugin.js").default;
-	await require("./plugs/CQBotPokeGroup.js").default.install();
-	await require("./plugs/CQBotRandomPicture.js").default;
-	await require("./plugs/CQBotRepeat.js").default;
-	await require("./plugs/CQBotSauceNAOGroup.js").default;
-	await require("./plugs/CQBotPicture.js").default;
+	await require("./plugs/CQBotCOC").default;
+	await require("./plugs/CQBotEvent").default.install();
+	await require("./plugs/CQBotPlugin").default;
+	await require("./plugs/CQBotPokeGroup").default.install();
+	await require("./plugs/CQBotRandomPicture").default;
+	await require("./plugs/CQBotRepeat").default;
+	await require("./plugs/CQBotSauceNAOGroup").default;
+	await require("./plugs/CQBotPicture").default;
 	await require("./plugs/test").default;
 }).then(() => {
 	logger.info("启动完成");

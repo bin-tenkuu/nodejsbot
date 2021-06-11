@@ -1,10 +1,10 @@
 import {CQ, CQEvent, CQTag} from "go-cqwebsocket";
-import {CQImage, CQReply} from "go-cqwebsocket/out/tags.js";
 import {Plug} from "../Plug.js";
 import {canCallGroup, canCallPrivate} from "../utils/Annotation.js";
 import {logger} from "../utils/logger.js";
 import {lolicon, paulzzhTouHou, pixivCat} from "../utils/Search.js";
-import {getM1200, isAtMe, sendAdminQQ, sendAuto, sendForward} from "../utils/Util.js";
+import {getM1200, sendAdminQQ, sendForward} from "../utils/Util.js";
+import CQData from "./CQData.js";
 
 
 class CQBotPicture extends Plug {
@@ -45,6 +45,10 @@ class CQBotPicture extends Plug {
 			this.isCalling = false;
 			return [];
 		}
+		let userId: number = event.context.user_id;
+		let member = CQData.getMember(userId);
+		if (member.exp < 10) { return [CQ.text("不够活跃,爬")]; }
+		member.exp -= 10;
 		logger.info("开始色图", groups);
 		try {
 			let data = await lolicon(groups.keyword, groups.r18);
@@ -58,13 +62,15 @@ class CQBotPicture extends Plug {
 			if (data.count < 1) {
 				logger.warn(`开始色图异常：色图数量不足(${data.count})`);
 				this.isCalling = false;
+				member.exp += 5;
 				return [CQ.text("色图数量不足")];
 			}
 			let first = data.data[0];
 			// logger.info(`剩余次数：${data.quota}||剩余重置时间：${data.quota_min_ttl}s`);
-			if (event.contextType === "message.group") {
+			if (event.contextType === "message.group" && member.exp > 5) {
+				member.exp -= 5;
 				let {
-					context: {message_id: messageId, sender: {nickname: nickname, user_id: userId}},
+					context: {message_id: messageId, sender: {nickname: nickname}},
 				} = event;
 				sendForward(event, [
 					CQ.nodeId(messageId),
@@ -80,7 +86,7 @@ class CQBotPicture extends Plug {
 			// if (data.quota < 5) {
 			// 	setTimeout(unlock, 1000 * Number(data.quota_min_ttl));
 			// } else {
-			setTimeout(unlock, 1000 * 5);
+			setTimeout(unlock, 1000 * 10);
 			// }
 			return [CQ.image(getM1200(first.url))];
 		} catch (reason) {
@@ -103,6 +109,10 @@ class CQBotPicture extends Plug {
 		if (pid === undefined) {
 			return [CQ.text("pid获取失败")];
 		}
+		let userId: number = event.context.user_id;
+		let member = CQData.getMember(userId);
+		if (member.exp < 5) { return [CQ.text("不够活跃,爬")]; }
+		member.exp -= 5;
 		try {
 			let data = await pixivCat(pid);
 			if (!data.success) {
@@ -133,6 +143,7 @@ class CQBotPicture extends Plug {
 				return [CQ.image(getM1200(data.original_url_proxy))];
 			}
 		} catch (e) {
+			member.exp += 5;
 			sendAdminQQ(event, "p站图片加载出错");
 			return [CQ.text("网络请求错误或内部错误")];
 		}
@@ -149,7 +160,10 @@ class CQBotPicture extends Plug {
 		}
 		this.isRandomToho = true;
 		console.log("开始东方");
-		sendAuto(event, "随机东方图加载中");
+		let userId: number = event.context.user_id;
+		let member = CQData.getMember(userId);
+		if (member.exp < 5) { return [CQ.text("不够活跃,爬")]; }
+		member.exp -= 5;
 		try {
 			let json = await paulzzhTouHou();
 			setTimeout(() => {
@@ -157,24 +171,9 @@ class CQBotPicture extends Plug {
 			}, 1000 * 60);
 			return [CQ.image((json.url)), CQ.text("作者:" + json.author)];
 		} catch (e) {
+			member.exp += 5;
 			return [CQ.text(`东方图API调用错误`)];
 		}
-	}
-
-	/**
-	 * 获取回复中的图片
-	 */
-	@canCallGroup()
-	async getReplyPic(event: CQEvent<"message.group">): Promise<CQTag[]> {
-		if (!isAtMe(event)) {return []; }
-		event.stopPropagation();
-		let find = <CQReply | undefined>event.cqTags.find(tag => tag instanceof CQReply);
-		if (find === undefined) return [CQ.text("需要带上回复消息@")];
-		let messageInfo = await event.bot.get_msg(find.id);
-		let parse = CQ.parse(messageInfo.message);
-		return parse.filter((tag) => {
-			return tag instanceof CQImage;
-		}).map((tag) => CQ.image(tag.get("url") as string));
 	}
 
 	static code(code: number) {

@@ -4,6 +4,7 @@ import {canCallGroup, canCallPrivate} from "../utils/Annotation.js";
 import {logger} from "../utils/logger.js";
 import {dongManXingKong, lolicon, paulzzhTouHou, toubiec, yingHua} from "../utils/Search.js";
 import {endlessGen, getM1200} from "../utils/Util.js";
+import CQData from "./CQData.js";
 
 
 class CQBotRandomPicture extends Plug {
@@ -30,6 +31,9 @@ class CQBotRandomPicture extends Plug {
 		let userId = event.context.user_id;
 		if (this.callSet.has(userId)) { return []; }
 		this.callSet.add(userId);
+		let member = CQData.getMember(userId);
+		if (member.exp < 2) { return [CQ.text("不够活跃,爬")]; }
+		member.exp -= 2;
 		return await this.generator.next().value();
 	}
 

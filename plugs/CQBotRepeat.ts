@@ -3,6 +3,7 @@ import {CQText} from "go-cqwebsocket/out/tags.js";
 import {Plug} from "../Plug.js";
 import {canCallGroup} from "../utils/Annotation.js";
 import {RepeatCache} from "../utils/repeat.js";
+import CQData from "./CQData.js";
 
 class CQBotRepeat extends Plug {
 	private repeatCache = new RepeatCache<string>();
@@ -21,14 +22,16 @@ class CQBotRepeat extends Plug {
 		if (event.cqTags.some(tag => !(tag instanceof CQText))) return [];
 		let msg = (event.cqTags as CQText[]).map(t => t.text).join("");
 		if (/^[-+$%^&*.]/.test(msg)) return [];
-		if (this.repeatCache.check(group_id, 4)) {
+		let times: number = this.repeatCache.getTimes(group_id);
+		if (times >= 4) {
 			event.stopPropagation();
-			if (msg.length < 3) {
+			CQData.getMember(event.context.user_id).exp--;
+			if (times > 4) {return [];}
+			if (msg.length < 4) {
 				return [CQ.text(msg)];
 			}
 			let slices = await event.bot.get_word_slices(msg);
 			return [CQ.text(CQBotRepeat.SendRandom(slices.slices))];
-
 		}
 		return [];
 	}

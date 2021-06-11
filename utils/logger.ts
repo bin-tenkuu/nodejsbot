@@ -15,6 +15,7 @@ export const logger = configure(<Configuration>{
 			filename: "./logs/date.log",
 			pattern: "yyyy-MM-dd",
 			alwaysIncludePattern: true,
+			daysToKeep: 10,
 			keepFileExt: true,
 			layout: <BaseLayout>{
 				type: "basic",

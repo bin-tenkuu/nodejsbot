@@ -1,27 +1,16 @@
 import {CQ, CQEvent, CQTag, CQWebSocket, messageNode} from "go-cqwebsocket";
 import {MessageId, PromiseRes, Status} from "go-cqwebsocket/out/Interfaces";
 import {adminGroup, adminId, CQWS} from "../config/config.json";
-import {corpora} from "../config/corpus.json";
 import {Plug} from "../Plug.js";
 import {canCallGroup} from "../utils/Annotation.js";
-import {db} from "../utils/database.js";
 import {hrtime, logger} from "../utils/logger.js";
 import {
 	deleteMsg, isAdminQQ, isAtMe, onlyText, parseMessage, sendForward, sendForwardQuick, sendGroup, sendPrivate,
 } from "../utils/Util";
-
-type Corpus = {
-	name: string, regexp: RegExp, reply: string,
-	forward: boolean, needAdmin: boolean, isOpen: boolean, delMSG: number,
-	canGroup: boolean, canPrivate: boolean
-}
-type Filter<T> = (obj: T) => boolean
+import {Corpus, default as members} from "./CQData.js";
 
 class CQBot extends Plug {
 	public bot: CQWebSocket;
-
-	banSet: Set<number>;
-	corpora: Corpus[];
 
 	private sendStateInterval?: NodeJS.Timeout;
 
@@ -48,8 +37,6 @@ class CQBot extends Plug {
 		this.bot.messageFail = (reason, message) => {
 			logger.error(`${message.action}失败[${reason.retcode}]:${reason.wording}`);
 		};
-		this.corpora = [];
-		this.banSet = new Set<number>();
 		this.init();
 	}
 
@@ -147,28 +134,13 @@ class CQBot extends Plug {
 	}
 
 	init() {
-		this.corpora = corpora.map(msg => ({
-			name: msg.name ?? "",
-			regexp: new RegExp(msg.regexp ?? "$^"),
-			reply: msg.reply ?? "",
-			forward: msg.forward === true,
-			needAdmin: msg.needAdmin === true,
-			isOpen: msg.isOpen !== false,
-			delMSG: msg.delMSG ?? 0,
-			canGroup: msg.canGroup !== false,
-			canPrivate: msg.canPrivate !== false,
-		}));
 		this.bot.bind("on", {
 			"message.group": (event) => {
 				let time = process.hrtime();
 				let userId = event.context.user_id;
-				db.start(async db => {
-					await db.run("insert or ignore into Members(id, time) values (?, ?);", userId, Date.now());
-					await db.run("update Members set exp=exp + 1, time=? where id = ?;", Date.now(), userId);
-					await db.close();
-				}).catch(NOP);
-				if (this.banSet.has(userId)) { return; }
-				CQBot.sendCorpusTags(event, CQBot.getValues(this.corpora, this.filterGroup(event)), (tags, element) => {
+				members.getMember(userId).exp++;
+				if (members.getBaned(userId)) { return; }
+				CQBot.sendCorpusTags(event, CQBot.getValues(members.corpora, this.filterGroup(event)), (tags, element) => {
 					if (tags.length < 1) return;
 					hrtime(time);
 					let pro: PromiseRes<MessageId>;
@@ -192,18 +164,13 @@ class CQBot extends Plug {
 			},
 			"message.private": (event) => {
 				let time = process.hrtime();
-				CQBot.sendCorpusTags(event, CQBot.getValues(this.corpora, this.filterPrivate(event)), tags => {
+				CQBot.sendCorpusTags(event, CQBot.getValues(members.corpora, this.filterPrivate(event)), tags => {
 					if (tags.length < 1) return;
 					hrtime(time);
 					sendPrivate(event, tags);
 				});
 			},
 		});
-		db.start(async db => {
-			let all = await db.all<{ id: number }[]>(`select id from Members where baned = 1`);
-			this.banSet = new Set(all.map(v => v.id));
-			await db.close();
-		}).catch(NOP);
 	}
 
 	filterPrivate(event: CQEvent<"message.private">): Filter<Corpus> {
@@ -222,3 +189,5 @@ class CQBot extends Plug {
 }
 
 export default new CQBot();
+
+type Filter<T> = (obj: T) => boolean
