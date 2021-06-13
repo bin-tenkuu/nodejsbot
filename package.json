@@ -26,10 +26,12 @@
 	"author": "bin",
 	"license": "MIT",
 	"devDependencies": {
+		"@types/ftp": "^0.3.31",
 		"@types/node": "^14.14.25"
 	},
 	"dependencies": {
 		"axios": "^0.21.1",
+		"ftp": "^0.3.10",
 		"go-cqwebsocket": "^6.0.0",
 		"images": "^3.2.3",
 		"log4js": "^6.3.0",

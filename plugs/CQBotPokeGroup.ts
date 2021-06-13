@@ -27,11 +27,11 @@ class CQBotPokeGroup extends Plug {
 			"notice.notify.poke.group": (event) => {
 				let {target_id, user_id} = event.context;
 				if (target_id !== event.bot.qq) {return;}
+				let member = CQData.getMember(user_id);
+				if (member.exp < 0b1111111) { return; }
+				member.exp >>= 7;
 				if (this.pokedSet.has(user_id)) { return; }
 				this.pokedSet.add(user_id);
-				let member = CQData.getMember(user_id);
-				if (member.exp < 5) { return; }
-				member.exp -= 5;
 				let time = process.hrtime();
 				event.stopPropagation();
 				let str = CQData.pokeGroup[Math.random() * CQData.pokeGroup.length | 0].text;
