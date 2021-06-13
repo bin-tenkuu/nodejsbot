@@ -10,8 +10,6 @@ import CQData from "./CQData.js";
 class CQBotPicture extends Plug {
 	public setuSet: Set<string>;
 
-	private isCalling: boolean;
-	private isRandomToho: boolean;
 
 
 	constructor() {
@@ -19,10 +17,8 @@ class CQBotPicture extends Plug {
 		this.name = "QQ群聊-图片相关";
 		this.description = "QQ群聊发送各种图片";
 		this.version = 0;
-		this.isCalling = false;
 		this.setuSet = new Set<string>();
 
-		this.isRandomToho = false;
 	}
 
 	/**
@@ -33,16 +29,11 @@ class CQBotPicture extends Plug {
 	async getSeTu(event: CQEvent<"message.private"> | CQEvent<"message.group">,
 		 exec: RegExpExecArray): Promise<CQTag[]> {
 		event.stopPropagation();
-		if (this.isCalling) {
-			return [CQ.text("冷却中")];
-		}
-		this.isCalling = true;
 		let groups = {
 			keyword: exec.groups?.keyword,
 			r18: exec.groups?.r18 !== undefined,
 		};
 		if (this.setuSet.has(groups.keyword ?? "")) {
-			this.isCalling = false;
 			return [];
 		}
 		let userId: number = event.context.user_id;
@@ -56,19 +47,18 @@ class CQBotPicture extends Plug {
 				let message = CQBotPicture.code(data.code);
 				logger.warn(`开始色图异常：异常返回码(${data.code})：${message}`);
 				if (data.code === 404) this.setuSet.add(groups.keyword ?? "");
-				this.isCalling = false;
+				member.exp += 10;
 				return [CQ.text(message)];
 			}
 			if (data.count < 1) {
 				logger.warn(`开始色图异常：色图数量不足(${data.count})`);
-				this.isCalling = false;
 				member.exp += 5;
 				return [CQ.text("色图数量不足")];
 			}
 			let first = data.data[0];
 			// logger.info(`剩余次数：${data.quota}||剩余重置时间：${data.quota_min_ttl}s`);
 			if (event.contextType === "message.group" && member.exp > 5) {
-				member.exp -= 5;
+				member.exp -= 2;
 				let {
 					context: {message_id: messageId, sender: {nickname: nickname}},
 				} = event;
@@ -79,15 +69,6 @@ class CQBotPicture extends Plug {
 					CQ.node(nickname, userId, CQ.escape(first.tags.join("\n"))),
 				]).catch(NOP);
 			}
-			let unlock = () => {
-				this.isCalling = false;
-				logger.info("解除锁定 %s", this.name);
-			};
-			// if (data.quota < 5) {
-			// 	setTimeout(unlock, 1000 * Number(data.quota_min_ttl));
-			// } else {
-			setTimeout(unlock, 1000 * 10);
-			// }
 			return [CQ.image(getM1200(first.url))];
 		} catch (reason) {
 			sendAdminQQ(event, "色图坏了");
@@ -111,8 +92,8 @@ class CQBotPicture extends Plug {
 		}
 		let userId: number = event.context.user_id;
 		let member = CQData.getMember(userId);
-		if (member.exp < 5) { return [CQ.text("不够活跃,爬")]; }
-		member.exp -= 5;
+		if (member.exp < 4) { return [CQ.text("不够活跃,爬")]; }
+		member.exp -= 4;
 		try {
 			let data = await pixivCat(pid);
 			if (!data.success) {
@@ -155,25 +136,25 @@ class CQBotPicture extends Plug {
 	@canCallGroup()
 	@canCallPrivate()
 	async getTouHouPNG(event: CQEvent<"message.group"> | CQEvent<"message.private">): Promise<CQTag[]> {
-		if (this.isRandomToho) {
-			return [CQ.text(`冷却中`)];
-		}
-		this.isRandomToho = true;
+
 		console.log("开始东方");
 		let userId: number = event.context.user_id;
 		let member = CQData.getMember(userId);
-		if (member.exp < 5) { return [CQ.text("不够活跃,爬")]; }
-		member.exp -= 5;
+		if (member.exp < 10) { return [CQ.text("不够活跃,爬")]; }
+		member.exp -= 10;
 		try {
 			let json = await paulzzhTouHou();
-			setTimeout(() => {
-				this.isRandomToho = false;
-			}, 1000 * 60);
 			return [CQ.image((json.url)), CQ.text("作者:" + json.author)];
 		} catch (e) {
 			member.exp += 5;
 			return [CQ.text(`东方图API调用错误`)];
 		}
+	}
+
+	@canCallGroup()
+	@canCallPrivate()
+	async getSetuSet(): Promise<CQTag[]> {
+		return [CQ.text([...this.setuSet].join("\n"))];
 	}
 
 	static code(code: number) {

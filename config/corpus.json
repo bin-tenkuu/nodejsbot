@@ -31,6 +31,11 @@
 			"reply": ".d <表达式> <...>:骰子\n.dstat:查看全部简写\n.dset <key>(=<value>):设置/删除简写\n来点(<r18>)<key>色图\n看_p站<pid>(-<p>)\n.搜图<图片>",
 			"forward": true
 		}, {
+			"name": "色图失败列表",
+			"regexp": "^\\.色图失败列表$",
+			"reply": ".d <表达式> <...>:骰子\n.dstat:查看全部简写\n.dset <key>(=<value>):设置/删除简写\n来点(<r18>)<key>色图\n看_p站<pid>(-<p>)\n.搜图<图片>",
+			"forward": true
+		}, {
 			"name": ".插件<other>",
 			"regexp": "^\\.插件(?<other>.*)$",
 			"reply": "[FN:CQBotPlugin.pluginInfo]",
@@ -91,33 +96,36 @@
 			"name": "为什么呢",
 			"regexp": "^为什么呢$",
 			"reply": "[CQ:reply]是啊，为什么呢，我也在寻找原因呢",
-			"canPrivate": false
+			"canPrivate": false,
+			"isOpen": false
 		}, {
 			"name": "有病吧",
 			"regexp": "^有病吧$",
 			"reply": "你治得好么?",
-			"canPrivate": false
+			"canPrivate": false,
+			"isOpen": false
 		}, {
 			"name": "太强了",
 			"regexp": "^(?:tql|太强了)$",
 			"reply": "[FN:CQBotPlugin.getTQL]",
-			"canPrivate": false
+			"canPrivate": false,
+			"isOpen": false
 		}, {
 			"name": ".搜图",
 			"regexp": "^\\.搜图$",
 			"reply": "[FN:CQBotSauceNAOGroup.getSauceNAO]"
 		}, {
-			"name": "复读",
+			"name": "(复读)",
 			"regexp": "^.+$",
 			"reply": "[FN:CQBotRepeat.getRepeat]",
 			"canPrivate": false
 		}, {
-			"name": "@复读AI",
+			"name": "(@复读AI)",
 			"regexp": "^.*$",
 			"reply": "[FN:CQBot.MemeAI]",
 			"canPrivate": false
 		}, {
-			"name": "保留值",
+			"name": "(保留值)",
 			"regexp": "$^",
 			"reply": ".",
 			"isOpen": false,

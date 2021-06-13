@@ -1,4 +1,5 @@
 import {CQ, CQEvent} from "go-cqwebsocket";
+import {CQImage} from "go-cqwebsocket/out/tags";
 import {CQText} from "go-cqwebsocket/out/tags.js";
 import {Plug} from "../Plug.js";
 import {canCallGroup} from "../utils/Annotation.js";
@@ -18,31 +19,44 @@ class CQBotRepeat extends Plug {
 	@canCallGroup()
 	async getRepeat(event: CQEvent<"message.group">) {
 		let {group_id, user_id, raw_message} = event.context;
-		this.repeatCache.addData(group_id, user_id, raw_message);
-		if (event.cqTags.some(tag => !(tag instanceof CQText))) return [];
-		let msg = (event.cqTags as CQText[]).map(t => t.text).join("");
-		if (/^[-+$%^&*.]/.test(msg)) return [];
-		let times: number = this.repeatCache.getTimes(group_id);
-		if (times >= 4) {
-			event.stopPropagation();
-			CQData.getMember(event.context.user_id).exp--;
-			if (times > 4) {return [];}
-			if (msg.length < 4) {
-				return [CQ.text(msg)];
-			}
-			let slices = await event.bot.get_word_slices(msg);
-			return [CQ.text(CQBotRepeat.SendRandom(slices.slices))];
+		let node = this.repeatCache.getNode(group_id, raw_message);
+		let member = CQData.getMember(event.context.user_id);
+		if (node.addUser(user_id)) {
+			member.exp--;
+			return [];
 		}
-		return [];
+		if (node.times !== 4) {
+			return [];
+		}
+		if (event.cqTags.some(tag => !(tag instanceof CQText))) {
+			return [];
+		}
+		let msg = event.cqTags.map<string>(tag => {
+			if (tag instanceof CQText) {
+				return CQBotRepeat.SendRandom(...tag.text);
+			} else if (tag instanceof CQImage) {
+				return "[图片]";
+			} else {
+				return "";
+			}
+		}).join("");
+		if (/^[-+$*.]/.test(msg)) {
+			return [];
+		}
+		event.stopPropagation();
+		if (msg.length < 4) {
+			return [CQ.text(msg)];
+		}
+		return [CQ.text(CQBotRepeat.SendRandom(""))];
+
 	}
 
 	async install() {}
 
 	async uninstall() {}
 
-	static SendRandom(str: string[]): string {
-		let i = str.length - 1;
-		for (; i > 0; i--) {
+	static SendRandom(...str: string[]): string {
+		for (let i = str.length - 1; i > 0; i--) {
 			let j = (Math.random() * i) | 0;
 			[str[i], str[j]] = [str[j], str[i]];
 		}

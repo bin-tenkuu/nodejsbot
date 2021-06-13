@@ -1,6 +1,7 @@
 import {corpora} from "../config/corpus.json";
 import {Plug} from "../Plug.js";
 import {db} from "../utils/database.js";
+import {logger} from "../utils/logger.js";
 
 class CQData extends Plug {
 
@@ -47,12 +48,18 @@ class CQData extends Plug {
 
 	async uninstall() {
 		return db.start(async db => {
+			let size: number = this.memberMap.size;
 			for (let memberMap of this.memberMap) {
 				let [id, {exp, baned}] = memberMap;
 				await db.run("insert or ignore into Members (id) values (?);", id);
 				await db.run("update Members set exp=?,baned=?,time=? where id=?;", exp, baned, Date.now(), id);
+				size--;
+				if ((size & 0b11111) === 0b11111) {
+					logger.info(`还剩${size}个member`);
+				}
 			}
 			await db.close();
+			logger.info("member持久化结束");
 		});
 	}
 

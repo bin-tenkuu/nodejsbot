@@ -9,11 +9,13 @@ class Node<T> {
 		this.user = new Set();
 	}
 
-	set users(user: number) {
-		this.user.add(user);
+	addUser(user: number): boolean {
+		let b: boolean = this.user.has(user);
+		b || this.user.add(user);
+		return !b;
 	}
 
-	get times() {
+	get times(): number {
 		return this.user.size;
 	}
 }
@@ -25,25 +27,13 @@ export class RepeatCache<T = unknown> {
 		this.cache = new NodeCache({useClones: false, stdTTL: 600, deleteOnExpire: true});
 	}
 
-	addData(group: number, user: number, data: T): void {
-		this.getNode(group, user, data).users = user;
+	addData(group: number, user: number, data: T): Node<T> {
+		let node: Node<T> = this.getNode(group, data);
+		node.addUser(user);
+		return node;
 	}
 
-	check(group: number, times: number): boolean {
-		let node = this.cache.get<Node<T>>(group);
-		if (node !== undefined && node.times === times) {
-			node.users = 0;
-			return true;
-		}
-		return false;
-	}
-
-	getTimes(group: number): number {
-		let node = this.cache.get<Node<T>>(group);
-		return node !== undefined ? node.times : 0;
-	}
-
-	getNode(group: number, user: number, data: T): Node<T> {
+	getNode(group: number, data: T): Node<T> {
 		let node = this.cache.get<Node<T>>(group);
 		if (node === undefined || node.msg !== data) {
 			node = new Node(data);

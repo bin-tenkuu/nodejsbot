@@ -191,7 +191,6 @@ export function getM1200(url: string) {
 	return url.replace("original", "master").replace(/(?<!1200)\.\w+$/, "_master1200.jpg");
 }
 export function* endlessGen<T>(list: Array<T>): Generator<T, never, never> {
-	// const list: readonly T[] = [...lists] as const;
 	for (let n = 0; true;) {
 		if (n >= list.length) n = 0;
 		yield list[n++];
