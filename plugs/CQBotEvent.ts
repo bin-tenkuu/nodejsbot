@@ -1,14 +1,11 @@
-import Client from "ftp";
 import {CQ, CQWebSocket} from "go-cqwebsocket";
 import {PartialSocketHandle} from "go-cqwebsocket/out/Interfaces";
-import {ftp} from "../config/config.json";
 import {Plug} from "../Plug.js";
-import {axios} from "../utils/Search.js";
+import {uploadFile} from "../utils/Search.js";
 import {sendAdminQQ, sendGroup, sendPrivate} from "../utils/Util.js";
 
 class CQBotEvent extends Plug {
 	private header?: PartialSocketHandle;
-	ftp: Client;
 
 	constructor() {
 		super(module);
@@ -17,7 +14,6 @@ class CQBotEvent extends Plug {
 		this.version = 0.1;
 
 		this.header = undefined;
-		this.ftp = new Client();
 	}
 
 	async install() {
@@ -66,36 +62,20 @@ class CQBotEvent extends Plug {
 			"notice.offline_file": (event) => {
 				event.stopPropagation();
 				let {name, size, url} = event.context.file;
-				this.ftp.connect(ftp);
-				console.log("开始");
-				let promise = axios.get(url, {
-					responseType: "stream",
-				});
 				sendPrivate(event, [CQ.text(`收到文件:${name}\n上传中...`)]);
-				this.ftp.on("ready", () => {
-					promise.then(value => {
-						return new Promise((resolve, reject) => {
-							this.ftp.put(value.data, "./files/" + name, false, error => {
-								if (error === undefined) {
-									this.ftp.end();
-									url = `http://pan.binsrc.club/files/${name}`;
-									resolve(undefined);
-								} else {
-									this.ftp.destroy();
-									reject(error);
-								}
-							});
-						});
-					}).catch(() => {
-						this.ftp.destroy();
-					}).finally(() => {
-						let message = [
-							CQ.text(`文件名:${name
-							}\n文件大小:${size
-							}\n文件链接:${url}`),
-						];
-						sendPrivate(event, message);
-					});
+				uploadFile(url, name).then(value => {
+					let message = [
+						CQ.text("上传成功\n"),
+						CQ.text(`文件名:${name
+						}\n文件大小:${size
+						}\n文件链接:${value}`),
+					];
+					sendPrivate(event, message);
+				}).catch(() => {
+					sendPrivate(event, [
+						CQ.text("上传失败\n"),
+						CQ.text(`文件名:${name}\n文件大小:${size}\n文件链接:${url}`),
+					]);
 				});
 			},
 		});
