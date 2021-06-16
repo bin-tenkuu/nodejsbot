@@ -11,7 +11,6 @@ class CQBotPicture extends Plug {
 	public setuSet: Set<string>;
 
 
-
 	constructor() {
 		super(module);
 		this.name = "QQ群聊-图片相关";
@@ -33,13 +32,13 @@ class CQBotPicture extends Plug {
 			keyword: exec.groups?.keyword,
 			r18: exec.groups?.r18 !== undefined,
 		};
-		if (this.setuSet.has(groups.keyword ?? "")) {
-			return [];
-		}
 		let userId: number = event.context.user_id;
 		let member = CQData.getMember(userId);
 		if (member.exp < 10) { return [CQ.text("不够活跃,爬")]; }
 		member.exp -= 10;
+		if (this.setuSet.has(groups.keyword ?? "")) {
+			return [];
+		}
 		logger.info("开始色图", groups);
 		try {
 			let data = await lolicon(groups.keyword, groups.r18);
@@ -57,7 +56,7 @@ class CQBotPicture extends Plug {
 			}
 			let first = data.data[0];
 			// logger.info(`剩余次数：${data.quota}||剩余重置时间：${data.quota_min_ttl}s`);
-			if (event.contextType === "message.group" && member.exp > 5) {
+			if (event.contextType === "message.group" && member.exp > 2) {
 				member.exp -= 2;
 				let {
 					context: {message_id: messageId, sender: {nickname: nickname}},
@@ -92,8 +91,8 @@ class CQBotPicture extends Plug {
 		}
 		let userId: number = event.context.user_id;
 		let member = CQData.getMember(userId);
-		if (member.exp < 4) { return [CQ.text("不够活跃,爬")]; }
-		member.exp -= 4;
+		if (member.exp < 10) { return [CQ.text("不够活跃,爬")]; }
+		member.exp -= 10;
 		try {
 			let data = await pixivCat(pid);
 			if (!data.success) {
@@ -136,7 +135,6 @@ class CQBotPicture extends Plug {
 	@canCallGroup()
 	@canCallPrivate()
 	async getTouHouPNG(event: CQEvent<"message.group"> | CQEvent<"message.private">): Promise<CQTag[]> {
-
 		console.log("开始东方");
 		let userId: number = event.context.user_id;
 		let member = CQData.getMember(userId);
@@ -154,7 +152,7 @@ class CQBotPicture extends Plug {
 	@canCallGroup()
 	@canCallPrivate()
 	async getSetuSet(): Promise<CQTag[]> {
-		return [CQ.text([...this.setuSet].join("\n"))];
+		return [CQ.text(["", ...this.setuSet].join("\n"))];
 	}
 
 	static code(code: number) {

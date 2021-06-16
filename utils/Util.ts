@@ -13,7 +13,7 @@ export function isAt({cqTags}: CQEvent<"message.group">): boolean {
 
 export function isAtMe({context: {self_id}, cqTags}: CQEvent<"message.group">): boolean {
 	if (cqTags.length === 0) { return false; }
-	return cqTags.some((tag: CQTag) => tag instanceof CQAt && tag.qq === self_id);
+	return cqTags.some((tag: CQTag) => tag instanceof CQAt && +tag.qq === self_id);
 }
 
 export function onlyText({context: {raw_message}}: CQEvent<"message.group" | "message.private">): string {

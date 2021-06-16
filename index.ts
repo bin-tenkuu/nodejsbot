@@ -17,7 +17,7 @@ Promise.resolve().then(async () => {
 	await require("./plugs/CQBotPokeGroup").default;
 	await require("./plugs/CQBotRandomPicture").default;
 	await require("./plugs/CQBotRepeat").default;
-	await require("./plugs/CQBotSauceNAOGroup").default;
+	await require("./plugs/CQBotSearch.js").default;
 	await require("./plugs/CQBotPicture").default;
 	await require("./plugs/test").default;
 }).then(() => {

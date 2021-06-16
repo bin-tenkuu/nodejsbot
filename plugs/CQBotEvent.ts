@@ -1,7 +1,6 @@
 import {CQ, CQWebSocket} from "go-cqwebsocket";
 import {PartialSocketHandle} from "go-cqwebsocket/out/Interfaces";
 import {Plug} from "../Plug.js";
-import {uploadFile} from "../utils/Search.js";
 import {sendAdminQQ, sendGroup, sendPrivate} from "../utils/Util.js";
 
 class CQBotEvent extends Plug {
@@ -62,21 +61,21 @@ class CQBotEvent extends Plug {
 			"notice.offline_file": (event) => {
 				event.stopPropagation();
 				let {name, size, url} = event.context.file;
-				sendPrivate(event, [CQ.text(`收到文件:${name}\n上传中...`)]);
-				uploadFile(url, name).then(value => {
-					let message = [
-						CQ.text("上传成功\n"),
-						CQ.text(`文件名:${name
-						}\n文件大小:${size
-						}\n文件链接:${value}`),
-					];
-					sendPrivate(event, message);
-				}).catch(() => {
-					sendPrivate(event, [
-						CQ.text("上传失败\n"),
-						CQ.text(`文件名:${name}\n文件大小:${size}\n文件链接:${url}`),
-					]);
-				});
+				// sendPrivate(event, [CQ.text(`收到文件:${name}\n上传中...`)]);
+				// uploadFile(url, name).then(value => {
+				// 	let message = [
+				// 		CQ.text("上传成功\n"),
+				// 		CQ.text(`文件名:${name
+				// 		}\n文件大小:${size
+				// 		}\n文件链接:${value}`),
+				// 	];
+				// 	sendPrivate(event, message);
+				// }).catch(() => {
+				sendPrivate(event, [
+					CQ.text("上传失败\n"),
+					CQ.text(`文件名:${name}\n文件大小:${size}\n文件链接:${url}`),
+				]);
+				// });
 			},
 		});
 	}

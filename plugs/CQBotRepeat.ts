@@ -31,36 +31,36 @@ class CQBotRepeat extends Plug {
 		if (event.cqTags.some(tag => !(tag instanceof CQText))) {
 			return [];
 		}
-		let msg = event.cqTags.map<string>(tag => {
+		let find = event.cqTags.find((tag) => (tag instanceof CQText)) as CQText | undefined;
+		if (find === undefined || /^[-+$*.]/.test(find.text)) {
+			return [];
+		}
+		let msg = CQBotRepeat.Random(...event.cqTags.map<string>(tag => {
 			if (tag instanceof CQText) {
-				return CQBotRepeat.SendRandom(...tag.text);
+				return CQBotRepeat.Random(...tag.text).join("");
 			} else if (tag instanceof CQImage) {
 				return "[图片]";
 			} else {
 				return "";
 			}
-		}).join("");
-		if (/^[-+$*.]/.test(msg)) {
-			return [];
-		}
+		})).join("");
 		event.stopPropagation();
 		if (msg.length < 4) {
 			return [CQ.text(msg)];
 		}
-		return [CQ.text(CQBotRepeat.SendRandom(""))];
-
+		return [CQ.text(CQBotRepeat.Random(...msg).join(""))];
 	}
 
 	async install() {}
 
 	async uninstall() {}
 
-	static SendRandom(...str: string[]): string {
-		for (let i = str.length - 1; i > 0; i--) {
+	static Random(...arr: string[]): string[] {
+		for (let i = arr.length - 1; i > 0; i--) {
 			let j = (Math.random() * i) | 0;
-			[str[i], str[j]] = [str[j], str[i]];
+			[arr[i], arr[j]] = [arr[j], arr[i]];
 		}
-		return str.join("");
+		return arr;
 	}
 }
 

@@ -6,7 +6,7 @@ import {logger} from "../utils/logger.js";
 import {sauceNAO} from "../utils/Search.js";
 import {sendAuto, sendForward} from "../utils/Util.js";
 
-class CQBotSauceNAOGroup extends Plug {
+class CQBotSearch extends Plug {
 
 	constructor() {
 		super(module);
@@ -123,4 +123,4 @@ class CQBotSauceNAOGroup extends Plug {
 	}
 }
 
-export default new CQBotSauceNAOGroup();
+export default new CQBotSearch();

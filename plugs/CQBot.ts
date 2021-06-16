@@ -19,24 +19,7 @@ class CQBot extends Plug {
 		this.name = "QQ机器人";
 		this.description = "用于连接go-cqhttp服务的bot";
 		this.version = 0;
-		this.bot = new CQWebSocket(CQWS);
-		this.bot.bind("on", {
-			"socket.error": ({context}) => {
-				logger.warn(`连接错误[${context.code}]: ${context.reason}`);
-			},
-			"socket.open": () => {
-				logger.info(`连接开启`);
-			},
-			"socket.close": ({context}) => {
-				logger.info(`已关闭 [${context.code}]: ${context.reason}`);
-			},
-		});
-		this.bot.messageSuccess = (ret, message) => {
-			logger.debug(`${message.action}成功：${JSON.stringify(ret.data)}`);
-		};
-		this.bot.messageFail = (reason, message) => {
-			logger.error(`${message.action}失败[${reason.retcode}]:${reason.wording}`);
-		};
+		this.bot = new CQWebSocket(CQWS, process.execArgv.includes("--inspect"));
 		this.init();
 	}
 
@@ -135,6 +118,23 @@ class CQBot extends Plug {
 
 	init() {
 		this.bot.bind("on", {
+			"socket.error": ({context}) => {
+				logger.warn(`连接错误[${context.code}]: ${context.reason}`);
+			},
+			"socket.open": () => {
+				logger.info(`连接开启`);
+			},
+			"socket.close": ({context}) => {
+				logger.info(`已关闭 [${context.code}]: ${context.reason}`);
+			},
+		});
+		this.bot.messageSuccess = (ret, message) => {
+			logger.debug(`${message.action}成功：${JSON.stringify(ret.data)}`);
+		};
+		this.bot.messageFail = (reason, message) => {
+			logger.error(`${message.action}失败[${reason.retcode}]:${reason.wording}`);
+		};
+		this.bot.bind("on", {
 			"message.group": (event) => {
 				let time = process.hrtime();
 				let userId = event.context.user_id;
@@ -142,7 +142,6 @@ class CQBot extends Plug {
 				if (members.getBaned(userId)) { return; }
 				CQBot.sendCorpusTags(event, CQBot.getValues(members.corpora, this.filterGroup(event)), (tags, element) => {
 					if (tags.length < 1) return;
-					hrtime(time);
 					let pro: PromiseRes<MessageId>;
 					if (!element.forward) {
 						pro = sendGroup(event, tags);
@@ -160,6 +159,7 @@ class CQBot extends Plug {
 					} else {
 						pro.catch(NOP);
 					}
+					hrtime(time);
 				});
 			},
 			"message.private": (event) => {
