@@ -9,6 +9,9 @@ class CQData extends Plug {
 	corpora: Corpus[];
 	pokeGroup: Poke[];
 
+	private autoSaveTimeout?: NodeJS.Timeout;
+	private saving: boolean;
+
 	constructor() {
 		super(module);
 		this.name = "QQ机器人";
@@ -17,6 +20,8 @@ class CQData extends Plug {
 		this.corpora = [];
 		this.pokeGroup = [];
 		this.memberMap = new Map();
+		this.autoSaveTimeout = undefined;
+		this.saving = false;
 	}
 
 	async install() {
@@ -44,22 +49,14 @@ class CQData extends Plug {
 
 			await db.close();
 		});
+		this.autoSave();
 	}
 
 	async uninstall() {
-		return db.start(async db => {
-			let size: number = this.memberMap.size;
-			for (let memberMap of this.memberMap) {
-				let [id, {exp, baned}] = memberMap;
-				await db.run("insert or ignore into Members (id) values (?);", id);
-				await db.run("update Members set exp=?,baned=?,time=? where id=?;", exp, baned, Date.now(), id);
-				size--;
-				if ((size & 0b11111) === 0b11111) {
-					logger.info(`还剩${size}个member`);
-				}
+		return this.save(size => {
+			if ((size & 0b111111) === 0b111111) {
+				logger.info(`还剩${size}个member`);
 			}
-			await db.close();
-			logger.info("member持久化结束");
 		});
 	}
 
@@ -81,7 +78,7 @@ class CQData extends Plug {
 		return member.baned === 1;
 	}
 
-	addPoke(text: string) {
+	addPoke(text: string): void {
 		db.start(async db => {
 			await db.run(`insert into pokeGroup(text) values(?);`, text);
 			let all: [{ id: number }] = await db.all<[{ id: number }]>(
@@ -92,13 +89,41 @@ class CQData extends Plug {
 		}).catch(NOP);
 	}
 
-	removePoke(id: number) {
+	removePoke(id: number): void {
 		db.start(async db => {
 			await db.run(`delete from pokeGroup where id=?;`, id);
 			let number: number = this.pokeGroup.findIndex(v => v.id === id);
 			this.pokeGroup.splice(number, 1);
 			await db.close();
 		}).catch(NOP);
+	}
+
+	private async save(callback?: (this: void, size: number) => void): Promise<void> {
+		if (this.saving) return;
+		this.saving = true;
+		return db.start(async db => {
+			let size: number = this.memberMap.size;
+			for (let memberMap of this.memberMap) {
+				let [id, {exp, baned}] = memberMap;
+				await db.run("insert or ignore into Members (id) values (?);", id);
+				await db.run("update Members set exp=?,baned=?,time=? where id=?;", exp, baned, Date.now(), id);
+				callback?.(--size);
+			}
+			this.saving = false;
+			await db.close();
+		});
+	}
+
+	private autoSave(): void {
+		this.autoSaveTimeout = setTimeout(() => {
+			if (!this.installed) { return; }
+			this.save().then(() => {
+				logger.info("自动保存结束");
+				this.autoSave();
+			}).catch(() => {
+				logger.error(`自动保存出错`);
+			});
+		}, 1000 * 60 * 60);
 	}
 }
 

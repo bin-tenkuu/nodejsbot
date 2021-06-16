@@ -58,11 +58,13 @@ export abstract class Plug {
 		};
 		this.#state = State.uninstalled;
 		this.error = undefined;
-		this.canAutoCall ??= new Set<string>();
+		this.canAutoCall ??= new Set();
 	}
 
+	/**@abstract*/
 	public async install(): Promise<void> {}
 
+	/**@abstract*/
 	public async uninstall(): Promise<void> {}
 
 	public toString() {

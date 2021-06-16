@@ -2,10 +2,10 @@ import {CQEvent, CQTag} from "go-cqwebsocket";
 import "reflect-metadata";
 import {Plug} from "../Plug.js";
 
-type Constructor = { new(...args: any[]): any };
+type Constructor = { new(...args: any): any };
 type FunctionDecorator<T extends Function = Function, O extends Object = Object, Key extends PropertyKey = PropertyKey> =
 	 <F extends T = T>(target: O, propertyKey: Key, descriptor: TypedPropertyDescriptor<F>) => void;
-type ConstructorDecorator<T extends Constructor = Constructor> = (constructor: T) => T | void;
+type ConstructorDecorator<T extends Constructor = Constructor> = <F extends T>(constructor: F) => F | void;
 type PropertyDecorator<O extends Object = Object, Key extends PropertyKey = PropertyKey> =
 	 (target: O, propertyKey: Key) => void;
 type ParameterDecorator<O extends Object = Object, Key extends PropertyKey = PropertyKey> =
@@ -13,8 +13,8 @@ type ParameterDecorator<O extends Object = Object, Key extends PropertyKey = Pro
 
 export enum Design {
 	type = "design:type",
-	paramtypes = "design:paramtypes",
-	returntype = "design:returntype"
+	paramTypes = "design:paramtypes",
+	returnType = "design:returntype"
 }
 
 export function logFuncCall(): FunctionDecorator {
@@ -88,8 +88,8 @@ export function logParam(): ParameterDecorator {
 	};
 }
 
-export type canCallGroupType = (event: CQEvent<"message.group">, exec: RegExpExecArray) => Promise<CQTag<any>[]>
-export type canCallPrivateType = (event: CQEvent<"message.private">, exec: RegExpExecArray) => Promise<CQTag<any>[]>
+export type canCallGroupType = (event: CQEvent<"message.group">, exec: RegExpExecArray) => Promise<CQTag[]>
+export type canCallPrivateType = (event: CQEvent<"message.private">, exec: RegExpExecArray) => Promise<CQTag[]>
 
 export function canCallGroup(): FunctionDecorator<canCallGroupType, Plug, string> {
 	return (target, propertyKey, descriptor) => {
