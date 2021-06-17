@@ -2,7 +2,7 @@ export function dice(times: number, max: number): { num: number, list: Uint16Arr
 	if (times > 99) {
 		return {num: 0, list: Uint16Array.of()};
 	}
-	if (max > 65535) max = 65535;
+	if (max > 9999999999) max = 9999999999;
 	let r = 0;
 	let arr = new Uint16Array(times);
 	while (times-- > 0) {

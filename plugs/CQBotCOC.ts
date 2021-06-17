@@ -68,7 +68,7 @@ class CQBotCOC extends Plug {
 		if (/[^+\-*d0-9#]/.test(dice)) {
 			return [CQ.text(".d错误参数")];
 		}
-		return [CQ.text(CQBotCOC.dice(dice, this.cheater))];
+		return [CQ.text(this.dice(dice))];
 	}
 
 	@canCallGroup()
@@ -96,22 +96,23 @@ class CQBotCOC extends Plug {
 		}).catch(NOP);
 	}
 
-	private static dice(str: string, cheater: boolean): string {
+	private dice(str: string): string {
 		let handles = str.split(/(?=[+\-*])/).map<calc>(value => {
-			return this.castString(value, cheater);
+			return CQBotCOC.castString(value, this.cheater);
 		});
 		let preRet = handles.filter(v => v.list !== null).map((v) => {
 			return `${v.origin}：[${v.list}]=${v.num}`;
 		}).join("\n");
-		let sumNum = this.calculate(handles);
-		if (handles.length === 1) {
-			if (preRet !== "") {
+		str = handles.map(value => value.origin).join("");
+		let sumNum = CQBotCOC.calculate(handles);
+		if (preRet !== "") {
+			if (handles.length === 1) {
 				return preRet;
 			} else {
-				return `${str}=${sumNum}`;
+				return `${preRet}\n${str}=${sumNum}`;
 			}
 		} else {
-			return `${preRet}\n${str}=${sumNum}`;
+			return `${str}=${sumNum}`;
 		}
 	}
 
@@ -121,9 +122,10 @@ class CQBotCOC extends Plug {
 			num?: string
 			max?: string
 		} ?? {};
-		let num: number | number[] = +(groups.num ?? 1);
+		let num: number = +(groups.num ?? 1);
 		let op = groups.op ?? "+";
-		if (groups.max) {
+		let max = groups.max;
+		if (max !== undefined) {
 			let dices: { num: number, list: Uint16Array };
 			if (cheater) {
 				dices = {
@@ -131,10 +133,10 @@ class CQBotCOC extends Plug {
 					num: num,
 				};
 			} else {
-				dices = dice(num, +groups.max);
+				dices = dice(num, +max);
 			}
 			return {
-				origin: value,
+				origin: `${op}${num}d${max}`,
 				op,
 				...dices,
 			};
@@ -143,39 +145,41 @@ class CQBotCOC extends Plug {
 				op: op,
 				num: num,
 				list: null,
-				origin: null,
+				origin: `${op}${num}`,
 			};
 		}
 	}
 
 	private static calculate(handles: calc[]): number {
-		let cache = 1;
-		return handles.reduceRight<number>((sum, v) => {
-			switch (v.op) {
-				case "*": {
-					cache *= v.num;
-					return sum;
-				}
-				case "+": {
-					let number = v.num * cache;
-					cache = 1;
-					return sum + number;
-				}
-				case "-": {
-					let number = v.num * cache;
-					cache = 1;
-					return sum - number;
-				}
-				default: {
-					let op: never = v.op;
-					logger.warn("未知的运算符:" + op);
-					return sum;
-				}
+		const map = {
+			"*": (sum: [number, number], num: number) => {
+				sum[1] *= num;
+				return sum;
+			},
+			"+": (sum: [number, number], num: number) => {
+				let number = num * sum[1];
+				sum[1] = 1;
+				sum[0] += number;
+				return sum;
+			},
+			"-": (sum: [number, number], num: number) => {
+				let number = num * sum[1];
+				sum[1] = 1;
+				sum[0] -= number;
+				return sum;
+			},
+		} as const;
+		return handles.reduceRight<[number, number]>((sum, v) => {
+			let arr: [number, number] | undefined = map[v.op]?.(sum, v.num);
+			if (arr === undefined) {
+				logger.warn("未知的运算符:" + v.op);
+				return sum;
 			}
-		}, 0);
+			return arr;
+		}, [0, 1])[0];
 	}
 }
 
-type calc = { op: "+" | "-" | "*", num: number, list: Uint16Array | null, origin: string | null }
+type calc = { op: "+" | "-" | "*", num: number, list: Uint16Array | null, origin: string }
 
 export default new CQBotCOC();
