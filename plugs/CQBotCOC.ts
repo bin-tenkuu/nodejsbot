@@ -125,7 +125,7 @@ class CQBotCOC extends Plug {
 		let num: number = +(groups.num ?? 1);
 		let op = groups.op ?? "+";
 		let max = groups.max;
-		if (max !== undefined) {
+		if (max !== undefined && max !== "") {
 			let dices: { num: number, list: Uint16Array };
 			if (cheater) {
 				dices = {
