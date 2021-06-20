@@ -105,15 +105,13 @@ class Shares extends Plug {
 		let member = CQData.getMember(qq);
 		/**成员股票列表*/
 		let user: SharesData = this.getUser(qq);
-		/**成员持有数量*/
-		let n: number = (user[id] ?? 0) | 0;
 		/**需要价格*/
 		let p: number = 0 | 0;
 		if (number === 0) {
 			return {
 				success: true,
 				price: price,
-				num: n,
+				num: user[id],
 				need: p,
 				point: member.exp,
 			};
@@ -123,31 +121,31 @@ class Shares extends Plug {
 				return {
 					success: false,
 					price: price,
-					num: n,
+					num: user[id],
 					need: p,
 					point: member.exp,
 				};
 			}
 		} else if (number < 0) {
 			p = Shares._calc(price - 1, -number) | 0;
-			if (n + number < 0) {
+			if (user[id] + number < 0) {
 				return {
 					success: false,
 					price: price,
-					num: n,
+					num: user[id],
 					need: p,
 					point: member.exp,
 				};
 			}
 		}
 		member.exp += p;
-		user[id] = n + number;
+		user[id] += number;
 		price += number;
 		prices[id] = price < 1 ? 1 : price;
 		return {
 			success: true,
 			price: prices[id],
-			num: n,
+			num: user[id],
 			need: p,
 			point: member.exp,
 		};
@@ -163,7 +161,6 @@ class Shares extends Plug {
 	}
 
 	async install() {
-		this.autoChange();
 	}
 
 	async uninstall() {
