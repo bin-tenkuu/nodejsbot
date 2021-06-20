@@ -44,15 +44,30 @@ export type paulzzhTouHouType = {
 	url: string
 	width: number
 };
+export type loliconPost = {
+	/**
+	 * 0为非 R18，1为 R18，2为混合（在库中的分类，不等同于作品本身的 R18 标识）
+	 * @default 0
+	 */
+	r18?: number
+	/**返回从标题、作者、标签中按指定关键字模糊匹配的结果，大小写不敏感，性能和准度较差且功能单一，建议使用tag代替*/
+	keyword?: string
+	/**
+	 * 一次返回的结果数量，范围为1到100；在指定关键字或标签的情况下，结果数量可能会不足指定的数量
+	 * @default 1
+	 */
+	num?: number
+	/**
+	 * 是否使用 master_1200 缩略图
+	 * @default ["original"]
+	 */
+	size1200?: boolean
+};
 export type loliconDate = {
 	/**返回码，可能值详见后续部分*/
 	code: number
 	/**错误信息之类的*/
 	msg: string
-	// /**剩余调用额度*/
-	// quota: number
-	// /**距离下一次调用额度恢复(+1)的秒数*/
-	// quota_min_ttl: number
 	/**结果数*/
 	count: number
 	/**色图数组*/
@@ -117,12 +132,3 @@ export type YHType = {
 	"width": string,
 	"height": string
 };
-
-interface Prom<T, U> extends PromiseLike<T> {
-	then<TR1 = T, TR2 = U>(
-		 onfulfilled?: ((value: T) => TR1 | PromiseLike<TR1>),
-		 onrejected?: ((reason: U) => TR2 | PromiseLike<TR2>),
-	): Promise<TR1 | TR2>;
-
-	catch<TR = U>(onrejected?: ((reason: U) => TR | PromiseLike<TR>)): Promise<T | TR>;
-}

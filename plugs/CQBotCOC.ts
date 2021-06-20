@@ -65,7 +65,7 @@ class CQBotCOC extends Plug {
 		this.shortKey.forEach((value, key) => {
 			dice = dice.replace(new RegExp(key, "g"), value);
 		});
-		if (/[^+\-*d0-9#]/.test(dice)) {
+		if (/[^+\-*dD0-9#]/.test(dice)) {
 			return [CQ.text(".d错误参数")];
 		}
 		return [CQ.text(this.dice(dice))];
@@ -117,7 +117,7 @@ class CQBotCOC extends Plug {
 	}
 
 	private static castString(value: string, cheater: boolean): calc {
-		let groups = (/^(?<op>[+\-*])?(?<num>\d+)?(d(?<max>\d+))?$/.exec(value)?.groups) as {
+		let groups = (/^(?<op>[+\-*])?(?<num>\d+)?([dD](?<max>\d+))?$/.exec(value)?.groups) as {
 			op?: "+" | "-" | "*"
 			num?: string
 			max?: string

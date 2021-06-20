@@ -44,17 +44,17 @@ class CQBotSearch extends Plug {
 				CQ.node(nickName, userId, [
 					CQ.image(first.header.thumbnail),
 					CQ.text(`相似度: ${first.header.similarity}%\n`),
-					CQ.text(this.decodeData(first.header.index_id, first.data)),
+					CQ.text(CQBotSearch.decodeData(first.header.index_id, first.data)),
 				]),
 				CQ.node(nickName, userId, [
 					CQ.image(second.header.thumbnail),
 					CQ.text(`相似度: ${second.header.similarity}%\n`),
-					CQ.text(this.decodeData(second.header.index_id, second.data)),
+					CQ.text(CQBotSearch.decodeData(second.header.index_id, second.data)),
 				]),
 				CQ.node(nickName, userId, [
 					CQ.image(third.header.thumbnail),
 					CQ.text(`相似度: ${third.header.similarity}%\n`),
-					CQ.text(this.decodeData(third.header.index_id, third.data)),
+					CQ.text(CQBotSearch.decodeData(third.header.index_id, third.data)),
 				]),
 			]).catch(() => {
 				return sendAuto(event, [
@@ -92,7 +92,7 @@ class CQBotSearch extends Plug {
 	 * @param {*}data
 	 * @return {string}
 	 */
-	decodeData(index: number, data: { [p: string]: any }) {
+	private static decodeData(index: number, data: { [p: string]: any }) {
 		let title: string;
 		let url: string = data["ext_urls"]?.join("\n") ?? "无";
 		switch (index) {

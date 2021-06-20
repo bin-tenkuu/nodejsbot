@@ -2,7 +2,7 @@ import {CQ, CQEvent, CQTag, CQWebSocket, messageNode} from "go-cqwebsocket";
 import {MessageId, PromiseRes, Status} from "go-cqwebsocket/out/Interfaces";
 import {adminGroup, adminId, CQWS} from "../config/config.json";
 import {Plug} from "../Plug.js";
-import {canCallGroup} from "../utils/Annotation.js";
+import {canCallGroup, canCallPrivate} from "../utils/Annotation.js";
 import {hrtime, logger} from "../utils/logger.js";
 import {
 	deleteMsg, isAdminQQ, isAtMe, onlyText, parseMessage, sendForward, sendForwardQuick, sendGroup, sendPrivate,
@@ -23,10 +23,8 @@ class CQBot extends Plug {
 		this.init();
 	}
 
-	/**
-	 * 发送bot信息
-	 */
-	sendState(state: Status["stat"]) {
+	/**发送bot信息*/
+	private sendState(state: Status["stat"]) {
 		this.bot.send_group_msg(adminGroup, `数据包丢失总数:${state.packet_lost
 		}\n接受信息总数:${state.message_received}\n发送信息总数:${state.message_sent}`).catch(() => {
 			if (this.sendStateInterval !== undefined) {
@@ -79,6 +77,14 @@ class CQBot extends Plug {
 		];
 	}
 
+	@canCallGroup()
+	@canCallPrivate()
+	async getHelp() {
+		let s: string = members.corpora.filter(c => c.isOpen && !c.needAdmin &&
+			 c.help !== undefined).map<string>((c) => `${c.name}:${c.help}`).join("\n");
+		return [CQ.text(s)];
+	}
+
 	async install() {
 		return new Promise<void>((resolve, reject) => {
 			this.bot.bind("onceAll", {
@@ -116,7 +122,7 @@ class CQBot extends Plug {
 		});
 	}
 
-	init() {
+	private init() {
 		this.bot.bind("on", {
 			"socket.error": ({context}) => {
 				logger.warn(`连接错误[${context.code}]: ${context.reason}`);
@@ -140,7 +146,7 @@ class CQBot extends Plug {
 				let userId = event.context.user_id;
 				members.getMember(userId).exp++;
 				if (members.getBaned(userId)) { return; }
-				CQBot.sendCorpusTags(event, CQBot.getValues(members.corpora, this.filterGroup(event)), (tags, element) => {
+				CQBot.sendCorpusTags(event, CQBot.getValues(members.corpora, CQBot.filterGroup(event)), (tags, element) => {
 					if (tags.length < 1) return;
 					let pro: PromiseRes<MessageId>;
 					if (!element.forward) {
@@ -164,7 +170,7 @@ class CQBot extends Plug {
 			},
 			"message.private": (event) => {
 				let time = process.hrtime();
-				CQBot.sendCorpusTags(event, CQBot.getValues(members.corpora, this.filterPrivate(event)), tags => {
+				CQBot.sendCorpusTags(event, CQBot.getValues(members.corpora, CQBot.filterPrivate(event)), tags => {
 					if (tags.length < 1) return;
 					hrtime(time);
 					sendPrivate(event, tags);
@@ -173,14 +179,14 @@ class CQBot extends Plug {
 		});
 	}
 
-	filterPrivate(event: CQEvent<"message.private">): Filter<Corpus> {
+	private static filterPrivate(event: CQEvent<"message.private">): Filter<Corpus> {
 		if (isAdminQQ(event)) {
 			return (c: Corpus) => c.canPrivate;
 		}
 		return (c: Corpus) => c.isOpen && !c.needAdmin && c.canPrivate;
 	}
 
-	filterGroup(event: CQEvent<"message.group">): Filter<Corpus> {
+	private static filterGroup(event: CQEvent<"message.group">): Filter<Corpus> {
 		if (isAdminQQ(event)) {
 			return (c: Corpus) => c.canGroup;
 		}

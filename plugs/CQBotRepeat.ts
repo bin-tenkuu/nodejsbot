@@ -4,7 +4,7 @@ import {CQText} from "go-cqwebsocket/out/tags.js";
 import {Plug} from "../Plug.js";
 import {canCallGroup} from "../utils/Annotation.js";
 import {RepeatCache} from "../utils/repeat.js";
-import CQData from "./CQData.js";
+import {default as CQData} from "./CQData.js";
 
 class CQBotRepeat extends Plug {
 	private repeatCache = new RepeatCache<string>();
@@ -55,7 +55,7 @@ class CQBotRepeat extends Plug {
 
 	async uninstall() {}
 
-	static Random(...arr: string[]): string[] {
+	private static Random(...arr: string[]): string[] {
 		for (let i = arr.length - 1; i > 0; i--) {
 			let j = (Math.random() * i) | 0;
 			[arr[i], arr[j]] = [arr[j], arr[i]];

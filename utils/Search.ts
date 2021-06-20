@@ -1,8 +1,8 @@
 import _axios from "axios";
 import Client from "ftp";
-import {ftp as ftpConfig, SauceNAOkey, SeTuApiKey} from "../config/config.json";
+import {ftp as ftpConfig, SauceNAOkey} from "../config/config.json";
 import {
-	DMXKType, loliconDate, paulzzhTouHouType, pixivCatType, sauceNAOResult, toubiecType, YHType,
+	DMXKType, loliconDate, loliconPost, paulzzhTouHouType, pixivCatType, sauceNAOResult, toubiecType, YHType,
 } from "./SearchType";
 
 export const axios = _axios.create({
@@ -51,16 +51,9 @@ export function paulzzhTouHou(): Promise<paulzzhTouHouType> {
 /**
  * lolicon API
  */
-export function lolicon(keyword?: string, r18 = false): Promise<loliconDate> {
-	// zhuzhu.php 朱朱搜图害我
-	return axios.get("https://api.lolicon.app/setu/", {
-		params: {
-			apikey: SeTuApiKey,
-			r18: r18,
-			keyword: keyword,
-			num: 1,
-			size1200: true,
-		},
+export function lolicon(data: loliconPost = {}): Promise<loliconDate> {
+	return axios.get<loliconDate>("https://api.lolicon.app/setu/v1", {
+		params: data,
 	}).then<loliconDate>((r) => r.data);
 }
 

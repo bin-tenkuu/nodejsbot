@@ -17,7 +17,7 @@
 	"scripts": {
 		"build": "tsc",
 		"debug": "node --inspect-brk index.js",
-		"stop": "curl 127.0.0.1:40000/exit",
+		"stop": "curl http://127.0.0.1:40000/exit",
 		"start": "node index.js"
 	},
 	"keywords": [

@@ -12,7 +12,7 @@
 		"MSG": {
 			"type": "string",
 			"description": "字符串格式消息段",
-			"pattern": "^(\\[(CQ:\\w+(,\\w+=[^,\\]]+)*|FN:\\w+\\.\\w+)\\]|[^\\[]+)+$",
+			"pattern": "^(\\[(CQ:\\w+(,\\w+=[^,\\]]+)*|FN:\\w+\\.\\w+)\\]|[^\\[]*)+$",
 			"default": ""
 		},
 		"CQ": {
@@ -71,6 +71,11 @@
 						"type": "boolean",
 						"description": "群聊可用,默认为true",
 						"default": false
+					},
+					"help": {
+						"type": "string",
+						"description": "帮助文本",
+						"default": null
 					}
 				},
 				"required": ["name", "regexp"],

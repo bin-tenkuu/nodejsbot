@@ -17,8 +17,9 @@ Promise.resolve().then(async () => {
 	await require("./plugs/CQBotPokeGroup").default;
 	await require("./plugs/CQBotRandomPicture").default;
 	await require("./plugs/CQBotRepeat").default;
-	await require("./plugs/CQBotSearch.js").default;
+	await require("./plugs/CQBotSearch").default;
 	await require("./plugs/CQBotPicture").default;
+	await require("./plugs/Shares").default;
 	await require("./plugs/test").default;
 }).then(() => {
 	logger.info("启动完成");

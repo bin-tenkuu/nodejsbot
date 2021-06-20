@@ -187,8 +187,13 @@ export async function parseMessage(template: string, message: CQEvent<"message.g
 type hasUser<T> = T extends { bot: CQWebSocket, context: { user_id: number } } ? T : never;
 type hasGroup<T> = T extends { bot: CQWebSocket, context: { group_id: number } } ? T : never;
 
-export function getM1200(url: string) {
+export function getPRegular(url: string) {
 	return url.replace("original", "master").replace(/(?<!1200)\.\w+$/, "_master1200.jpg");
+}
+export function getPSmall(url: string) {
+	return url.replace(/(?<=\.cat)(.+)(?=img\/)/,
+		 "/c/540x540_70/").replace(/(?<!1200)\.\w+$/,
+		 "_master1200.jpg");
 }
 export function* endlessGen<T>(list: Array<T>): Generator<T, never, never> {
 	for (let n = 0; true;) {

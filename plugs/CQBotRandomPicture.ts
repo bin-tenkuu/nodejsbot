@@ -3,7 +3,7 @@ import {Plug} from "../Plug.js";
 import {canCallGroup, canCallPrivate} from "../utils/Annotation.js";
 import {logger} from "../utils/logger.js";
 import {dongManXingKong, lolicon, paulzzhTouHou, toubiec, yingHua} from "../utils/Search.js";
-import {endlessGen, getM1200} from "../utils/Util.js";
+import {endlessGen, getPRegular} from "../utils/Util.js";
 import CQData from "./CQData.js";
 
 
@@ -32,14 +32,14 @@ class CQBotRandomPicture extends Plug {
 		if (this.callSet.has(userId)) { return []; }
 		this.callSet.add(userId);
 		let member = CQData.getMember(userId);
-		if (member.exp < 2) { return [CQ.text("不够活跃,爬")]; }
+		if (member.exp < 2) { return [CQ.text("不够活跃")]; }
 		member.exp -= 2;
 		return await this.generator.next().value();
 	}
 
-	async getSeTu(this: void): Promise<[CQTag]> {
+	private static async getSeTu(this: void): Promise<[CQTag]> {
 		try {
-			let data = await lolicon("", false);
+			let data = await lolicon();
 			if (data.code !== 0) {
 				let message = CQBotRandomPicture.code(data.code);
 				logger.warn(`色图异常：异常返回码(${data.code})：${message}`);
@@ -50,15 +50,14 @@ class CQBotRandomPicture extends Plug {
 				return [CQ.text("色图数量不足")];
 			}
 			let first = data.data[0];
-			// logger.info(`剩余次数：${data.quota}||剩余重置时间：${data.quota_min_ttl}s`);
-			return [CQ.image(getM1200(first.url))];
+			return [CQ.image(getPRegular(first.url))];
 		} catch (reason) {
 			logger.info(reason);
 			return [CQ.text("未知错误,或网络错误")];
 		}
 	}
 
-	async getTouHouPNG(this: void): Promise<[CQTag]> {
+	private static async getTouHouPNG(this: void): Promise<[CQTag]> {
 		try {
 			let json = await paulzzhTouHou();
 			return [CQ.image((json.url))];
@@ -67,7 +66,7 @@ class CQBotRandomPicture extends Plug {
 		}
 	}
 
-	async getToubiec(this: void): Promise<[CQTag]> {
+	private static async getToubiec(this: void): Promise<[CQTag]> {
 		try {
 			let json = await toubiec();
 			return [CQ.image((json.imgurl))];
@@ -76,7 +75,7 @@ class CQBotRandomPicture extends Plug {
 		}
 	}
 
-	async getDMXK(this: void): Promise<[CQTag]> {
+	private static async getDMXK(this: void): Promise<[CQTag]> {
 		try {
 			let json = await dongManXingKong();
 			return [CQ.image((json.imgurl))];
@@ -85,7 +84,7 @@ class CQBotRandomPicture extends Plug {
 		}
 	}
 
-	async getYH(this: void): Promise<[CQTag]> {
+	private static async getYH(this: void): Promise<[CQTag]> {
 		try {
 			let json = await yingHua();
 			return [CQ.image((json.imgurl))];
@@ -100,26 +99,20 @@ class CQBotRandomPicture extends Plug {
 				return "内部错误";// 请向 i@loli.best 反馈
 			case 0   :
 				return "成功";
-			case 401 :
-				return "APIKEY 不存在或被封禁";
-			case 403 :
-				return "由于不规范的操作而被拒绝调用";
 			case 404 :
 				return "找不到符合关键字的色图";
-			case 429 :
-				return "达到调用额度限制";
 			default:
 				return "未知的返回码";
 		}
 	}
 
-	init() {
+	private init() {
 		this.callList.push(
-			 this.getSeTu,
-			 this.getTouHouPNG,
-			 this.getToubiec,
-			 this.getDMXK,
-			 this.getYH,
+			 CQBotRandomPicture.getSeTu,
+			 CQBotRandomPicture.getTouHouPNG,
+			 CQBotRandomPicture.getToubiec,
+			 CQBotRandomPicture.getDMXK,
+			 CQBotRandomPicture.getYH,
 		);
 		setInterval(() => {
 			this.callSet.clear();

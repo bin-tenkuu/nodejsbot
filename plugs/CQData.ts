@@ -6,6 +6,7 @@ import {logger} from "../utils/logger.js";
 class CQData extends Plug {
 
 	readonly memberMap: Map<number, Member>;
+	readonly shares: Map<number, number>;
 	corpora: Corpus[];
 	pokeGroup: Poke[];
 
@@ -20,6 +21,7 @@ class CQData extends Plug {
 		this.corpora = [];
 		this.pokeGroup = [];
 		this.memberMap = new Map();
+		this.shares = new Map();
 		this.autoSaveTimeout = undefined;
 		this.saving = false;
 	}
@@ -35,6 +37,7 @@ class CQData extends Plug {
 			delMSG: msg.delMSG ?? 0,
 			canGroup: msg.canGroup !== false,
 			canPrivate: msg.canPrivate !== false,
+			help: msg.help,
 		}));
 		await db.start(async db => {
 			{
@@ -46,6 +49,12 @@ class CQData extends Plug {
 			{
 				this.pokeGroup = await db.all<Poke[]>(`select id,text from pokeGroup`);
 			}
+			{
+				let all = await db.all<{ id: number, number: number }[]>(`SELECT id,number FROM Shares`);
+				all.forEach(value => {
+					this.shares.set(value.id, value.number);
+				});
+			}
 
 			await db.close();
 		});
@@ -53,6 +62,7 @@ class CQData extends Plug {
 	}
 
 	async uninstall() {
+		if (this.autoSaveTimeout !== undefined) clearTimeout(this.autoSaveTimeout);
 		return this.save(size => {
 			if ((size & 0b111111) === 0b111111) {
 				logger.info(`还剩${size}个member`);
@@ -105,9 +115,14 @@ class CQData extends Plug {
 			let size: number = this.memberMap.size;
 			for (let memberMap of this.memberMap) {
 				let [id, {exp, baned}] = memberMap;
-				await db.run("insert or ignore into Members (id) values (?);", id);
-				await db.run("update Members set exp=?,baned=?,time=? where id=?;", exp, baned, Date.now(), id);
+				await db.run("INSERT OR IGNORE INTO Members (id) VALUES (?);", id);
+				await db.run("UPDATE Members SET exp=?,baned=?,time=? WHERE id=?;", exp, baned, Date.now(), id);
 				callback?.(--size);
+			}
+			for (let share of this.shares) {
+				let [id, number] = share;
+				await db.run("INSERT OR IGNORE INTO Shares (id) VALUES (?);", id);
+				await db.run("UPDATE Shares SET number=? WHERE id=?;", number, id);
 			}
 			this.saving = false;
 			await db.close();
@@ -132,7 +147,7 @@ export default new CQData();
 export type Corpus = {
 	name: string, regexp: RegExp, reply: string,
 	forward: boolean, needAdmin: boolean, isOpen: boolean, delMSG: number,
-	canGroup: boolean, canPrivate: boolean
+	canGroup: boolean, canPrivate: boolean, help: string | undefined
 };
 export type Poke = { id: number, text: string }
 export type Member = { exp: number, baned: 0 | 1 };

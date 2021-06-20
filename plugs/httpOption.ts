@@ -60,7 +60,7 @@ class HttpOption extends Plug {
 		});
 	}
 
-	handle(req: IncomingMessage, res: ServerResponse) {
+	private handle(req: IncomingMessage, res: ServerResponse) {
 		logger.info(`网页 '${req.url}' 收到请求`);
 		logger.info(`代理:\t${req.headers["x-forwarded-for"]}`);
 		let {remoteFamily: family, remoteAddress: address, remotePort: port} = req.socket;
@@ -80,7 +80,7 @@ class HttpOption extends Plug {
 		this.header?.close();
 	}
 
-	get 404(): ServerHandle {
+	private get 404(): ServerHandle {
 		return this.server.get("404") ?? ((_, res) => {
 			res.writeHead(404);
 			res.end();
