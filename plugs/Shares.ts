@@ -48,6 +48,7 @@ class Shares extends Plug {
 		let {user_id} = event.context;
 		let ids: number = +id;
 		let b: Buy = Shares._buy(user_id, ids, +num);
+		this.autoChange();
 		if (b.success) {
 			return [CQ.text(`${Shares.getName(ids)}买入成功\n当前价格:${b.price
 			}\n你的持有:${b.num
@@ -85,69 +86,70 @@ class Shares extends Plug {
 	}
 
 	private autoChange() {
+		if (this.auto !== undefined) {
+			clearTimeout(this.auto);
+		}
 		this.auto = setTimeout(() => {
 			if (!this.installed) {return;}
 			Shares.changePrice();
-			this.autoChange();
-		}, 1000 * 60 * 60);
+		}, 1000 * 60);
 	}
 
 	private static _buy(qq: number, id: number, number: number): Buy {
-		qq |= 0;
 		id |= 0;
 		number |= 0;
 		/**股票列表*/
 		let prices: SharesData = Shares.prices;
 		/**股票价格*/
-		let p: number = prices[id] | 0;
+		let price: number = prices[id] | 0;
 		/**成员*/
 		let member = CQData.getMember(qq);
 		/**成员股票列表*/
 		let user: SharesData = this.getUser(qq);
 		/**成员持有数量*/
 		let n: number = (user[id] ?? 0) | 0;
+		/**需要价格*/
+		let p: number = 0 | 0;
 		if (number === 0) {
 			return {
 				success: true,
-				need: 0,
-				num: 0,
-				price: p,
+				price: price,
+				num: n,
+				need: p,
 				point: member.exp,
 			};
-		}
-		let price: number = 0 | 0;
-		if (number > 0) {
-			price = -Shares._calc(p + 1, number) | 0;
-			if (member.exp < price) {
+		} else if (number > 0) {
+			p = -Shares._calc(price + 1, number) | 0;
+			if (member.exp + p < 0) {
 				return {
 					success: false,
-					price: p,
+					price: price,
 					num: n,
-					need: price,
+					need: p,
 					point: member.exp,
 				};
 			}
 		} else if (number < 0) {
-			price = Shares._calc(p - 1, -number) | 0;
+			p = Shares._calc(price - 1, -number) | 0;
 			if (n + number < 0) {
 				return {
 					success: false,
-					price: p,
+					price: price,
 					num: n,
-					need: price,
+					need: p,
 					point: member.exp,
 				};
 			}
 		}
-		member.exp += price;
+		member.exp += p;
 		user[id] = n + number;
-		p += number;
-		prices[id] = p < 1 ? 1 : p;
+		price += number;
+		prices[id] = price < 1 ? 1 : price;
 		return {
 			success: true,
 			price: prices[id],
 			num: n,
-			need: price,
+			need: p,
 			point: member.exp,
 		};
 	}

@@ -19,7 +19,7 @@ class CQBot extends Plug {
 		this.name = "QQ机器人";
 		this.description = "用于连接go-cqhttp服务的bot";
 		this.version = 0;
-		this.bot = new CQWebSocket(CQWS, process.execArgv.includes("--inspect"));
+		this.bot = new CQWebSocket(CQWS);
 		this.init();
 	}
 

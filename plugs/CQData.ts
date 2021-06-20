@@ -60,7 +60,6 @@ class CQData extends Plug {
 					]);
 				});
 			}
-
 			await db.close();
 		});
 		this.autoSave();
