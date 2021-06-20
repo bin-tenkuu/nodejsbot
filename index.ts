@@ -20,7 +20,7 @@ Promise.resolve().then(async () => {
 	await require("./plugs/CQBotRepeat").default;
 	await require("./plugs/CQBotSearch").default;
 	await require("./plugs/CQBotPicture").default;
-	await require("./plugs/Shares").default;
+	await require("./plugs/Shares").default.install();
 	await require("./plugs/test").default;
 	hrtime(time);
 }).then(() => {

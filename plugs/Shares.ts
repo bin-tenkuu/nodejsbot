@@ -90,9 +90,8 @@ class Shares extends Plug {
 			clearTimeout(this.auto);
 		}
 		this.auto = setTimeout(() => {
-			if (!this.installed) {return;}
 			Shares.changePrice();
-		}, 1000 * 60);
+		}, 1000 * 30);
 	}
 
 	private static _buy(qq: number, id: number, number: number): Buy {
