@@ -22,10 +22,11 @@ class Shares extends Plug {
 		 execArray: RegExpExecArray): Promise<CQTag[]> {
 		let {id} = execArray.groups as { id?: string } ?? {};
 		let {user_id} = event.context;
-		let price: SharesData = Shares.prices;
 		if (id === undefined) {
+			let price: SharesData = Shares.prices;
+			let user: SharesData = Shares.getUser(user_id);
 			let str: string = Array.from({length: 10}, (_, i) => {
-				return `${i}.${Shares.getName(i)}:${price[i]}`;
+				return `${i}.${Shares.getName(i)}:${price[i]} 持有:${user[i]}`;
 			}).join("\n");
 			return [CQ.text("当前价格:\n" + str)];
 		} else {
