@@ -161,6 +161,7 @@ class Shares extends Plug {
 	}
 
 	async install() {
+		this.autoChange();
 	}
 
 	async uninstall() {
