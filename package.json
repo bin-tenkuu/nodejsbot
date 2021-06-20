@@ -32,7 +32,7 @@
 	"dependencies": {
 		"axios": "^0.21.1",
 		"ftp": "^0.3.10",
-		"go-cqwebsocket": "^6.0.0",
+		"go-cqwebsocket": "^6.0.1",
 		"images": "^3.2.3",
 		"log4js": "^6.3.0",
 		"node-cache": "^5.1.2",

@@ -173,7 +173,7 @@ class CQBot extends Plug {
 				CQBot.sendCorpusTags(event, CQBot.getValues(members.corpora, CQBot.filterPrivate(event)), tags => {
 					if (tags.length < 1) return;
 					hrtime(time);
-					sendPrivate(event, tags);
+					sendPrivate(event, tags, event.context.temp_source);
 				});
 			},
 		});
