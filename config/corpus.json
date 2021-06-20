@@ -101,15 +101,16 @@
 			"name": ".股票",
 			"regexp": "^\\.(?:gp|股票) ?(?<id>\\d)?$",
 			"reply": "[FN:Shares.getSharesPrice]",
-			"forward": false,
+			"forward": true,
 			"help": "股票游戏:(.gp)或(.股票)+(股票id)查看当前价格,不附带股票id则表示获取所有股票价格",
 			"delMSG": 30
 		}, {
 			"name": ".股票",
 			"regexp": "^\\.(?:gp|股票) ?(?<id>\\d) (?<num>[+-]?\\d+)$",
 			"reply": "[FN:Shares.getShares]",
-			"forward": false,
-			"help": "股票游戏:(.gp)或(.股票)+(股票id) (数量)购买或卖出股票.(每买入1,价格+1)",
+			"forward": true,
+			"canGroup": false,
+			"help": "股票游戏(私聊):(.gp)或(.股票)+(股票id) (数量)购买或卖出股票.(每买入1,价格+1)",
 			"delMSG": 30
 		}, {
 			"name": "为什么呢",

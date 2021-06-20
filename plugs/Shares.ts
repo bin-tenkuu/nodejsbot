@@ -79,20 +79,21 @@ class Shares extends Plug {
 		let price = Shares.prices;
 		price.forEach((v, i) => {
 			let number = distribution(2) * Math.max(v, 9) | 0;
-			if ((v < 10)) {
-				number += 10 - v;
-			}
+			if (v < 10) { number += 10 - v; }
+			if (v > 100) { number -= v >> 5; }
 			price[i] = v + number;
 		});
 	}
 
-	private autoChange() {
+	/**单位:秒*/
+	private autoChange(time = 30): void {
 		if (this.auto !== undefined) {
 			clearTimeout(this.auto);
 		}
 		this.auto = setTimeout(() => {
 			Shares.changePrice();
-		}, 1000 * 30);
+			this.autoChange(60 * 60);
+		}, 1000 * time);
 	}
 
 	private static _buy(qq: number, id: number, number: number): Buy {
@@ -107,7 +108,7 @@ class Shares extends Plug {
 		/**成员股票列表*/
 		let user: SharesData = this.getUser(qq);
 		/**需要价格*/
-		let p: number = 0 | 0;
+		let p: number = 0;
 		if (number === 0) {
 			return {
 				success: true,
@@ -117,7 +118,7 @@ class Shares extends Plug {
 				point: member.exp,
 			};
 		} else if (number > 0) {
-			p = -Shares._calc(price + 1, number) | 0;
+			p = -Shares._calc(price + 1, number);
 			if (member.exp + p < 0) {
 				return {
 					success: false,
@@ -128,7 +129,7 @@ class Shares extends Plug {
 				};
 			}
 		} else if (number < 0) {
-			p = Shares._calc(price - 1, -number) | 0;
+			p = Shares._calc(price + number - 1, -number);
 			if (user[id] + number < 0) {
 				return {
 					success: false,
@@ -140,6 +141,7 @@ class Shares extends Plug {
 			}
 		}
 		member.exp += p;
+		if (member.exp < 0 || member.exp > 0x7fffffff) {member.exp = 0; }
 		user[id] += number;
 		price += number;
 		prices[id] = price < 1 ? 1 : price;
@@ -158,7 +160,7 @@ class Shares extends Plug {
 	}
 
 	private static _calc(p: number, n: number): number {
-		return p * n + (n * (n - 1) >> 1) | 0;
+		return p * n + (n * (n - 1) >> 1);
 	}
 
 	async install() {
