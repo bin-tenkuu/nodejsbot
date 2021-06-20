@@ -3,7 +3,7 @@ import {CQTag} from "go-cqwebsocket/out/tags";
 import {Plug} from "../Plug.js";
 import {canCallGroup, canCallPrivate} from "../utils/Annotation.js";
 import {distribution} from "../utils/COCUtils.js";
-import {default as CQData} from "./CQData.js";
+import {default as CQData, SharesData} from "./CQData.js";
 
 class Shares extends Plug {
 	private auto?: NodeJS.Timeout;
@@ -20,45 +20,68 @@ class Shares extends Plug {
 	@canCallPrivate()
 	async getSharesPrice(event: CQEvent<"message.group"> | CQEvent<"message.private">,
 		 execArray: RegExpExecArray): Promise<CQTag[]> {
-		event.stopPropagation();
-		let {num} = execArray.groups as { num?: string } ?? {};
+		let {id} = execArray.groups as { id?: string } ?? {};
 		let {user_id} = event.context;
-		if (num === undefined) {
-			return [CQ.text(`当前价格:${Shares.price
-			}\n你的持有:${CQData.shares.get(user_id) ?? 0
-			}\n剩余点数:${CQData.getMember(user_id).exp
+		let price: SharesData = Shares.prices;
+		if (id === undefined) {
+			let str: string = Array.from({length: 10}, (_, i) => {
+				return `${i}.${Shares.getName(i)}:${price[i]}`;
+			}).join("\n");
+			return [CQ.text("当前价格:\n" + str)];
+		} else {
+			let ids: number = +id;
+			let buy: Buy = Shares._buy(user_id, ids, 0);
+			return [CQ.text(`${Shares.getName(ids)}价格:${buy.price
+			}\n你的持有:${buy.num
+			}\n剩余点数:${buy.point
 			}`)];
 		}
-		let b: boolean = Shares._buy(user_id, +num);
-		let p: number = Shares.price;
-		let n = Shares._calc(p, +num);
-		if (b) {
-			return [CQ.text(`买入成功\n当前价格:${p
-			}\n你的持有:${CQData.shares.get(user_id) ?? 0
-			}\n剩余点数:${CQData.getMember(user_id).exp
-			}\n消耗点数:${n}`)];
+	}
+
+	@canCallGroup()
+	@canCallPrivate()
+	async getShares(event: CQEvent<"message.group"> | CQEvent<"message.private">,
+		 execArray: RegExpExecArray): Promise<CQTag[]> {
+		event.stopPropagation();
+		let {id, num} = execArray.groups as { id?: string, num?: string } ?? {};
+		if (id === undefined || num === undefined) return [];
+		let {user_id} = event.context;
+		let ids: number = +id;
+		let b: Buy = Shares._buy(user_id, ids, +num);
+		if (b.success) {
+			return [CQ.text(`${Shares.getName(ids)}买入成功\n当前价格:${b.price
+			}\n你的持有:${b.num
+			}\n剩余点数:${b.point
+			}\n消耗点数:${b.need}`)];
 		}
-		return [CQ.text(`买入失败\n当前价格:${p
-		}\n你的持有:${CQData.shares.get(user_id) ?? 0
-		}\n剩余点数:${CQData.getMember(user_id).exp
-		}\n需要点数${n}`)];
+		return [CQ.text(`${Shares.getName(ids)}买入失败\n当前价格:${b.price
+		}\n你的持有:${b.num
+		}\n剩余点数:${b.point
+		}\n需要点数${b.need}`)];
 	}
 
-	private static get price(): number {
-		return (CQData.shares.get(0) ?? (Shares.price = 10)) | 0;
+	private static getUser(qq: number): SharesData {
+		let arr: SharesData | undefined = CQData.shares.get(qq);
+		if (arr === undefined) {
+			arr = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+			CQData.shares.set(qq, arr);
+		}
+		return arr;
 	}
 
-	private static set price(value: number) {
-		CQData.shares.set(0, value);
+	private static get prices(): SharesData {
+		return this.getUser(0);
 	}
 
 	private static changePrice() {
-		let price: number = Shares.price | 0;
-		let number = distribution(2) * Math.max(price, 9) | 0;
-		if ((price < 10)) {
-			number += 10 - price;
-		}
-		Shares.price = price + number;
+		let price = Shares.prices;
+		price.forEach((v, i) => {
+			let number = distribution(2) * Math.max(v, 9) | 0;
+			if ((v < 10)) {
+				number += 10 - v;
+			}
+			price[i] = v + number;
+		});
 	}
 
 	private autoChange() {
@@ -69,28 +92,69 @@ class Shares extends Plug {
 		}, 1000 * 60 * 60);
 	}
 
-	private static _buy(id: number, number: number): boolean {
+	private static _buy(qq: number, id: number, number: number): Buy {
+		qq |= 0;
+		id |= 0;
 		number |= 0;
-		if (number === 0) return true;
-		let p: number = Shares.price | 0;
-		let member = CQData.getMember(id);
-		let n: number = (CQData.shares.get(id) ?? 0) | 0;
-		if (number > 0) {
-			let price: number = Shares._calc(p, number) | 0;
-			if (member.exp < price) return false;
-			member.exp -= price;
-			CQData.shares.set(id, n + number);
-			Shares.price = p + number;
-			return true;
-		} else if (number < 0) {
-			number = -number;
-			if (n < number) return false;
-			member.exp += Shares._calc(p, number) | 0;
-			CQData.shares.set(id, n - number);
-			Shares.price = (p -= number) < 1 ? 1 : p;
-			return true;
+		/**股票列表*/
+		let prices: SharesData = Shares.prices;
+		/**股票价格*/
+		let p: number = prices[id] | 0;
+		/**成员*/
+		let member = CQData.getMember(qq);
+		/**成员股票列表*/
+		let user: SharesData = this.getUser(qq);
+		/**成员持有数量*/
+		let n: number = (user[id] ?? 0) | 0;
+		if (number === 0) {
+			return {
+				success: true,
+				need: 0,
+				num: 0,
+				price: p,
+				point: member.exp,
+			};
 		}
-		return false;
+		let price: number = 0 | 0;
+		if (number > 0) {
+			price = -Shares._calc(p + 1, number) | 0;
+			if (member.exp < price) {
+				return {
+					success: false,
+					price: p,
+					num: n,
+					need: price,
+					point: member.exp,
+				};
+			}
+		} else if (number < 0) {
+			price = Shares._calc(p - 1, -number) | 0;
+			if (n + number < 0) {
+				return {
+					success: false,
+					price: p,
+					num: n,
+					need: price,
+					point: member.exp,
+				};
+			}
+		}
+		member.exp += price;
+		user[id] = n + number;
+		p += number;
+		prices[id] = p < 1 ? 1 : p;
+		return {
+			success: true,
+			price: prices[id],
+			num: n,
+			need: price,
+			point: member.exp,
+		};
+	}
+
+	private static getName(id: number): string {
+		const array = ["牛牛  ", "咕咕  ", "鱼鱼  ", "皮皮虾", "BUG  ", "双马尾", "黑丝袜", "超短裙", "死库水", "萝莉  "];
+		return array[id];
 	}
 
 	private static _calc(p: number, n: number): number {
@@ -107,3 +171,16 @@ class Shares extends Plug {
 }
 
 export default new Shares();
+
+type Buy = {
+	/**成功*/
+	success: boolean
+	/**价格*/
+	price: number,
+	/**持有数量*/
+	num: number,
+	/**需要点数*/
+	need: number
+	/**剩余点数*/
+	point: number
+}

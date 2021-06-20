@@ -6,7 +6,7 @@ import {logger} from "../utils/logger.js";
 class CQData extends Plug {
 
 	readonly memberMap: Map<number, Member>;
-	readonly shares: Map<number, number>;
+	readonly shares: Map<number, SharesData>;
 	corpora: Corpus[];
 	pokeGroup: Poke[];
 
@@ -50,9 +50,14 @@ class CQData extends Plug {
 				this.pokeGroup = await db.all<Poke[]>(`select id,text from pokeGroup`);
 			}
 			{
-				let all = await db.all<{ id: number, number: number }[]>(`SELECT id,number FROM Shares`);
+				let all = await db.all<{ id: number, n0: number, n1: number, n2: number, n3: number, n4: number, n5: number, n6: number, n7: number, n8: number, n9: number }[]>(
+					 `SELECT id, n0, n1, n2, n3, n4, n5, n6, n7, n8, n9 FROM Shares`);
 				all.forEach(value => {
-					this.shares.set(value.id, value.number);
+					this.shares.set(value.id, [value.n0,
+						value.n1, value.n2, value.n3,
+						value.n4, value.n5, value.n6,
+						value.n7, value.n8, value.n9,
+					]);
 				});
 			}
 
@@ -122,7 +127,8 @@ class CQData extends Plug {
 			for (let share of this.shares) {
 				let [id, number] = share;
 				await db.run("INSERT OR IGNORE INTO Shares (id) VALUES (?);", id);
-				await db.run("UPDATE Shares SET number=? WHERE id=?;", number, id);
+				await db.run("UPDATE Shares SET n0=?,n1=?,n2=?,n3=?,n4=?,n5=?,n6=?,n7=?,n8=?,n9=? WHERE id=?;",
+					 ...number, id);
 			}
 			this.saving = false;
 			await db.close();
@@ -149,5 +155,6 @@ export type Corpus = {
 	forward: boolean, needAdmin: boolean, isOpen: boolean, delMSG: number,
 	canGroup: boolean, canPrivate: boolean, help: string | undefined
 };
+export type SharesData = [number, number, number, number, number, number, number, number, number, number]
 export type Poke = { id: number, text: string }
 export type Member = { exp: number, baned: 0 | 1 };
