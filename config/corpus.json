@@ -11,8 +11,8 @@
 			"regexp": "^\\.dall1$",
 			"reply": "[FN:CQBotCOC.setCheater]"
 		}, {
-			"name": ".d <表达式> <...>",
-			"regexp": "^\\.d +([^ ]+)",
+			"name": ".[Dd] <表达式> <...>",
+			"regexp": "^\\.[dD] +([^ ]+)",
 			"reply": "[FN:CQBotCOC.getDice]",
 			"help": "骰子及简单表达式计算"
 		}, {
