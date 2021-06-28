@@ -103,7 +103,7 @@ class CQBotCOC extends Plug {
 		let preRet = handles.filter(v => v.list !== null).map((v) => {
 			return `${v.origin}：[${v.list}]=${v.num}`;
 		}).join("\n");
-		str = handles.map(value => value.origin).join("");
+		str = handles.map(value => `${value.op}${value.origin}`).join("");
 		let sumNum = CQBotCOC.calculate(handles);
 		if (preRet !== "") {
 			if (handles.length === 1) {
@@ -117,7 +117,7 @@ class CQBotCOC extends Plug {
 	}
 
 	private static castString(value: string, cheater: boolean): calc {
-		let groups = (/^(?<op>[+\-*])?(?<num>\d+)?([dD](?<max>\d+))?$/.exec(value)?.groups) as {
+		let groups = (/^(?<op>[+\-*])?(?<num>\d+)?(?:[dD](?<max>\d+))?$/.exec(value)?.groups) as {
 			op?: "+" | "-" | "*"
 			num?: string
 			max?: string
@@ -136,7 +136,7 @@ class CQBotCOC extends Plug {
 				dices = dice(num, +max);
 			}
 			return {
-				origin: `${op}${num}d${max}`,
+				origin: `${num}d${max}`,
 				op,
 				...dices,
 			};
@@ -145,7 +145,7 @@ class CQBotCOC extends Plug {
 				op: op,
 				num: num,
 				list: null,
-				origin: `${op}${num}`,
+				origin: num.toString(),
 			};
 		}
 	}

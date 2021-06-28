@@ -50,16 +50,16 @@ export function sendAuto(event: CQEvent<"message.group"> | CQEvent<"message.priv
 	if (event.contextType === "message.group") {
 		sendGroup(event, message).catch(NOP);
 	} else if (event.contextType === "message.private") {
-		sendPrivate(event, message, event.context.temp_source).catch(NOP);
+		sendPrivate(event, message).catch(NOP);
 	}
 }
 
 export function sendPrivate<T>({bot, context: {user_id = adminId}}: hasUser<T>,
-	 message: CQTag[] | string, group_id?: number): PromiseRes<MessageId> {
+		message: CQTag[] | string): PromiseRes<MessageId> {
 	if (typeof message === "string") message = CQ.parse(message);
 	let msg = message;
 	return bot.send("send_private_msg", {
-		message: <any>msg, user_id, group_id,
+		message: <any>msg, user_id,
 	}).catch(() => {
 		return bot.send_private_msg(user_id, cast2Text(msg));
 	}).catch(() => {

@@ -12,7 +12,7 @@
 			"reply": "[FN:CQBotCOC.setCheater]"
 		}, {
 			"name": ".d <表达式> <...>",
-			"regexp": "^\\.d *([^ ]+)",
+			"regexp": "^\\.d +([^ ]+)",
 			"reply": "[FN:CQBotCOC.getDice]",
 			"help": "骰子及简单表达式计算"
 		}, {

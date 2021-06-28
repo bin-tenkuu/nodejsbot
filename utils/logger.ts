@@ -32,12 +32,12 @@ export const logger = configure(<Configuration>{
 }).getLogger("default");
 
 export function hrtime(time: [number, number]): void {
-	let [s, ns] = process.hrtime(time);
-	ns = ns / 1e3 | 0;
+	let [s, ns] = time;
+	ns = ns / 1e3;
 	if (ns < 1000) {
 		return logger.info(`本次请求耗时:${s}秒${ns}微秒`);
 	}
-	ns = ns / 1e3 | 0;
+	ns = (ns | 0) / 1e3;
 	return logger.info(`本次请求耗时:${s}秒${ns}毫秒`);
 }
 

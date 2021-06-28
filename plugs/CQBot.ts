@@ -165,15 +165,15 @@ class CQBot extends Plug {
 					} else {
 						pro.catch(NOP);
 					}
-					hrtime(time);
+					hrtime(process.hrtime(time));
 				});
 			},
 			"message.private": (event) => {
 				let time = process.hrtime();
 				CQBot.sendCorpusTags(event, CQBot.getValues(members.corpora, CQBot.filterPrivate(event)), tags => {
 					if (tags.length < 1) return;
-					hrtime(time);
-					sendPrivate(event, tags, event.context.temp_source);
+					hrtime(process.hrtime(time));
+					sendPrivate(event, tags);
 				});
 			},
 		});

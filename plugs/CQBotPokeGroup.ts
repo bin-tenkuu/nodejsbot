@@ -36,7 +36,7 @@ class CQBotPokeGroup extends Plug {
 				event.stopPropagation();
 				let str = CQData.pokeGroup[Math.random() * CQData.pokeGroup.length | 0].text;
 				sendGroup(event, str).catch(NOP).finally(() => {
-					hrtime(time);
+					hrtime(process.hrtime(time));
 				});
 			},
 		});
