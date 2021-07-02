@@ -19,7 +19,7 @@ class CQBotRepeat extends Plug {
 	@canCallGroup()
 	async getRepeat(event: CQEvent<"message.group">) {
 		let {group_id, user_id, raw_message} = event.context;
-		let node = this.repeatCache.getNode(group_id, raw_message);
+		let node = this.repeatCache.get(group_id, raw_message);
 		let member = CQData.getMember(event.context.user_id);
 		if (node.addUser(user_id)) {
 			member.exp--;

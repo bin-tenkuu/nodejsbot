@@ -23,18 +23,21 @@ class Node<T> {
 export class RepeatCache<T = unknown> {
 	private cache: NodeCache;
 
-	constructor() {
-		this.cache = new NodeCache({useClones: false, stdTTL: 600, deleteOnExpire: true});
+	/**
+	 *
+	 * @param options 未明确指定时,不克隆,过期时间1h,过期后删除
+	 */
+	constructor(options?: NodeCache.Options) {
+		this.cache = new NodeCache(options ?? {useClones: false, stdTTL: 600, deleteOnExpire: true});
 	}
 
-	addData(group: number, user: number, data: T): Node<T> {
-		let node: Node<T> = this.getNode(group, data);
-		node.addUser(user);
-		return node;
-	}
-
-	getNode(group: number, data: T): Node<T> {
+	get(group: number, data?: undefined): Node<T> | undefined
+	get(group: number, data: T): Node<T>
+	get(group: number, data: T | undefined): Node<T> | undefined {
 		let node = this.cache.get<Node<T>>(group);
+		if (data === undefined) {
+			return node;
+		}
 		if (node === undefined || node.msg !== data) {
 			node = new Node(data);
 			this.cache.set(group, node, 600);
