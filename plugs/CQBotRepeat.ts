@@ -3,11 +3,11 @@ import {CQImage} from "go-cqwebsocket/out/tags";
 import {CQText} from "go-cqwebsocket/out/tags.js";
 import {Plug} from "../Plug.js";
 import {canCallGroup} from "../utils/Annotation.js";
-import {RepeatCache, RepeatCacheNode} from "../utils/repeat.js";
+import {Equatable, DataCache} from "../utils/repeat.js";
 import {default as CQData} from "./CQData.js";
 
 class CQBotRepeat extends Plug {
-	private repeatCache = new RepeatCache<RepeatCacheNode<string>>();
+	private repeatCache = new DataCache<RepeatCache>();
 
 	constructor() {
 		super(module);
@@ -19,7 +19,7 @@ class CQBotRepeat extends Plug {
 	@canCallGroup()
 	async getRepeat(event: CQEvent<"message.group">) {
 		let {group_id, user_id, raw_message} = event.context;
-		let node = this.repeatCache.get(group_id, new RepeatCacheNode<string>(raw_message));
+		let node = this.repeatCache.get(group_id, new RepeatCache(raw_message));
 		let member = CQData.getMember(event.context.user_id);
 		if (node.addUser(user_id)) {
 			member.exp--;
@@ -64,4 +64,31 @@ class CQBotRepeat extends Plug {
 	}
 }
 
+export class RepeatCache extends Equatable {
+	public msg: string;
+	public user: Set<number>;
+
+	constructor(msg: string) {
+		super();
+		this.msg = msg;
+		this.user = new Set();
+	}
+
+	addUser(user: number): boolean {
+		let b: boolean = this.user.has(user);
+		b || this.user.add(user);
+		return !b;
+	}
+
+	get times(): number {
+		return this.user.size;
+	}
+
+	public equal(obj: any): boolean {
+		if (obj instanceof RepeatCache) {
+			return this.msg === obj.msg;
+		}
+		return false;
+	}
+}
 export default new CQBotRepeat();

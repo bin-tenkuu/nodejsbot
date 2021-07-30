@@ -1,61 +1,32 @@
-import NodeCache from "node-cache";
+import Cache from "node-cache";
 
-export abstract class Equatable {
-	abstract equal(obj: any): boolean;
-}
-
-export class RepeatCacheNode<T> extends Equatable {
-	public msg: T;
-	public user: Set<number>;
-
-	constructor(msg: T) {
-		super();
-		this.msg = msg;
-		this.user = new Set();
-	}
-
-	addUser(user: number): boolean {
-		let b: boolean = this.user.has(user);
-		b || this.user.add(user);
-		return !b;
-	}
-
-	get times(): number {
-		return this.user.size;
-	}
-
-	public equal(obj: any): boolean {
-		if (obj == undefined) return false;
-		if (obj instanceof RepeatCacheNode) {
-			return this.msg == obj.msg;
-		}
-		return false;
+export class Equatable {
+	equal(obj: any): boolean {
+		return obj != null && this === obj;
 	}
 }
 
-export class RepeatCache<T = unknown> {
-	private cache: NodeCache;
+export class DataCache<T extends Equatable> {
+	private cache: Cache;
 
 	/**
 	 *
 	 * @param options 未明确指定时,不克隆,过期时间1h,过期后删除
 	 */
-	constructor(options?: NodeCache.Options) {
-		this.cache = new NodeCache(options ?? {useClones: false, stdTTL: 600, deleteOnExpire: true});
+	constructor(options?: Cache.Options) {
+		this.cache = new Cache(options ?? {useClones: false, stdTTL: 600, deleteOnExpire: true});
 	}
 
 	get(group: number, data?: undefined): T | undefined;
 	get(group: number, data: T): T;
 	get(group: number, data: T | undefined): T | undefined {
 		let node = this.cache.get<T>(group);
-		if (data === undefined) {
+		if (data == null) {
 			return node;
 		}
-		if (node === undefined || node !== data) {
-			if (!(node instanceof Equatable) ||
-				 node instanceof Equatable && !node.equal(data)) {
-				this.cache.set(group, data, 600);
-			}
+		if (node == null || node !== data || !node.equal(data)) {
+			this.cache.set(group, data, 600);
+			node = data;
 		}
 		return node;
 	}

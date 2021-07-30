@@ -3,11 +3,11 @@ import {CQTag} from "go-cqwebsocket/out/tags";
 import {Plug} from "../Plug.js";
 import {canCallGroup, canCallPrivate} from "../utils/Annotation.js";
 import {dice} from "../utils/COCUtils.js";
-import {RepeatCache} from "../utils/repeat.js";
+import {DataCache} from "../utils/repeat.js";
 import {default as CQData} from "./CQData.js";
 
 class Game1 extends Plug {
-	cache: RepeatCache<Uint16Array>;
+	// cache: DataCache<Uint16Array>;
 
 	constructor() {
 		super(module);
@@ -15,11 +15,11 @@ class Game1 extends Plug {
 		this.description = "柏青哥游戏";
 		this.version = 0;
 
-		this.cache = new RepeatCache({
-			useClones: false,
-			stdTTL: 60,
-			deleteOnExpire: true,
-		});
+		// this.cache = new DataCache({
+		// 	useClones: false,
+		// 	stdTTL: 60,
+		// 	deleteOnExpire: true,
+		// });
 	}
 
 	@canCallGroup()
@@ -32,7 +32,7 @@ class Game1 extends Plug {
 		let list = dice(3, 3).list;
 
 		// 创建缓存
-		let node = this.cache.get(1, list);
+		// let node = this.cache.get(1, list);
 
 		return [];
 	}
@@ -44,10 +44,10 @@ class Game1 extends Plug {
 		// 进入
 		event.stopPropagation();
 		// 创建缓存
-		let node = this.cache.get(1);
-		if (node === undefined) {
-			return [];
-		}
+		// let node = this.cache.get(1);
+		// if (node === undefined) {
+		// 	return [];
+		// }
 		// 判断
 
 		// 回复
