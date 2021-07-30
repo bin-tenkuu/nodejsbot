@@ -3,11 +3,11 @@ import {CQImage} from "go-cqwebsocket/out/tags";
 import {CQText} from "go-cqwebsocket/out/tags.js";
 import {Plug} from "../Plug.js";
 import {canCallGroup} from "../utils/Annotation.js";
-import {RepeatCache} from "../utils/repeat.js";
+import {RepeatCache, RepeatCacheNode} from "../utils/repeat.js";
 import {default as CQData} from "./CQData.js";
 
 class CQBotRepeat extends Plug {
-	private repeatCache = new RepeatCache<string>();
+	private repeatCache = new RepeatCache<RepeatCacheNode<string>>();
 
 	constructor() {
 		super(module);
@@ -19,7 +19,7 @@ class CQBotRepeat extends Plug {
 	@canCallGroup()
 	async getRepeat(event: CQEvent<"message.group">) {
 		let {group_id, user_id, raw_message} = event.context;
-		let node = this.repeatCache.get(group_id, raw_message);
+		let node = this.repeatCache.get(group_id, new RepeatCacheNode<string>(raw_message));
 		let member = CQData.getMember(event.context.user_id);
 		if (node.addUser(user_id)) {
 			member.exp--;

@@ -4,10 +4,12 @@ import {canCallGroup, canCallPrivate} from "../utils/Annotation.js";
 import {dice, distribution} from "../utils/COCUtils.js";
 import {db} from "../utils/database.js";
 import {logger} from "../utils/logger.js";
+import {Equatable, RepeatCache} from "../utils/repeat.js";
 
 class CQBotCOC extends Plug {
-	shortKey = new Map<string, string>();
-	cheater: boolean;
+	private shortKey = new Map<string, string>();
+	private cheater: boolean;
+	private cache: RepeatCache<DiceCache>;
 
 	constructor() {
 		super(module);
@@ -15,6 +17,7 @@ class CQBotCOC extends Plug {
 		this.description = "一些跑团常用功能";
 		this.version = 1;
 		this.cheater = false;
+		this.cache = new RepeatCache<DiceCache>({useClones: false, stdTTL: 60 * 5, deleteOnExpire: true});
 
 		this.readShortKey();
 	}
@@ -40,7 +43,7 @@ class CQBotCOC extends Plug {
 		if (key === undefined || key.length > 5) return [CQ.text("key格式错误或长度大于5")];
 		if (value === undefined) {
 			db.start(async db => {
-				await db.run(`delete from COCShortKey where key = ?`, key);
+				await db.run(`DELETE FROM COCShortKey WHERE KEY = ?`, key);
 				await db.close();
 			}).catch(NOP);
 			this.shortKey.delete(key);
@@ -49,7 +52,7 @@ class CQBotCOC extends Plug {
 		if (value.length > 10) return [CQ.text("value长度不大于10")];
 		this.shortKey.set(key, value);
 		db.start(async db => {
-			await db.run(`insert into COCShortKey(key, value) values (?, ?)`, key, value);
+			await db.run(`INSERT INTO COCShortKey(key, value) VALUES (?, ?)`, key, value);
 			await db.close();
 		}).catch(NOP);
 		return [CQ.text(`添加key:${key}=${value}`)];
@@ -68,13 +71,14 @@ class CQBotCOC extends Plug {
 		if (/[^+\-*dD0-9#]/.test(dice)) {
 			return [CQ.text(".d错误参数")];
 		}
-		return [CQ.text(this.dice(dice))];
+		return [CQ.text(this.dice(dice, event.context.user_id))];
 	}
 
 	@canCallGroup()
 	@canCallPrivate()
 	async getRandom(event: CQEvent<"message.group"> | CQEvent<"message.private">,
 		 execArray: RegExpExecArray): Promise<CQTag[]> {
+		event.stopPropagation();
 		let {num, times = 2} = execArray.groups as { num?: string, times?: string } ?? {};
 		if (num === undefined) return [];
 		let number = distribution(+times) * +num | 0;
@@ -83,20 +87,45 @@ class CQBotCOC extends Plug {
 
 	@canCallGroup()
 	@canCallPrivate()
-	async setCheater() {
+	async setCheater(event: CQEvent<"message.group"> | CQEvent<"message.private">) {
+		event.stopPropagation();
 		this.cheater = !this.cheater;
 		return [CQ.text("全1" + (this.cheater ? "开" : "关"))];
 	}
 
+	@canCallGroup()
+	@canCallPrivate()
+	async getAddedRandom(event: CQEvent<"message.group"> | CQEvent<"message.private">,
+		 execArray: RegExpExecArray): Promise<CQTag[]> {
+		event.stopPropagation();
+		let {num: numStr} = execArray.groups as {
+			num?: string
+		} ?? {};
+		let num: number = 1;
+		if (numStr != undefined) {
+			num = +numStr;
+		}
+		if (num === 0) {
+			return [];
+		}
+		let cache = this.cache.get(event.context.user_id);
+		if (cache == undefined || cache.max <= 0) {
+			return [CQ.text("5分钟之内没有投任何骰子")];
+		}
+		let calc = CQBotCOC.castString(`+${num}d${cache.max}`, this.cheater);
+		cache.add(calc.list![0]);
+		return [CQ.text(`${calc.origin}：[${calc.list}]=${calc.num}\n[${cache.list}]`)];
+	}
+
 	private readShortKey() {
 		db.start(async db => {
-			let all = await db.all<{ key: string, value: string }[]>(`select key, value from COCShortKey`);
+			let all = await db.all<{ key: string, value: string }[]>(`SELECT KEY, VALUE FROM COCShortKey`);
 			all.forEach(({key, value}) => this.shortKey.set(key, value));
 			await db.close();
 		}).catch(NOP);
 	}
 
-	private dice(str: string): string {
+	private dice(str: string, userId: number): string {
 		let handles = str.split(/(?=[+\-*])/).map<calc>(value => {
 			return CQBotCOC.castString(value, this.cheater);
 		});
@@ -107,6 +136,7 @@ class CQBotCOC extends Plug {
 		let sumNum = CQBotCOC.calculate(handles);
 		if (preRet !== "") {
 			if (handles.length === 1) {
+				this.cache.set(userId, new DiceCache(handles[0].max, handles[0].list ?? <number[]>[]));
 				return preRet;
 			} else {
 				return `${preRet}\n${str}=${sumNum}`;
@@ -139,6 +169,7 @@ class CQBotCOC extends Plug {
 				origin: `${num}d${max}`,
 				op,
 				...dices,
+				max: +max,
 			};
 		} else {
 			return {
@@ -146,6 +177,7 @@ class CQBotCOC extends Plug {
 				num: num,
 				list: null,
 				origin: num.toString(),
+				max: num,
 			};
 		}
 	}
@@ -180,6 +212,26 @@ class CQBotCOC extends Plug {
 	}
 }
 
-type calc = { op: "+" | "-" | "*", num: number, list: Uint16Array | null, origin: string }
+type calc = { op: "+" | "-" | "*", num: number, list: Uint16Array | null, origin: string, max: number }
+
+class DiceCache extends Equatable {
+	public max: number;
+	public list: number[];
+
+	constructor(max: number, list: Iterable<number>) {
+		super();
+		this.max = max;
+		this.list = [...list];
+	}
+
+	add(num: number) {
+		this.list.push(num | 0);
+	}
+
+	public equal(obj: any): boolean {
+		return obj == undefined || obj instanceof DiceCache && obj.max == this.max;
+	}
+
+}
 
 export default new CQBotCOC();
