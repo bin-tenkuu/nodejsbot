@@ -31,8 +31,8 @@ class CQBotPicture extends Plug {
 		};
 		let userId: number = event.context.user_id;
 		let member = CQData.getMember(userId);
-		if (member.exp < 10) { return [CQ.text("不够活跃")]; }
-		member.exp -= 10;
+		if (member.exp < 5) { return [CQ.text("不够活跃")]; }
+		member.exp -= 5;
 		if (this.setuSet.has(groups.keyword ?? "")) {
 			return [];
 		}
@@ -47,12 +47,12 @@ class CQBotPicture extends Plug {
 				let message = CQBotPicture.code(data.code);
 				logger.warn(`开始色图异常：异常返回码(${data.code})：${message}`);
 				if (data.code === 404) this.setuSet.add(groups.keyword ?? "");
-				member.exp += 10;
+				member.exp += 5;
 				return [CQ.text(message)];
 			}
 			if (data.count < 1) {
 				logger.warn(`开始色图异常：色图数量不足(${data.count})`);
-				member.exp += 5;
+				member.exp += 2;
 				return [CQ.text("色图数量不足")];
 			}
 			let first = data.data[0];
