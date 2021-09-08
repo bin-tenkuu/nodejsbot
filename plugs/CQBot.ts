@@ -35,17 +35,23 @@ class CQBot extends Plug {
 
 	private static* getValues(corpora: Corpus[], filter: Filter<Corpus>): Generator<Corpus, void> {
 		for (const corpus of corpora) {
-			if (filter(corpus)) yield corpus;
+			if (filter(corpus)) {
+				yield corpus;
+			}
 		}
 	}
 
 	private static sendCorpusTags(event: CQEvent<"message.private"> | CQEvent<"message.group">,
-		 corpus: Iterable<Corpus>, callback: (this: void, tags: CQTag[], element: Corpus) => void) {
+			corpus: Iterable<Corpus>, callback: (this: void, tags: CQTag[], element: Corpus) => void) {
 		let text = onlyText(event);
 		for (const element of corpus) {
 			let exec = element.regexp.exec(text);
-			if (exec === null) continue;
-			if (event.isCanceled) return;
+			if (exec === null) {
+				continue;
+			}
+			if (event.isCanceled) {
+				return;
+			}
 			parseMessage(element.reply, event, exec).catch(e => {
 				logger.error("语料库转换失败:" + element.name);
 				logger.error(e);
@@ -53,23 +59,27 @@ class CQBot extends Plug {
 			}).then(msg => {
 				callback(msg, element);
 			});
-			if (event.isCanceled) return;
+			if (event.isCanceled) {
+				return;
+			}
 		}
 	}
 
 	@canCallGroup()
 	async MemeAI(event: CQEvent<"message.group">, execArray: RegExpExecArray) {
-		if (!isAtMe(event)) return [];
+		if (!isAtMe(event)) {
+			return [];
+		}
 		event.stopPropagation();
 		let {message_id, user_id} = event.context;
 		let cqTags = execArray[0].replace(/吗/g, "")
-			 .replace(/(?<!\\)不/g, "\\很")
-			 .replace(/(?<!\\)你/g, "\\我")
-			 .replace(/(?<!\\)我/g, "\\你")
-			 .replace(/(?<![没\\])有/g, "\\没有")
-			 .replace(/(?<!\\)没有/g, "\\有")
-			 .replace(/[？?]/g, "!")
-			 .replace(/\\/g, "");
+				.replace(/(?<!\\)不/g, "\\很")
+				.replace(/(?<!\\)你/g, "\\我")
+				.replace(/(?<!\\)我/g, "\\你")
+				.replace(/(?<![没\\])有/g, "\\没有")
+				.replace(/(?<!\\)没有/g, "\\有")
+				.replace(/[？?]/g, "!")
+				.replace(/\\/g, "");
 		return [
 			CQ.reply(message_id),
 			CQ.at(user_id),
@@ -81,7 +91,7 @@ class CQBot extends Plug {
 	@canCallPrivate()
 	async getHelp() {
 		let s: string = members.corpora.filter(c => c.isOpen && !c.needAdmin &&
-			 c.help !== undefined).map<string>((c) => `${c.name}:${c.help}`).join("\n");
+				c.help !== undefined).map<string>((c) => `${c.name}:${c.help}`).join("\n");
 		return [CQ.text(s)];
 	}
 
@@ -144,10 +154,16 @@ class CQBot extends Plug {
 			"message.group": (event) => {
 				let time = process.hrtime();
 				let userId = event.context.user_id;
-				members.getMember(userId).exp++;
-				if (members.getBaned(userId)) { return; }
+				let member = members.getMember(userId)
+				member.name = event.context.sender.nickname
+				member.exp++;
+				if (members.getBaned(userId)) {
+					return;
+				}
 				CQBot.sendCorpusTags(event, CQBot.getValues(members.corpora, CQBot.filterGroup(event)), (tags, element) => {
-					if (tags.length < 1) return;
+					if (tags.length < 1) {
+						return;
+					}
 					let pro: PromiseRes<MessageId>;
 					if (!element.forward) {
 						pro = sendGroup(event, tags);
@@ -171,7 +187,9 @@ class CQBot extends Plug {
 			"message.private": (event) => {
 				let time = process.hrtime();
 				CQBot.sendCorpusTags(event, CQBot.getValues(members.corpora, CQBot.filterPrivate(event)), tags => {
-					if (tags.length < 1) return;
+					if (tags.length < 1) {
+						return;
+					}
 					hrtime(process.hrtime(time));
 					sendPrivate(event, tags);
 				});

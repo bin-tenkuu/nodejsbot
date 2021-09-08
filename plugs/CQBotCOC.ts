@@ -30,7 +30,9 @@ class CQBotCOC extends Plug {
 		this.shortKey.forEach((value, key) => {
 			str += `${key}=${value}\n`;
 		});
-		if (str === "") str = "无";
+		if (str === "") {
+			str = "无";
+		}
 		return [CQ.text(str)];
 	}
 
@@ -40,7 +42,9 @@ class CQBotCOC extends Plug {
 			execArray: RegExpExecArray): Promise<CQTag[]> {
 		event.stopPropagation();
 		let {key, value} = execArray.groups as { key?: string, value?: string } ?? {};
-		if (key === undefined || key.length > 5) return [CQ.text("key格式错误或长度大于5")];
+		if (key === undefined || key.length > 5) {
+			return [CQ.text("key格式错误或长度大于5")];
+		}
 		if (value === undefined) {
 			db.start(async db => {
 				await db.run(`DELETE FROM COCShortKey WHERE KEY = ?`, key);
@@ -49,7 +53,9 @@ class CQBotCOC extends Plug {
 			this.shortKey.delete(key);
 			return [CQ.text(`删除key:${key}`)];
 		}
-		if (value.length > 10) return [CQ.text("value长度不大于10")];
+		if (value.length > 10) {
+			return [CQ.text("value长度不大于10")];
+		}
 		this.shortKey.set(key, value);
 		db.start(async db => {
 			await db.run(`INSERT INTO COCShortKey(key, value) VALUES (?, ?)`, key, value);
@@ -63,15 +69,18 @@ class CQBotCOC extends Plug {
 	async getDice(event: CQEvent<"message.group"> | CQEvent<"message.private">,
 			execArray: RegExpExecArray): Promise<CQTag[]> {
 		event.stopPropagation();
-		let dice = execArray[1];
-		if (dice === undefined) return [];
+		let {times = "1", dice} = execArray.groups as { times: string, dice: string } ?? {};
+		if (dice === undefined) {
+			return [];
+		}
 		this.shortKey.forEach((value, key) => {
 			dice = dice.replace(new RegExp(key, "g"), value);
 		});
 		if (/[^+\-*dD0-9#]/.test(dice)) {
 			return [CQ.text(".d错误参数")];
 		}
-		return [CQ.text(this.dice(dice, event.context.user_id))];
+		let result = Array.from({length: +times}, () => this.dice(dice, event.context.user_id)).join("\n")
+		return [CQ.text(result)];
 	}
 
 	@canCallGroup()
@@ -80,7 +89,9 @@ class CQBotCOC extends Plug {
 			execArray: RegExpExecArray): Promise<CQTag[]> {
 		event.stopPropagation();
 		let {num, times = 2} = execArray.groups as { num?: string, times?: string } ?? {};
-		if (num === undefined) return [];
+		if (num === undefined) {
+			return [];
+		}
 		let number = distribution(+times) * +num | 0;
 		return [CQ.text(`${times}重随机数:${number}`)];
 	}
@@ -147,7 +158,7 @@ class CQBotCOC extends Plug {
 	}
 
 	private static castString(value: string, cheater: boolean): calc {
-		let groups = (/^(?<op>[+\-*])?(?<num>\d+)?(?:[dD](?<max>\d+))?$/.exec(value)?.groups) as {
+		let groups = /^(?<op>[+\-*])?(?<num>\d+)?(?:[dD](?<max>\d+))?$/.exec(value)?.groups as {
 			op?: "+" | "-" | "*"
 			num?: string
 			max?: string

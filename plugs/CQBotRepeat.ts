@@ -4,7 +4,6 @@ import {CQText} from "go-cqwebsocket/out/tags.js";
 import {Plug} from "../Plug.js";
 import {canCallGroup} from "../utils/Annotation.js";
 import {Equatable, DataCache} from "../utils/repeat.js";
-import {default as CQData} from "./CQData.js";
 
 class CQBotRepeat extends Plug {
 	private repeatCache = new DataCache<RepeatCache>();
@@ -20,9 +19,7 @@ class CQBotRepeat extends Plug {
 	async getRepeat(event: CQEvent<"message.group">) {
 		let {group_id, user_id, raw_message} = event.context;
 		let node = this.repeatCache.get(group_id, new RepeatCache(raw_message));
-		let member = CQData.getMember(event.context.user_id);
 		if (node.addUser(user_id)) {
-			member.exp--;
 			return [];
 		}
 		if (node.times !== 4) {
@@ -51,9 +48,11 @@ class CQBotRepeat extends Plug {
 		return [CQ.text(CQBotRepeat.Random(...msg).join(""))];
 	}
 
-	async install() {}
+	async install() {
+	}
 
-	async uninstall() {}
+	async uninstall() {
+	}
 
 	private static Random(...arr: string[]): string[] {
 		for (let i = arr.length - 1; i > 0; i--) {
@@ -64,7 +63,7 @@ class CQBotRepeat extends Plug {
 	}
 }
 
-export class RepeatCache extends Equatable {
+class RepeatCache extends Equatable {
 	public msg: string;
 	public user: Set<number>;
 
@@ -74,13 +73,18 @@ export class RepeatCache extends Equatable {
 		this.user = new Set();
 	}
 
-	addUser(user: number): boolean {
+	/**
+	 * 添加 user
+	 * @param user
+	 * @return 是否添加成功,如果已经存在则返回 `false`
+	 */
+	public addUser(user: number): boolean {
 		let b: boolean = this.user.has(user);
 		b || this.user.add(user);
 		return !b;
 	}
 
-	get times(): number {
+	public get times(): number {
 		return this.user.size;
 	}
 
@@ -91,4 +95,5 @@ export class RepeatCache extends Equatable {
 		return false;
 	}
 }
+
 export default new CQBotRepeat();

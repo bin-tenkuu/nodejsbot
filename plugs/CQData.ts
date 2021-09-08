@@ -41,19 +41,20 @@ class CQData extends Plug {
 		}));
 		await db.start(async db => {
 			{
-				let all = await db.all<{ id: number, exp: number, baned: 0 | 1 }[]>(`select id,exp,baned from Members`);
+				let all = await db.all<{ id: number, exp: number, baned: 0 | 1, name: string }[]>(`SELECT id, exp, baned, name FROM Members`);
 				all.forEach(value => {
-					this.memberMap.set(value.id, {exp: value.exp, baned: value.baned});
+					this.memberMap.set(value.id, {exp: value.exp, baned: value.baned, name: value.name});
 				});
 			}
 			{
-				this.pokeGroup = await db.all<Poke[]>(`select id,text from pokeGroup`);
+				this.pokeGroup = await db.all<Poke[]>(`SELECT id, text FROM pokeGroup`);
 			}
 			{
 				let all = await db.all<{ id: number, n0: number, n1: number, n2: number, n3: number, n4: number, n5: number, n6: number, n7: number, n8: number, n9: number }[]>(
-					 `SELECT id, n0, n1, n2, n3, n4, n5, n6, n7, n8, n9 FROM Shares`);
+						`SELECT id, n0, n1, n2, n3, n4, n5, n6, n7, n8, n9 FROM Shares`);
 				all.forEach(value => {
-					this.shares.set(value.id, [value.n0,
+					this.shares.set(value.id, [
+						value.n0,
 						value.n1, value.n2, value.n3,
 						value.n4, value.n5, value.n6,
 						value.n7, value.n8, value.n9,
@@ -66,7 +67,9 @@ class CQData extends Plug {
 	}
 
 	async uninstall() {
-		if (this.autoSaveTimeout !== undefined) clearTimeout(this.autoSaveTimeout);
+		if (this.autoSaveTimeout !== undefined) {
+			clearTimeout(this.autoSaveTimeout);
+		}
 		return this.save(size => {
 			if ((size & 0b111111) === 0b111111) {
 				logger.info(`还剩${size}个member`);
@@ -77,7 +80,7 @@ class CQData extends Plug {
 	getMember(id: number): Member {
 		let member: Member | undefined = this.memberMap.get(id);
 		if (member === undefined) {
-			member = {baned: 0, exp: 0};
+			member = {baned: 0, exp: 0, name: ""};
 			this.memberMap.set(id, member);
 		}
 		return member;
@@ -86,7 +89,7 @@ class CQData extends Plug {
 	getBaned(id: number): boolean {
 		let member: Member | undefined = this.memberMap.get(id);
 		if (member === undefined) {
-			member = {baned: 0, exp: 0};
+			member = {baned: 0, exp: 0, name: ""};
 			this.memberMap.set(id, member);
 		}
 		return member.baned === 1;
@@ -94,9 +97,9 @@ class CQData extends Plug {
 
 	addPoke(text: string): void {
 		db.start(async db => {
-			await db.run(`insert into pokeGroup(text) values(?);`, text);
+			await db.run(`INSERT INTO pokeGroup(text) VALUES (?);`, text);
 			let all: [{ id: number }] = await db.all<[{ id: number }]>(
-				 `select last_insert_rowid() as id from pokeGroup limit 1;`,
+					`SELECT LAST_INSERT_ROWID() AS id FROM pokeGroup LIMIT 1;`,
 			);
 			this.pokeGroup.push({id: all[0].id, text: text});
 			await db.close();
@@ -105,7 +108,7 @@ class CQData extends Plug {
 
 	removePoke(id: number): void {
 		db.start(async db => {
-			await db.run(`delete from pokeGroup where id=?;`, id);
+			await db.run(`DELETE FROM pokeGroup WHERE id = ?;`, id);
 			let number: number = this.pokeGroup.findIndex(v => v.id === id);
 			this.pokeGroup.splice(number, 1);
 			await db.close();
@@ -113,7 +116,9 @@ class CQData extends Plug {
 	}
 
 	private async save(callback?: (this: void, size: number) => void): Promise<void> {
-		if (this.saving) return;
+		if (this.saving) {
+			return;
+		}
 		this.saving = true;
 		return db.start(async db => {
 			let size: number = this.memberMap.size;
@@ -127,7 +132,8 @@ class CQData extends Plug {
 				let [id, number] = share;
 				await db.run("INSERT OR IGNORE INTO Shares (id) VALUES (?);", id);
 				await db.run("UPDATE Shares SET n0=?,n1=?,n2=?,n3=?,n4=?,n5=?,n6=?,n7=?,n8=?,n9=? WHERE id=?;",
-					 ...number, id);
+						...number, id,
+				);
 			}
 			this.saving = false;
 			await db.close();
@@ -136,7 +142,9 @@ class CQData extends Plug {
 
 	private autoSave(): void {
 		this.autoSaveTimeout = setTimeout(() => {
-			if (!this.installed) { return; }
+			if (!this.installed) {
+				return;
+			}
 			this.save().then(() => {
 				logger.info("自动保存结束");
 				this.autoSave();
@@ -156,4 +164,4 @@ export type Corpus = {
 };
 export type SharesData = [number, number, number, number, number, number, number, number, number, number]
 export type Poke = { id: number, text: string }
-export type Member = { exp: number, baned: 0 | 1 };
+export type Member = { exp: number, baned: 0 | 1, name: string };

@@ -27,7 +27,7 @@
 			"help": "5分钟之内加投骰"
 		}, {
 			"name": ".[Dd] <表达式> <...>",
-			"regexp": "^\\.[dD] +([^ ]+)",
+			"regexp": "^\\.[dD] +(?:(?<times>\\d)#)?(?<dice>[^ ]+)",
 			"reply": "[FN:CQBotCOC.getDice]",
 			"help": "骰子及简单表达式计算"
 		}, {
@@ -63,7 +63,7 @@
 			"regexp": "^\\.(?<control>设置|删除)poke(?<other>.*)$",
 			"reply": "[FN:CQBotPokeGroup.runPrivate]",
 			"needAdmin": true,
-			"isOpen": true
+			"isOpen": false
 		}, {
 			"name": ".语料库<type><open>",
 			"regexp": "^\\.语料库(?<type>私聊|群聊)?(?<open>开|关)$",
@@ -84,7 +84,8 @@
 			"name": "来点图",
 			"regexp": "^[来來发發给給][张張个個幅点點份][图圖]片?$",
 			"reply": "[FN:CQBotRandomPicture.getRandomPicture]",
-			"help": "随机图片"
+			"help": "随机图片",
+			"isOpen": false
 		}, {
 			"name": "来点[<r18>][<key>]色图",
 			"regexp": "^[来來发發给給][张張个個幅点點份](?<r18>[Rr]18的?)?(?<keyword>.*)?[色瑟][图圖]$",
@@ -108,7 +109,8 @@
 			"reply": "[FN:Shares.getSharesPrice]",
 			"forward": true,
 			"help": "股票游戏:(.gp)或(.股票)+(股票id)查看当前价格,不附带股票id则表示获取所有股票价格",
-			"delMSG": 30
+			"delMSG": 30,
+			"isOpen": false
 		}, {
 			"name": ".股票",
 			"regexp": "^\\.(?:gp|股票) ?(?<id>\\d) (?<num>[+-]?\\d+)$",
@@ -116,7 +118,8 @@
 			"forward": true,
 			"canGroup": false,
 			"help": "股票游戏(私聊):(.gp)或(.股票)+(股票id) (数量)购买或卖出股票.(每买入1,价格+1)",
-			"delMSG": 30
+			"delMSG": 30,
+			"isOpen": false
 		}, {
 			"name": "为什么呢",
 			"regexp": "^为什么呢$",
@@ -139,7 +142,8 @@
 			"name": ".搜图",
 			"regexp": "^\\.搜图$",
 			"reply": "[FN:CQBotSearch.getSauceNAO]",
-			"help": "带上图片发送"
+			"help": "带上图片发送",
+			"isOpen": false
 		}, {
 			"name": "(复读)",
 			"regexp": "^.+$",

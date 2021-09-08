@@ -27,7 +27,7 @@ class CQBotEvent extends Plug {
 				} else {
 					str = `@${user_id} 被管理员{@${operator_id}} ${sub_type === "approve" ? "同意" : "邀请"}入群`;
 				}
-				event.bot.send_group_msg(group_id, str).catch(() => { });
+				event.bot.send_group_msg(group_id, str).catch(NOP);
 			},
 			"notice.group_decrease": (event) => {
 				event.stopPropagation();

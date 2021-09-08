@@ -29,10 +29,14 @@ class CQBotRandomPicture extends Plug {
 	async getRandomPicture(event: CQEvent<"message.private"> | CQEvent<"message.group">): Promise<CQTag[]> {
 		event.stopPropagation();
 		let userId = event.context.user_id;
-		if (this.callSet.has(userId)) { return []; }
+		if (this.callSet.has(userId)) {
+			return [];
+		}
 		this.callSet.add(userId);
 		let member = CQData.getMember(userId);
-		if (member.exp < 2) { return [CQ.text("不够活跃")]; }
+		if (member.exp < 2) {
+			return [CQ.text("不够活跃")];
+		}
 		member.exp -= 2;
 		return await this.generator.next().value();
 	}
@@ -95,24 +99,24 @@ class CQBotRandomPicture extends Plug {
 
 	private static code(code: number) {
 		switch (code) {
-			case -1  :
-				return "内部错误";// 请向 i@loli.best 反馈
-			case 0   :
-				return "成功";
-			case 404 :
-				return "找不到符合关键字的色图";
-			default:
-				return "未知的返回码";
+		case -1  :
+			return "内部错误";// 请向 i@loli.best 反馈
+		case 0   :
+			return "成功";
+		case 404 :
+			return "找不到符合关键字的色图";
+		default:
+			return "未知的返回码";
 		}
 	}
 
 	private init() {
 		this.callList.push(
-			 CQBotRandomPicture.getSeTu,
-			 CQBotRandomPicture.getTouHouPNG,
-			 CQBotRandomPicture.getToubiec,
-			 CQBotRandomPicture.getDMXK,
-			 CQBotRandomPicture.getYH,
+				CQBotRandomPicture.getSeTu,
+				CQBotRandomPicture.getTouHouPNG,
+				CQBotRandomPicture.getToubiec,
+				CQBotRandomPicture.getDMXK,
+				CQBotRandomPicture.getYH,
 		);
 		setInterval(() => {
 			this.callSet.clear();

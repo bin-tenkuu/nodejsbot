@@ -1,9 +1,9 @@
 import {hrtime, logger} from "./utils/logger.js";
 
 declare global {
-	function NOP(): void
+	function NOP(): undefined
 }
-global.NOP = () => {};
+global.NOP = () => undefined;
 
 //*
 Promise.resolve().then(async () => {
@@ -15,10 +15,10 @@ Promise.resolve().then(async () => {
 	await require("./plugs/CQBotCOC").default;
 	await require("./plugs/CQBotEvent").default.install();
 	await require("./plugs/CQBotPlugin").default;
-	await require("./plugs/CQBotPokeGroup").default;
-	await require("./plugs/CQBotRandomPicture").default;
+	// await require("./plugs/CQBotPokeGroup").default;
+	// await require("./plugs/CQBotRandomPicture").default;
 	await require("./plugs/CQBotRepeat").default;
-	await require("./plugs/CQBotSearch").default;
+	// await require("./plugs/CQBotSearch").default;
 	await require("./plugs/CQBotPicture").default;
 	await require("./plugs/Shares").default;
 	await require("./plugs/test").default;

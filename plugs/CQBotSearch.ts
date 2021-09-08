@@ -18,9 +18,13 @@ class CQBotSearch extends Plug {
 	@canCallGroup()
 	async getSauceNAO(event: CQEvent<"message.group">): Promise<CQTag[]> {
 		let tag: CQTag | undefined = event.cqTags.find(tag => tag instanceof CQImage);
-		if (tag === undefined) return [CQ.text("请带上图片")];
+		if (tag === undefined) {
+			return [CQ.text("请带上图片")];
+		}
 		let url = tag.get("url");
-		if (url === undefined) return [];
+		if (url === undefined) {
+			return [];
+		}
 		logger.info("开始搜图");
 		event.stopPropagation();
 		let {
@@ -96,29 +100,29 @@ class CQBotSearch extends Plug {
 		let title: string;
 		let url: string = data["ext_urls"]?.join("\n") ?? "无";
 		switch (index) {
-			case 5:
-				return `图库:Pixiv\n标题:${data.title}\n画师:${data["member_name"]}\n原图:www.pixiv.net/artworks/${data["pixiv_id"]}`;
-			case 9:
-				return `图库:Danbooru\n上传者:${data["creator"]}\n角色:${data["characters"]}\n原图:${data["source"]}`;
-			case 19:
-				return `图库:2D市场\n上传者:${data["creator"]}\n原图:${url}`;
-			case 31:
-				return `图库:半次元插图\n标题:${data.title}\n画师:${data["member_name"]}\n原图:${url}`;
-			case 34:
-				return `图库:deviantart\n标题:${data.title}\n画师:${data["author_name"]}\n原图:${url}`;
-			case 36:
-				return `图库:madokami\n无具体信息`;
-			case 37:
-				return `图库:露娜汉化\n画师:${data["author"]}\n原图:${url}`;
-			case 38:
-				title = data["jp_name"] ?? data["eng_name"] ?? data.source;
-				url = data["creator"].toString();
-				return `图库:ehentai\n标题:${title}\n创建者:${url}`;
-			case 41:
-				return `图库:Twitter\n上传者:${data["twitter_user_handle"]}\n原图:${url}`;
-			default:
-				logger.info(index, data);
-				return `图库id:${index}\n具体信息未解析\n链接:${url}`;
+		case 5:
+			return `图库:Pixiv\n标题:${data.title}\n画师:${data["member_name"]}\n原图:www.pixiv.net/artworks/${data["pixiv_id"]}`;
+		case 9:
+			return `图库:Danbooru\n上传者:${data["creator"]}\n角色:${data["characters"]}\n原图:${data["source"]}`;
+		case 19:
+			return `图库:2D市场\n上传者:${data["creator"]}\n原图:${url}`;
+		case 31:
+			return `图库:半次元插图\n标题:${data.title}\n画师:${data["member_name"]}\n原图:${url}`;
+		case 34:
+			return `图库:deviantart\n标题:${data.title}\n画师:${data["author_name"]}\n原图:${url}`;
+		case 36:
+			return `图库:madokami\n无具体信息`;
+		case 37:
+			return `图库:露娜汉化\n画师:${data["author"]}\n原图:${url}`;
+		case 38:
+			title = data["jp_name"] ?? data["eng_name"] ?? data.source;
+			url = data["creator"].toString();
+			return `图库:ehentai\n标题:${title}\n创建者:${url}`;
+		case 41:
+			return `图库:Twitter\n上传者:${data["twitter_user_handle"]}\n原图:${url}`;
+		default:
+			logger.info(index, data);
+			return `图库id:${index}\n具体信息未解析\n链接:${url}`;
 		}
 	}
 }

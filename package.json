@@ -26,11 +26,11 @@
 	"author": "bin",
 	"license": "MIT",
 	"devDependencies": {
-		"@types/ftp": "^0.3.31",
-		"@types/node": "^14.14.25"
+		"@types/ftp": "^0.3.32",
+		"@types/node": "^16.7.13"
 	},
 	"dependencies": {
-		"axios": "^0.21.1",
+		"axios": "^0.21.4",
 		"ftp": "^0.3.10",
 		"go-cqwebsocket": "^6.0.1",
 		"images": "^3.2.3",
@@ -38,7 +38,7 @@
 		"node-cache": "^5.1.2",
 		"reflect-metadata": "^0.1.13",
 		"safe-regex": "^2.1.1",
-		"sqlite": "^4.0.21",
+		"sqlite": "^4.0.23",
 		"sqlite3": "^5.0.2",
 		"xmldom-ts": "^0.3.1"
 	},
