@@ -11,6 +11,10 @@
 			"regexp": "^\\.dall1$",
 			"reply": "[FN:CQBotCOC.setCheater]"
 		}, {
+			"name": ".d[bug|(wr|cb|aj)f?]:打开/关闭特殊模式",
+			"regexp": "^\\.d(?<operator>\\w{2,3})$",
+			"reply": "[FN:CQBotCOC.setDiceType]"
+		}, {
 			"name": ".dstat",
 			"regexp": "^\\.dstat$",
 			"reply": "[FN:CQBotCOC.getDiceStat]",
