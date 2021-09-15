@@ -6,11 +6,10 @@ import {logger} from "../utils/logger.js";
 class CQData extends Plug {
 
 	readonly memberMap: Map<number, Member>;
-	readonly shares: Map<number, SharesData>;
 	corpora: Corpus[];
 	pokeGroup: Poke[];
 
-	private autoSaveTimeout?: NodeJS.Timeout;
+	private autoSaveTimeout: NodeJS.Timeout | undefined;
 	private saving: boolean;
 
 	constructor() {
@@ -21,7 +20,6 @@ class CQData extends Plug {
 		this.corpora = [];
 		this.pokeGroup = [];
 		this.memberMap = new Map();
-		this.shares = new Map();
 		this.autoSaveTimeout = undefined;
 		this.saving = false;
 	}
@@ -49,18 +47,6 @@ class CQData extends Plug {
 			{
 				this.pokeGroup = await db.all<Poke[]>(`SELECT id, text FROM pokeGroup`);
 			}
-			{
-				let all = await db.all<{ id: number, n0: number, n1: number, n2: number, n3: number, n4: number, n5: number, n6: number, n7: number, n8: number, n9: number }[]>(
-						`SELECT id, n0, n1, n2, n3, n4, n5, n6, n7, n8, n9 FROM Shares`);
-				all.forEach(value => {
-					this.shares.set(value.id, [
-						value.n0,
-						value.n1, value.n2, value.n3,
-						value.n4, value.n5, value.n6,
-						value.n7, value.n8, value.n9,
-					]);
-				});
-			}
 		}).catch(db.close);
 		this.autoSave();
 	}
@@ -69,11 +55,7 @@ class CQData extends Plug {
 		if (this.autoSaveTimeout !== undefined) {
 			clearTimeout(this.autoSaveTimeout);
 		}
-		return this.save(size => {
-			if ((size & 0b111111) === 0b111111) {
-				logger.info(`还剩${size}个member`);
-			}
-		});
+		return this.save();
 	}
 
 	getMember(id: number): Member {
@@ -112,27 +94,20 @@ class CQData extends Plug {
 		}).catch(db.close);
 	}
 
-	private async save(callback?: (this: void, size: number) => void): Promise<void> {
+	private async save(): Promise<void> {
 		if (this.saving) {
 			return;
 		}
 		this.saving = true;
 		return db.start(async db => {
-			let size: number = this.memberMap.size;
+			logger.info("保存开始");
 			for (let memberMap of this.memberMap) {
 				let [id, {exp, baned}] = memberMap;
 				await db.run("INSERT OR IGNORE INTO Members (id) VALUES (?);", id);
 				await db.run("UPDATE Members SET exp=?,baned=?,time=? WHERE id=?;", exp, baned, Date.now(), id);
-				callback?.(--size);
-			}
-			for (let share of this.shares) {
-				let [id, number] = share;
-				await db.run("INSERT OR IGNORE INTO Shares (id) VALUES (?);", id);
-				await db.run("UPDATE Shares SET n0=?,n1=?,n2=?,n3=?,n4=?,n5=?,n6=?,n7=?,n8=?,n9=? WHERE id=?;",
-						...number, id,
-				);
 			}
 			this.saving = false;
+			logger.info("保存结束");
 		}).catch(db.close);
 	}
 
@@ -141,11 +116,11 @@ class CQData extends Plug {
 			if (!this.installed) {
 				return;
 			}
-			this.save().then(() => {
-				logger.info("自动保存结束");
+			this.save().catch(e => {
+				logger.error(`自动保存出错:`);
+				logger.error(e);
+			}).finally(() => {
 				this.autoSave();
-			}).catch(() => {
-				logger.error(`自动保存出错`);
 			});
 		}, 1000 * 60 * 60);
 	}
@@ -158,6 +133,5 @@ export type Corpus = {
 	forward: boolean, needAdmin: boolean, isOpen: boolean, delMSG: number,
 	canGroup: boolean, canPrivate: boolean, help: string | undefined
 };
-export type SharesData = [number, number, number, number, number, number, number, number, number, number]
 export type Poke = { id: number, text: string }
 export type Member = { exp: number, baned: 0 | 1, name: string };

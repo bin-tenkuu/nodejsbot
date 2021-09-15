@@ -20,13 +20,10 @@ class SQLControl {
 		};
 		this.breakTime = undefined;
 		this.db = undefined;
-		this.open().catch(e => {
-			logger.error(e);
-		});
 	}
 
 	/**
-	 * 记得关闭数据库
+	 * 不要关闭数据库
 	 * @param fun 数据库回调函数
 	 */
 	public async start<T = any>(fun: DatabaseHandle<T>): Promise<T> {
@@ -41,7 +38,7 @@ class SQLControl {
 		return openSqlite(this.config).then(db => {
 			this.db = db;
 			db.db.on("close", () => {
-				logger.info("DB Close");
+				logger.debug("DB Close");
 				this.db = undefined;
 			});
 			this.setBreakTime();
@@ -54,7 +51,7 @@ class SQLControl {
 		this.breakTime = undefined;
 	}
 
-	private setBreakTime(time: number = 1000 * 60 * 5) {
+	private setBreakTime(time: number = 1000 * 60 * 10) {
 		this.breakTime = setTimeout(this.close, time);
 	}
 

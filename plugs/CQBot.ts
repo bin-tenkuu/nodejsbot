@@ -142,7 +142,7 @@ class CQBot extends Plug {
 			},
 			"socket.close": ({context}) => {
 				logger.info(`已关闭 [${context.code}]: ${context.reason}`);
-
+				require("child_process").exec("npm stop");
 			},
 		});
 		this.bot.messageSuccess = (ret, message) => {

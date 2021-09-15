@@ -274,7 +274,7 @@ class SpecialEffects {
 				}
 				if (list.length > 2 && list[0] === list[1]) {
 					++list[1];
-					++data.num;
+					// ++data.num;
 				}
 				data.state = "[温柔]";
 			},
@@ -285,7 +285,7 @@ class SpecialEffects {
 				if (list === null) {
 					return;
 				}
-				data.num += list[0] - list[1];
+				// data.num += list[0] - list[1];
 				list[1] = list[0];
 				data.state = "[残暴]";
 			},

@@ -108,23 +108,6 @@
 			"delMSG": 60,
 			"help": "看看p站带上pid发送"
 		}, {
-			"name": ".股票",
-			"regexp": "^\\.(?:gp|股票) ?(?<id>\\d)?$",
-			"reply": "[FN:Shares.getSharesPrice]",
-			"forward": true,
-			"help": "股票游戏:(.gp)或(.股票)+(股票id)查看当前价格,不附带股票id则表示获取所有股票价格",
-			"delMSG": 30,
-			"isOpen": false
-		}, {
-			"name": ".股票",
-			"regexp": "^\\.(?:gp|股票) ?(?<id>\\d) (?<num>[+-]?\\d+)$",
-			"reply": "[FN:Shares.getShares]",
-			"forward": true,
-			"canGroup": false,
-			"help": "股票游戏(私聊):(.gp)或(.股票)+(股票id) (数量)购买或卖出股票.(每买入1,价格+1)",
-			"delMSG": 30,
-			"isOpen": false
-		}, {
 			"name": "为什么呢",
 			"regexp": "^为什么呢$",
 			"reply": "[CQ:reply]是啊，为什么呢，我也在寻找原因呢",

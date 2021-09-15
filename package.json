@@ -12,7 +12,7 @@
 	"type": "commonjs",
 	"scripts": {
 		"build": "tsc",
-		"test": "node --inspect-brk index.js",
+		"test": "node --inspect-brk test.js",
 		"stop": "curl http://127.0.0.1:40000/exit",
 		"start": "node index.js"
 	},
