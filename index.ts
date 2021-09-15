@@ -22,7 +22,7 @@ Promise.resolve().then(async () => {
 	await require("./plugs/CQBotPicture").default;
 	await require("./plugs/Shares").default;
 	await require("./plugs/test").default;
-	hrtime(process.hrtime(time));
+	hrtime(time);
 }).then(() => {
 	logger.info("启动完成");
 	module.children = [];

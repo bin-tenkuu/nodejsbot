@@ -1,5 +1,5 @@
-import {corpora} from "../config/corpus.json";
 import {Plug} from "../Plug.js";
+import {corpora} from "../config/corpus.json";
 import {db} from "../utils/database.js";
 import {logger} from "../utils/logger.js";
 
@@ -61,8 +61,7 @@ class CQData extends Plug {
 					]);
 				});
 			}
-			await db.close();
-		});
+		}).catch(db.close);
 		this.autoSave();
 	}
 
@@ -102,8 +101,7 @@ class CQData extends Plug {
 					`SELECT LAST_INSERT_ROWID() AS id FROM pokeGroup LIMIT 1;`,
 			);
 			this.pokeGroup.push({id: all[0].id, text: text});
-			await db.close();
-		}).catch(NOP);
+		}).catch(db.close);
 	}
 
 	removePoke(id: number): void {
@@ -111,8 +109,7 @@ class CQData extends Plug {
 			await db.run(`DELETE FROM pokeGroup WHERE id = ?;`, id);
 			let number: number = this.pokeGroup.findIndex(v => v.id === id);
 			this.pokeGroup.splice(number, 1);
-			await db.close();
-		}).catch(NOP);
+		}).catch(db.close);
 	}
 
 	private async save(callback?: (this: void, size: number) => void): Promise<void> {
@@ -136,8 +133,7 @@ class CQData extends Plug {
 				);
 			}
 			this.saving = false;
-			await db.close();
-		});
+		}).catch(db.close);
 	}
 
 	private autoSave(): void {

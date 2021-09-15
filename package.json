@@ -7,16 +7,12 @@
 	},
 	"main": "index.js",
 	"files": [
-		"config/*.json",
-		"plugs/*.js",
-		"utils/*.js",
-		"index.js",
-		"Plug.js"
+		"config/*.json", "plugs/*.js", "utils/*.js", "index.js", "Plug.js"
 	],
 	"type": "commonjs",
 	"scripts": {
 		"build": "tsc",
-		"debug": "node --inspect-brk index.js",
+		"test": "node --inspect-brk index.js",
 		"stop": "curl http://127.0.0.1:40000/exit",
 		"start": "node index.js"
 	},

@@ -142,6 +142,7 @@ class CQBot extends Plug {
 			},
 			"socket.close": ({context}) => {
 				logger.info(`已关闭 [${context.code}]: ${context.reason}`);
+
 			},
 		});
 		this.bot.messageSuccess = (ret, message) => {
@@ -154,8 +155,8 @@ class CQBot extends Plug {
 			"message.group": (event) => {
 				let time = process.hrtime();
 				let userId = event.context.user_id;
-				let member = members.getMember(userId)
-				member.name = event.context.sender.nickname
+				let member = members.getMember(userId);
+				member.name = event.context.sender.nickname;
 				member.exp++;
 				if (members.getBaned(userId)) {
 					return;
@@ -181,7 +182,7 @@ class CQBot extends Plug {
 					} else {
 						pro.catch(NOP);
 					}
-					hrtime(process.hrtime(time));
+					hrtime(time);
 				});
 			},
 			"message.private": (event) => {
@@ -190,7 +191,7 @@ class CQBot extends Plug {
 					if (tags.length < 1) {
 						return;
 					}
-					hrtime(process.hrtime(time));
+					hrtime(time);
 					sendPrivate(event, tags);
 				});
 			},

@@ -16,52 +16,54 @@ class CQBotPlugin extends Plug {
 	@canCallPrivate()
 	@canCallGroup()
 	async getter(event: CQEvent<"message.private"> | CQEvent<"message.group">,
-		 execArray: RegExpExecArray): Promise<CQTag[]> {
+			execArray: RegExpExecArray): Promise<CQTag[]> {
 		event.stopPropagation();
 		let {type} = execArray.groups as { type?: string } ?? {};
-		if (type === undefined) return [];
+		if (type === undefined) {
+			return [];
+		}
 		switch (type) {
-			case "群":
-				return event.bot.get_group_list().then(list => {
-					let s = list.map(group => `(${group.group_id})${group.group_name}`).join("\n");
-					return [CQ.text(s)];
-				});
-			case "好友":
-				return event.bot.get_friend_list().then(list => {
-					let s = list.map(friend => `(${friend.user_id})${friend.nickname}:(${friend.remark})`).join("\n");
-					return [CQ.text(s)];
-				});
-			case "ban":
-				let banList: number[] = [];
-				for (let memberMap of CQData.memberMap) {
-					let [number, {baned}] = memberMap;
-					if (baned === 1) {
-						banList.push(number);
-					}
-				}
-				let s = banList.join("\n");
+		case "群":
+			return event.bot.get_group_list().then(list => {
+				let s = list.map(group => `(${group.group_id})${group.group_name}`).join("\n");
 				return [CQ.text(s)];
-			case "poke":
-				let uin = event.context.self_id;
-				return CQData.pokeGroup.map(v => CQ.node(String(v.id), uin, v.text));
-			default:
-				return [];
+			});
+		case "好友":
+			return event.bot.get_friend_list().then(list => {
+				let s = list.map(friend => `(${friend.user_id})${friend.nickname}:(${friend.remark})`).join("\n");
+				return [CQ.text(s)];
+			});
+		case "ban":
+			let banList: number[] = [];
+			for (let memberMap of CQData.memberMap) {
+				let [number, {baned}] = memberMap;
+				if (baned === 1) {
+					banList.push(number);
+				}
+			}
+			let s = banList.join("\n");
+			return [CQ.text(s)];
+		case "poke":
+			let uin = event.context.self_id;
+			return CQData.pokeGroup.map(v => CQ.node(String(v.id), uin, v.text));
+		default:
+			return [];
 		}
 	}
 
 	@canCallPrivate()
 	@canCallGroup()
 	async setter(event: CQEvent<"message.private"> | CQEvent<"message.group">,
-		 execArray: RegExpExecArray): Promise<CQTag[]> {
+			execArray: RegExpExecArray): Promise<CQTag[]> {
 		event.stopPropagation();
 		let {type, other = ""} = execArray.groups as { type?: string, other?: string } ?? {};
 		switch (type) {
-			case "ban":
-				return [CQ.text(CQBotPlugin.setBanQQ(other, 1))];
-			case "unban":
-				return [CQ.text(CQBotPlugin.setBanQQ(other, 0))];
-			default:
-				return [];
+		case "ban":
+			return [CQ.text(CQBotPlugin.setBanQQ(other, 1))];
+		case "unban":
+			return [CQ.text(CQBotPlugin.setBanQQ(other, 0))];
+		default:
+			return [];
 		}
 	}
 
@@ -71,7 +73,7 @@ class CQBotPlugin extends Plug {
 	@canCallPrivate()
 	@canCallGroup()
 	async corpusList(event: CQEvent<"message.private"> | CQEvent<"message.group">,
-		 execArray: RegExpExecArray): Promise<CQTag[]> {
+			execArray: RegExpExecArray): Promise<CQTag[]> {
 		event.stopPropagation();
 		let {type, open} = execArray.groups as { type?: "私聊" | "群聊", open?: "开" | "关" } ?? {};
 		let isOpen: boolean;
@@ -83,7 +85,7 @@ class CQBotPlugin extends Plug {
 			return [];
 		}
 		return CQBotPlugin.getCorpusList(type).map((msg, index) =>
-			 ({name: msg.name, isOpen: msg.isOpen, index}),
+				({name: msg.name, isOpen: msg.isOpen, index}),
 		).filter(msg => msg.isOpen === isOpen,
 		).map(({name, index}) => CQ.text(`${index} :${name}\n`),
 		);
@@ -95,12 +97,14 @@ class CQBotPlugin extends Plug {
 	@canCallPrivate()
 	@canCallGroup()
 	async corpusStat(event: CQEvent<"message.private"> | CQEvent<"message.group">,
-		 execArray: RegExpExecArray): Promise<CQTag[]> {
+			execArray: RegExpExecArray): Promise<CQTag[]> {
 		event.stopPropagation();
 		let {
 			type, open, nums,
 		} = execArray.groups as { type?: "私聊" | "群聊", open?: "开" | "关", nums?: string } ?? {};
-		if (nums === undefined) return [];
+		if (nums === undefined) {
+			return [];
+		}
 		let number = +nums;
 		let s: boolean;
 		if (open === "开") {
@@ -111,7 +115,9 @@ class CQBotPlugin extends Plug {
 			return [];
 		}
 		let element = CQBotPlugin.getCorpusList(type)[number];
-		if (element === undefined) return [];
+		if (element === undefined) {
+			return [];
+		}
 		element.isOpen = s;
 		return [CQ.text("回复变动id:" + number)];
 	}
@@ -119,16 +125,22 @@ class CQBotPlugin extends Plug {
 	@canCallPrivate()
 	@canCallGroup()
 	async corpusInfo(event: CQEvent<"message.private"> | CQEvent<"message.group">,
-		 execArray: RegExpExecArray): Promise<CQTag[]> {
+			execArray: RegExpExecArray): Promise<CQTag[]> {
 		event.stopPropagation();
 		let {
 			type, nums,
 		} = execArray.groups as { type?: "私聊" | "群聊", nums?: string } ?? {};
-		if (nums === undefined) return [];
+		if (nums === undefined) {
+			return [];
+		}
 		let element = CQBotPlugin.getCorpusList(type)[+nums];
-		if (element === undefined) return [];
+		if (element === undefined) {
+			return [];
+		}
 		let stringify = JSON.stringify(element, (key, value) => {
-			if (value instanceof RegExp) return value.toString();
+			if (value instanceof RegExp) {
+				return value.toString();
+			}
 			return value;
 		}, 1);
 		return [CQ.text(stringify)];
@@ -137,16 +149,20 @@ class CQBotPlugin extends Plug {
 	@canCallPrivate()
 	@canCallGroup()
 	async pluginInfo(event: CQEvent<"message.private"> | CQEvent<"message.group">,
-		 execArray: RegExpExecArray): Promise<CQTag[]> {
+			execArray: RegExpExecArray): Promise<CQTag[]> {
 		event.stopPropagation();
 		let {other} = execArray.groups as { other?: string } ?? {};
-		if (other === undefined) return [];
+		if (other === undefined) {
+			return [];
+		}
 		if (other === "") {
 			let str = [...Plug.plugs.keys()].map((p, i) => `${i}. ${p}`).join("\n");
 			return [CQ.text(str)];
 		}
 		let plugin = Plug.plugs.get(other);
-		if (plugin === undefined) return [CQ.text("未知插件名称")];
+		if (plugin === undefined) {
+			return [CQ.text("未知插件名称")];
+		}
 		let str = JSON.stringify({
 			...plugin.toJSON(),
 			canAutoCall: [...plugin.canAutoCall],
@@ -157,7 +173,9 @@ class CQBotPlugin extends Plug {
 	@canCallPrivate()
 	@canCallGroup()
 	async getTQL(): Promise<CQTag[]> {
-		if (Math.random() < 0.8) return [];
+		if (Math.random() < 0.8) {
+			return [];
+		}
 		return [
 			CQ.text("也不看看我是谁呀"),
 			CQ.image("https://c2cpicdw.qpic.cn/offpic_new/0//2938137849-553222350-B9DC48A4E06FCA24C40C44D8F1B835F1/0?term=2"),

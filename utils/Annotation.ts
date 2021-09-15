@@ -4,12 +4,12 @@ import {Plug} from "../Plug.js";
 
 type Constructor = { new(...args: any): any };
 type FunctionDecorator<T extends Function = Function, O extends Object = Object, Key extends PropertyKey = PropertyKey> =
-	 <F extends T = T>(target: O, propertyKey: Key, descriptor: TypedPropertyDescriptor<F>) => void;
+		<F extends T = T>(target: O, propertyKey: Key, descriptor: TypedPropertyDescriptor<F>) => void;
 type ConstructorDecorator<T extends Constructor = Constructor> = <F extends T>(constructor: F) => F | void;
 type PropertyDecorator<O extends Object = Object, Key extends PropertyKey = PropertyKey> =
-	 (target: O, propertyKey: Key) => void;
+		(target: O, propertyKey: Key) => void;
 type ParameterDecorator<O extends Object = Object, Key extends PropertyKey = PropertyKey> =
-	 (target: O, propertyKey: Key, parameterIndex: number) => void;
+		(target: O, propertyKey: Key, parameterIndex: number) => void;
 
 export enum Design {
 	type = "design:type",

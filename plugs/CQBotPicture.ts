@@ -23,7 +23,7 @@ class CQBotPicture extends Plug {
 	@canCallGroup()
 	@canCallPrivate()
 	async getSeTu(event: CQEvent<"message.private"> | CQEvent<"message.group">,
-		 exec: RegExpExecArray): Promise<CQTag[]> {
+			exec: RegExpExecArray): Promise<CQTag[]> {
 		event.stopPropagation();
 		let groups = {
 			keyword: exec.groups?.keyword,
@@ -31,7 +31,9 @@ class CQBotPicture extends Plug {
 		};
 		let userId: number = event.context.user_id;
 		let member = CQData.getMember(userId);
-		if (member.exp < 5) { return [CQ.text("不够活跃")]; }
+		if (member.exp < 5) {
+			return [CQ.text("不够活跃")];
+		}
 		member.exp -= 5;
 		if (this.setuSet.has(groups.keyword ?? "")) {
 			return [];
@@ -46,7 +48,9 @@ class CQBotPicture extends Plug {
 			if (data.code !== 0) {
 				let message = CQBotPicture.code(data.code);
 				logger.warn(`开始色图异常：异常返回码(${data.code})：${message}`);
-				if (data.code === 404) this.setuSet.add(groups.keyword ?? "");
+				if (data.code === 404) {
+					this.setuSet.add(groups.keyword ?? "");
+				}
 				member.exp += 5;
 				return [CQ.text(message)];
 			}
@@ -80,7 +84,7 @@ class CQBotPicture extends Plug {
 	@canCallGroup()
 	@canCallPrivate()
 	async getPixiv(event: CQEvent<"message.group"> | CQEvent<"message.private">,
-		 exec: RegExpExecArray): Promise<CQTag[]> {
+			exec: RegExpExecArray): Promise<CQTag[]> {
 		event.stopPropagation();
 		let {pid, p} = (exec.groups as { pid?: string, p?: string }) ?? {};
 		logger.debug(`p站图片请求：pid:${pid},p:${p}`);
@@ -89,7 +93,9 @@ class CQBotPicture extends Plug {
 		}
 		let userId: number = event.context.user_id;
 		let member = CQData.getMember(userId);
-		if (member.exp < 10) { return [CQ.text("不够活跃")]; }
+		if (member.exp < 10) {
+			return [CQ.text("不够活跃")];
+		}
 		member.exp -= 10;
 		try {
 			let data = await pixivCat(pid);
@@ -134,7 +140,9 @@ class CQBotPicture extends Plug {
 		console.log("开始东方");
 		let userId: number = event.context.user_id;
 		let member = CQData.getMember(userId);
-		if (member.exp < 10) { return [CQ.text("不够活跃")]; }
+		if (member.exp < 10) {
+			return [CQ.text("不够活跃")];
+		}
 		member.exp -= 10;
 		try {
 			let json = await paulzzhTouHou();
@@ -153,14 +161,14 @@ class CQBotPicture extends Plug {
 
 	private static code(code: number) {
 		switch (code) {
-			case -1  :
-				return "内部错误";// 请向 i@loli.best 反馈
-			case 0   :
-				return "成功";
-			case 404 :
-				return "找不到符合关键字的色图";
-			default:
-				return "未知的返回码";
+		case -1  :
+			return "内部错误";// 请向 i@loli.best 反馈
+		case 0   :
+			return "成功";
+		case 404 :
+			return "找不到符合关键字的色图";
+		default:
+			return "未知的返回码";
 		}
 	}
 }

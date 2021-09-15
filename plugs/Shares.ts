@@ -19,7 +19,7 @@ class Shares extends Plug {
 	@canCallGroup()
 	@canCallPrivate()
 	async getSharesPrice(event: CQEvent<"message.group"> | CQEvent<"message.private">,
-		 execArray: RegExpExecArray): Promise<CQTag[]> {
+			execArray: RegExpExecArray): Promise<CQTag[]> {
 		let {id} = execArray.groups as { id?: string } ?? {};
 		let {user_id} = event.context;
 		if (id === undefined) {
@@ -32,34 +32,42 @@ class Shares extends Plug {
 		} else {
 			let ids: number = +id;
 			let buy: Buy = Shares._buy(user_id, ids, 0);
-			return [CQ.text(`${Shares.getName(ids)}价格:${buy.price
-			}\n你的持有:${buy.num
-			}\n剩余点数:${buy.point
-			}`)];
+			return [
+				CQ.text(`${Shares.getName(ids)}价格:${buy.price
+				}\n你的持有:${buy.num
+				}\n剩余点数:${buy.point
+				}`),
+			];
 		}
 	}
 
 	@canCallGroup()
 	@canCallPrivate()
 	async getShares(event: CQEvent<"message.group"> | CQEvent<"message.private">,
-		 execArray: RegExpExecArray): Promise<CQTag[]> {
+			execArray: RegExpExecArray): Promise<CQTag[]> {
 		event.stopPropagation();
 		let {id, num} = execArray.groups as { id?: string, num?: string } ?? {};
-		if (id === undefined || num === undefined) return [];
+		if (id === undefined || num === undefined) {
+			return [];
+		}
 		let {user_id} = event.context;
 		let ids: number = +id;
 		let b: Buy = Shares._buy(user_id, ids, +num);
 		this.autoChange();
 		if (b.success) {
-			return [CQ.text(`${Shares.getName(ids)}买入成功\n当前价格:${b.price
+			return [
+				CQ.text(`${Shares.getName(ids)}买入成功\n当前价格:${b.price
+				}\n你的持有:${b.num
+				}\n剩余点数:${b.point
+				}\n消耗点数:${b.need}`),
+			];
+		}
+		return [
+			CQ.text(`${Shares.getName(ids)}买入失败\n当前价格:${b.price
 			}\n你的持有:${b.num
 			}\n剩余点数:${b.point
-			}\n消耗点数:${b.need}`)];
-		}
-		return [CQ.text(`${Shares.getName(ids)}买入失败\n当前价格:${b.price
-		}\n你的持有:${b.num
-		}\n剩余点数:${b.point
-		}\n需要点数${b.need}`)];
+			}\n需要点数${b.need}`),
+		];
 	}
 
 	private static getUser(qq: number): SharesData {
@@ -79,8 +87,12 @@ class Shares extends Plug {
 		let price = Shares.prices;
 		price.forEach((v, i) => {
 			let number = distribution(2) * Math.max(v, 9) | 0;
-			if (v < 10) { number += 10 - v; }
-			if (v > 100) { number -= v >> 5; }
+			if (v < 10) {
+				number += 10 - v;
+			}
+			if (v > 100) {
+				number -= v >> 5;
+			}
 			price[i] = v + number;
 		});
 	}
@@ -141,7 +153,9 @@ class Shares extends Plug {
 			}
 		}
 		member.exp += p;
-		if (member.exp < 0 || member.exp > 0x7fffffff) {member.exp = 0; }
+		if (member.exp < 0 || member.exp > 0x7fffffff) {
+			member.exp = 0;
+		}
 		user[id] += number;
 		price += number;
 		prices[id] = price < 1 ? 1 : price;
@@ -168,7 +182,9 @@ class Shares extends Plug {
 	}
 
 	async uninstall() {
-		if (this.auto !== undefined) clearTimeout(this.auto);
+		if (this.auto !== undefined) {
+			clearTimeout(this.auto);
+		}
 	}
 }
 

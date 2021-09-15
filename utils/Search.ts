@@ -75,7 +75,7 @@ export function pixivCat(pid: string): Promise<pixivCatType> {
 /**动漫星空随机图片*/
 export function dongManXingKong(): Promise<DMXKType> {
 	return axios.get("https://api.dongmanxingkong.com/suijitupian/acg/1080p/index.php?return=json",
-		 {},
+			{},
 	).then<DMXKType>((data) => {
 		return data.data;
 	});
@@ -84,7 +84,7 @@ export function dongManXingKong(): Promise<DMXKType> {
 /**樱花随机二次元图片*/
 export function yingHua(): Promise<YHType> {
 	return axios.get("https://www.dmoe.cc/random.php?return=json",
-		 {},
+			{},
 	).then<YHType>((data) => {
 		return data.data;
 	});

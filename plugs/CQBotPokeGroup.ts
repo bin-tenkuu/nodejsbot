@@ -26,17 +26,23 @@ class CQBotPokeGroup extends Plug {
 		this.header = (<CQWebSocket>require("./CQBot.js").default.bot).bind("on", {
 			"notice.notify.poke.group": (event) => {
 				let {target_id, user_id} = event.context;
-				if (target_id !== event.bot.qq) {return;}
+				if (target_id !== event.bot.qq) {
+					return;
+				}
 				let member = CQData.getMember(user_id);
-				if (member.exp < 0b1111111) { return; }
+				if (member.exp < 0b1111111) {
+					return;
+				}
 				member.exp >>= 7;
-				if (this.pokedSet.has(user_id)) { return; }
+				if (this.pokedSet.has(user_id)) {
+					return;
+				}
 				this.pokedSet.add(user_id);
 				let time = process.hrtime();
 				event.stopPropagation();
 				let str = CQData.pokeGroup[Math.random() * CQData.pokeGroup.length | 0].text;
 				sendGroup(event, str).catch(NOP).finally(() => {
-					hrtime(process.hrtime(time));
+					hrtime(time);
 				});
 			},
 		});
@@ -47,7 +53,9 @@ class CQBotPokeGroup extends Plug {
 
 	async uninstall() {
 		require("./CQBot.js").default.bot.unbind(this.header);
-		if (this.resetTime !== undefined) clearInterval(this.resetTime);
+		if (this.resetTime !== undefined) {
+			clearInterval(this.resetTime);
+		}
 		this.resetTime = undefined;
 		this.pokedSet.clear();
 	}
@@ -60,32 +68,42 @@ class CQBotPokeGroup extends Plug {
 	@canCallPrivate()
 	@canCallGroup()
 	async runPrivate(event: CQEvent<"message.private"> | CQEvent<"message.group">,
-		 execArray: RegExpExecArray): Promise<CQTag[]> {
+			execArray: RegExpExecArray): Promise<CQTag[]> {
 		event.stopPropagation();
 		let {control, other} = execArray.groups as { control?: string, other?: string } ?? {};
-		if (control === undefined) return [];
+		if (control === undefined) {
+			return [];
+		}
 		switch (control) {
-			case "设置":
-				event.bot.once("message.private", event => {
-					if (!isAdminQQ(event)) {return; }
-					let tags = event.cqTags.map(tag => {
-						if (tag instanceof CQText) return tag;
-						if (tag instanceof CQImage) return CQ.image(tag.url as string);
-						return CQ.text(`未支持tag:` + tag.tagName);
-					}).join("");
-					CQData.addPoke(tags);
-					sendAdminQQ(event, tags);
-				});
-				return [CQ.text("请发送")];
-			case "删除":
-				if (other === undefined) return [];
-				let matches = other.match(/\d+\s+/g) ?? [];
-				for (let match of matches) {
-					CQData.removePoke(+match);
+		case "设置":
+			event.bot.once("message.private", event => {
+				if (!isAdminQQ(event)) {
+					return;
 				}
-				return [CQ.text("已删除:" + matches.join(","))];
-			default:
+				let tags = event.cqTags.map(tag => {
+					if (tag instanceof CQText) {
+						return tag;
+					}
+					if (tag instanceof CQImage) {
+						return CQ.image(tag.url as string);
+					}
+					return CQ.text(`未支持tag:` + tag.tagName);
+				}).join("");
+				CQData.addPoke(tags);
+				sendAdminQQ(event, tags);
+			});
+			return [CQ.text("请发送")];
+		case "删除":
+			if (other === undefined) {
 				return [];
+			}
+			let matches = other.match(/\d+\s+/g) ?? [];
+			for (let match of matches) {
+				CQData.removePoke(+match);
+			}
+			return [CQ.text("已删除:" + matches.join(","))];
+		default:
+			return [];
 		}
 	}
 }

@@ -9,23 +9,29 @@ type ServerHandle = (req: IncomingMessage, res: ServerResponse) => void;
 
 function create(): Map<string, ServerHandle> {
 	return new Map<string, ServerHandle>([
-		["/exit", (req, res) => {
+		[
+			"/exit", (req, res) => {
 			res.setHeader("Content-type", "text/html; charset=utf-8");
 			res.end("开始退出\n");
 			Promise.all([...(Plug.plugs.values())].map((p) => p.uninstall())).then<void>(() => {
 				logger.info(">>>>>>>>>> 全部卸载完成 <<<<<<<<<<");
-				if (process.execArgv.includes("--inspect")) { return; }
+				if (process.execArgv.includes("--inspect")) {
+					return;
+				}
 				setTimeout(() => {
 					console.log("退出");
 					process.exit(0);
 				}, 500);
 			});
-		}],
-		["404", (req, res) => {
+		},
+		],
+		[
+			"404", (req, res) => {
 			res.writeHead(404);
 			logger.warn(`${req.url} 404`);
 			return res.end("<a href='./exit'>http://127.0.0.1:40000/exit</a>");
-		}],
+		},
+		],
 	]);
 }
 
@@ -70,7 +76,7 @@ class HttpOption extends Plug {
 
 	async install() {
 		let server = http.createServer(
-			 this.handle.bind(this),
+				this.handle.bind(this),
 		).listen(40000, "127.0.0.1");
 		logger.info("快速结束已启动,点击 http://127.0.0.1:40000");
 		this.header = server;

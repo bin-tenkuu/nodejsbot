@@ -49,8 +49,7 @@ class CQBotCOC extends Plug {
 		if (value === undefined) {
 			db.start(async db => {
 				await db.run(`DELETE FROM COCShortKey WHERE KEY = ?`, key);
-				await db.close();
-			}).catch(NOP);
+			}).catch(db.close);
 			this.shortKey.delete(key);
 			return [CQ.text(`删除key:${key}`)];
 		}
@@ -60,8 +59,7 @@ class CQBotCOC extends Plug {
 		this.shortKey.set(key, value);
 		db.start(async db => {
 			await db.run(`INSERT INTO COCShortKey(key, value) VALUES (?, ?)`, key, value);
-			await db.close();
-		}).catch(NOP);
+		}).catch(db.close);
 		return [CQ.text(`添加key:${key}=${value}`)];
 	}
 
@@ -153,8 +151,7 @@ class CQBotCOC extends Plug {
 		db.start(async db => {
 			let all = await db.all<{ key: string, value: string }[]>(`SELECT KEY, VALUE FROM COCShortKey`);
 			all.forEach(({key, value}) => this.shortKey.set(key, value));
-			await db.close();
-		}).catch(NOP);
+		}).catch(db.close);
 	}
 
 	private dice(str: string, userId: number): string {
