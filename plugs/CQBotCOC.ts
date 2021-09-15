@@ -4,7 +4,7 @@ import {canCallGroup, canCallPrivate} from "../utils/Annotation.js";
 import {dice, distribution} from "../utils/COCUtils.js";
 import {db} from "../utils/database.js";
 import {logger} from "../utils/logger.js";
-import {Equatable, DataCache} from "../utils/repeat.js";
+import {DataCache, Equatable} from "../utils/repeat.js";
 
 class CQBotCOC extends Plug {
 	private shortKey = new Map<string, string>();
@@ -274,6 +274,7 @@ class SpecialEffects {
 				}
 				if (list.length > 2 && list[0] === list[1]) {
 					++list[1];
+					++data.num;
 				}
 				data.state = "[温柔]";
 			},
@@ -284,6 +285,7 @@ class SpecialEffects {
 				if (list === null) {
 					return;
 				}
+				data.num += list[0] - list[1];
 				list[1] = list[0];
 				data.state = "[残暴]";
 			},
