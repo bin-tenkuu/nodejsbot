@@ -4,7 +4,7 @@
 /.idea/
 /test/
 
-/nodejsbot-1.0.0.tgz
+*.tgz
 /logs
 /config/*.json
 !/config/schema/
