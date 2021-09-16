@@ -1,7 +1,6 @@
 import {CQ, CQWebSocket} from "go-cqwebsocket";
 import {PartialSocketHandle} from "go-cqwebsocket/out/Interfaces";
 import {Plug} from "../Plug.js";
-import {logger} from "../utils/logger.js";
 import {sendAdminQQ, sendGroup, sendPrivate} from "../utils/Util.js";
 
 class CQBotEvent extends Plug {
@@ -78,7 +77,7 @@ class CQBotEvent extends Plug {
 					CQ.text("上传失败\n"),
 					CQ.text(`文件名:${name}\n文件大小:${size}\n文件链接:${url}`),
 				]).catch(reason => {
-					logger.error(reason.msg);
+					this.logger.error(reason.msg);
 				});
 				// });
 			},

@@ -1,3 +1,4 @@
+import {getLogger, Logger} from "log4js";
 import {logger} from "./utils/logger.js";
 
 enum State {
@@ -16,11 +17,11 @@ export abstract class Plug {
 	public version: number;
 	public error: any;
 	public declare readonly __proto__: Readonly<this>;
+	private static declare _logger: Logger;
 
 	#state: State;
 
 	protected constructor(module: NodeModule) {
-		logger.debug("fix:\t" + module.filename);
 		this.#state = State.create;
 		let key = this.constructor.name;
 		this.module = module;
@@ -37,7 +38,7 @@ export abstract class Plug {
 					return;
 				}
 				await this.__proto__.install.call(this);
-				logger.info("已启动 %s", this.toString());
+				this.logger.info("已启动 %s", this.toString());
 				this.#state = State.installed;
 			} catch (e) {
 				this.#state = State.error;
@@ -52,7 +53,7 @@ export abstract class Plug {
 					return;
 				}
 				await this.__proto__.uninstall.call(this);
-				logger.info("已停止 %s", this.toString());
+				this.logger.info("已停止 %s", this.toString());
 				if (this.#state === State.error) {
 					return;
 				}
@@ -67,6 +68,7 @@ export abstract class Plug {
 		this.#state = State.uninstalled;
 		this.error = undefined;
 		this.canAutoCall ??= new Set();
+		this.logger.debug("fix:\t" + module.filename);
 	}
 
 	/**@abstract*/
@@ -92,4 +94,26 @@ export abstract class Plug {
 	public toJSON() {
 		return {"name": this.name, "version": this.version, "State": this.state};
 	}
+
+	protected get logger(): Logger {
+		// @ts-ignore
+		return this.constructor.logger;
+	}
+
+	public static get logger(): Logger {
+		if (this._logger === undefined) {
+			this._logger = getLogger(this.name);
+		}
+		return this._logger;
+	}
+}
+
+export function hrtime(time: [number, number]): void {
+	let [s, ns] = process.hrtime(time);
+	ns = ns / 1e3;
+	if (ns < 1000) {
+		return logger.info(`本次请求耗时:${s}秒${ns}微秒`);
+	}
+	ns = (ns | 0) / 1e3;
+	return logger.info(`本次请求耗时:${s}秒${ns}毫秒`);
 }

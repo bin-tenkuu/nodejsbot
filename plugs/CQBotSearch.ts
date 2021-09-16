@@ -2,7 +2,6 @@ import {CQ, CQEvent} from "go-cqwebsocket";
 import {CQImage, CQTag} from "go-cqwebsocket/out/tags";
 import {Plug} from "../Plug.js";
 import {canCallGroup} from "../utils/Annotation.js";
-import {logger} from "../utils/logger.js";
 import {sauceNAO} from "../utils/Search.js";
 import {sendAuto, sendForward} from "../utils/Util.js";
 
@@ -25,7 +24,7 @@ class CQBotSearch extends Plug {
 		if (url === undefined) {
 			return [];
 		}
-		logger.info("开始搜图");
+		this.logger.info("开始搜图");
 		event.stopPropagation();
 		let {
 			message_id: messageId,
@@ -35,7 +34,7 @@ class CQBotSearch extends Plug {
 			let result = await sauceNAO(url);
 			// console.log(result);
 			if (result.results.length === 0) {
-				logger.info("搜图无结果");
+				this.logger.info("搜图无结果");
 				return [
 					CQ.reply(messageId),
 					CQ.at(userId),
@@ -73,8 +72,8 @@ class CQBotSearch extends Plug {
 				CQ.text("有结果，加载中"),
 			];
 		} catch (e) {
-			logger.warn("搜图出错");
-			logger.error(e);
+			this.logger.warn("搜图出错");
+			this.logger.error(e);
 			sendAuto(event, [
 				CQ.reply(messageId),
 				CQ.at(userId),
@@ -121,7 +120,7 @@ class CQBotSearch extends Plug {
 		case 41:
 			return `图库:Twitter\n上传者:${data["twitter_user_handle"]}\n原图:${url}`;
 		default:
-			logger.info(index, data);
+			this.logger.info(index, data);
 			return `图库id:${index}\n具体信息未解析\n链接:${url}`;
 		}
 	}

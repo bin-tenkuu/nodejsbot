@@ -1,5 +1,4 @@
 import {Plug} from "../Plug.js";
-import {logger} from "../utils/logger.js";
 
 class test extends Plug {
 	constructor() {
@@ -10,12 +9,12 @@ class test extends Plug {
 	}
 
 	async install() {
-		logger.info(this.toString());
+		this.logger.info(this.toString());
 		throw "但是我拒绝";
 	}
 
 	async uninstall() {
-		logger.info(this.toString());
+		this.logger.info(this.toString());
 	}
 }
 

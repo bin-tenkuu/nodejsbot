@@ -43,9 +43,9 @@ class CQBotPlugin extends Plug {
 			}
 			let s = banList.join("\n");
 			return [CQ.text(s)];
-		case "poke":
-			let uin = event.context.self_id;
-			return CQData.pokeGroup.map(v => CQ.node(String(v.id), uin, v.text));
+				// case "poke":
+				// 	let uin = event.context.self_id;
+				// 	return CQData.pokeGroup.map(v => CQ.node(String(v.id), uin, v.text));
 		default:
 			return [];
 		}

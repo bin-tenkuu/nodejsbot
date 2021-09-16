@@ -1,7 +1,6 @@
 import http, {IncomingMessage, ServerResponse} from "http";
 import images from "images";
 import {Plug} from "../Plug.js";
-import {logger} from "../utils/logger.js";
 import {axios} from "../utils/Search.js";
 import {endlessGen} from "../utils/Util.js";
 
@@ -14,7 +13,7 @@ function create(): Map<string, ServerHandle> {
 			res.setHeader("Content-type", "text/html; charset=utf-8");
 			res.end("开始退出\n");
 			Promise.all([...(Plug.plugs.values())].map((p) => p.uninstall())).then<void>(() => {
-				logger.info(">>>>>>>>>> 全部卸载完成 <<<<<<<<<<");
+				HttpOption.logger.info(">>>>>>>>>> 全部卸载完成 <<<<<<<<<<");
 				if (process.execArgv.includes("--inspect")) {
 					return;
 				}
@@ -28,7 +27,7 @@ function create(): Map<string, ServerHandle> {
 		[
 			"404", (req, res) => {
 			res.writeHead(404);
-			logger.warn(`${req.url} 404`);
+			HttpOption.logger.warn(`${req.url} 404`);
 			return res.end("<a href='./exit'>http://127.0.0.1:40000/exit</a>");
 		},
 		],
@@ -67,10 +66,10 @@ class HttpOption extends Plug {
 	}
 
 	private handle(req: IncomingMessage, res: ServerResponse) {
-		logger.info(`网页 '${req.url}' 收到请求`);
-		logger.info(`代理:\t${req.headers["x-forwarded-for"]}`);
+		this.logger.info(`网页 '${req.url}' 收到请求`);
+		this.logger.info(`代理:\t${req.headers["x-forwarded-for"]}`);
 		let {remoteFamily: family, remoteAddress: address, remotePort: port} = req.socket;
-		logger.info(`远程地址:\t${family} -> ${address} : ${port}`);
+		this.logger.info(`远程地址:\t${family} -> ${address} : ${port}`);
 		(this.server.get(req.url ?? "") ?? this[404])(req, res);
 	}
 
@@ -78,7 +77,7 @@ class HttpOption extends Plug {
 		let server = http.createServer(
 				this.handle.bind(this),
 		).listen(40000, "127.0.0.1");
-		logger.info("快速结束已启动,点击 http://127.0.0.1:40000");
+		this.logger.info("快速结束已启动,点击 http://127.0.0.1:40000");
 		this.header = server;
 	}
 

@@ -1,7 +1,6 @@
 import {CQ, CQEvent, CQTag} from "go-cqwebsocket";
 import {Plug} from "../Plug.js";
 import {canCallGroup, canCallPrivate} from "../utils/Annotation.js";
-import {logger} from "../utils/logger.js";
 import {lolicon, paulzzhTouHou, pixivCat} from "../utils/Search.js";
 import {getPRegular, sendAdminQQ, sendForward} from "../utils/Util.js";
 import CQData from "./CQData.js";
@@ -38,7 +37,7 @@ class CQBotPicture extends Plug {
 		if (this.setuSet.has(groups.keyword ?? "")) {
 			return [];
 		}
-		logger.info("开始色图", groups);
+		this.logger.info("开始色图", groups);
 		try {
 			let data = await lolicon({
 				size1200: true,
@@ -47,7 +46,7 @@ class CQBotPicture extends Plug {
 			});
 			if (data.code !== 0) {
 				let message = CQBotPicture.code(data.code);
-				logger.warn(`开始色图异常：异常返回码(${data.code})：${message}`);
+				this.logger.warn(`开始色图异常：异常返回码(${data.code})：${message}`);
 				if (data.code === 404) {
 					this.setuSet.add(groups.keyword ?? "");
 				}
@@ -55,7 +54,7 @@ class CQBotPicture extends Plug {
 				return [CQ.text(message)];
 			}
 			if (data.count < 1) {
-				logger.warn(`开始色图异常：色图数量不足(${data.count})`);
+				this.logger.warn(`开始色图异常：色图数量不足(${data.count})`);
 				member.exp += 2;
 				return [CQ.text("色图数量不足")];
 			}
@@ -75,7 +74,7 @@ class CQBotPicture extends Plug {
 			return [CQ.image(getPRegular(first.url))];
 		} catch (reason) {
 			sendAdminQQ(event, "色图坏了");
-			logger.info(reason);
+			this.logger.info(reason);
 			return [CQ.text("未知错误,或网络错误")];
 		}
 	}
@@ -87,7 +86,7 @@ class CQBotPicture extends Plug {
 			exec: RegExpExecArray): Promise<CQTag[]> {
 		event.stopPropagation();
 		let {pid, p} = (exec.groups as { pid?: string, p?: string }) ?? {};
-		logger.debug(`p站图片请求：pid:${pid},p:${p}`);
+		this.logger.debug(`p站图片请求：pid:${pid},p:${p}`);
 		if (pid === undefined) {
 			return [CQ.text("pid获取失败")];
 		}
@@ -100,10 +99,10 @@ class CQBotPicture extends Plug {
 		try {
 			let data = await pixivCat(pid);
 			if (!data.success) {
-				logger.info(`请求失败`);
+				this.logger.info(`请求失败`);
 				return [CQ.text(data.error)];
 			}
-			logger.info(`多张图片:${data.multiple}`);
+			this.logger.info(`多张图片:${data.multiple}`);
 			if (data.multiple) {
 				let urlsProxy = data.original_urls_proxy;
 				let length = urlsProxy.length;

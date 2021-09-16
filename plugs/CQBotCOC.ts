@@ -3,7 +3,6 @@ import {Plug} from "../Plug.js";
 import {canCallGroup, canCallPrivate} from "../utils/Annotation.js";
 import {dice, distribution} from "../utils/COCUtils.js";
 import {db} from "../utils/database.js";
-import {logger} from "../utils/logger.js";
 import {DataCache, Equatable} from "../utils/repeat.js";
 
 class CQBotCOC extends Plug {
@@ -234,7 +233,7 @@ class CQBotCOC extends Plug {
 		return handles.reduceRight<[number, number]>((sum, v) => {
 			let arr: [number, number] | undefined = map[v.op]?.(sum, v.num);
 			if (arr === undefined) {
-				logger.warn("未知的运算符:" + v.op);
+				this.logger.warn("未知的运算符:" + v.op);
 				return sum;
 			}
 			return arr;

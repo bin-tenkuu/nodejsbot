@@ -1,8 +1,8 @@
 import {
-	BaseLayout, Configuration, configure, ConsoleAppender, DateFileAppender, MessagePassThroughLayout,
+	BaseLayout, Configuration, configure, ConsoleAppender, DateFileAppender, getLogger, MessagePassThroughLayout,
 } from "log4js";
 
-export const logger = configure(<Configuration>{
+configure(<Configuration>{
 	appenders: {
 		consoleLog: <ConsoleAppender>{
 			type: "console",
@@ -29,15 +29,5 @@ export const logger = configure(<Configuration>{
 			enableCallStack: true,
 		},
 	},
-}).getLogger("default");
-
-export function hrtime(time: [number, number]): void {
-	let [s, ns] = process.hrtime(time);
-	ns = ns / 1e3;
-	if (ns < 1000) {
-		return logger.info(`本次请求耗时:${s}秒${ns}微秒`);
-	}
-	ns = (ns | 0) / 1e3;
-	return logger.info(`本次请求耗时:${s}秒${ns}毫秒`);
-}
-
+});
+export const logger = getLogger("default");

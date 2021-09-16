@@ -1,7 +1,6 @@
 import {CQ, CQEvent, CQTag} from "go-cqwebsocket";
 import {Plug} from "../Plug.js";
 import {canCallGroup, canCallPrivate} from "../utils/Annotation.js";
-import {logger} from "../utils/logger.js";
 import {dongManXingKong, lolicon, paulzzhTouHou, toubiec, yingHua} from "../utils/Search.js";
 import {endlessGen, getPRegular} from "../utils/Util.js";
 import CQData from "./CQData.js";
@@ -46,17 +45,17 @@ class CQBotRandomPicture extends Plug {
 			let data = await lolicon();
 			if (data.code !== 0) {
 				let message = CQBotRandomPicture.code(data.code);
-				logger.warn(`色图异常：异常返回码(${data.code})：${message}`);
+				CQBotRandomPicture.logger.warn(`色图异常：异常返回码(${data.code})：${message}`);
 				return [CQ.text(message)];
 			}
 			if (data.count < 1) {
-				logger.warn(`色图异常：色图数量不足(${data.count})`);
+				CQBotRandomPicture.logger.warn(`色图异常：色图数量不足(${data.count})`);
 				return [CQ.text("色图数量不足")];
 			}
 			let first = data.data[0];
 			return [CQ.image(getPRegular(first.url))];
 		} catch (reason) {
-			logger.info(reason);
+			CQBotRandomPicture.logger.info(reason);
 			return [CQ.text("未知错误,或网络错误")];
 		}
 	}

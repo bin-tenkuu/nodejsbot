@@ -1,9 +1,8 @@
 import {CQ, CQEvent, CQTag, CQWebSocket, messageNode} from "go-cqwebsocket";
 import {MessageId, PromiseRes, Status} from "go-cqwebsocket/out/Interfaces";
 import {adminGroup, adminId, CQWS} from "../config/config.json";
-import {Plug} from "../Plug.js";
+import {hrtime, Plug} from "../Plug.js";
 import {canCallGroup, canCallPrivate} from "../utils/Annotation.js";
-import {hrtime, logger} from "../utils/logger.js";
 import {
 	deleteMsg, isAdminQQ, isAtMe, onlyText, parseMessage, sendForward, sendForwardQuick, sendGroup, sendPrivate,
 } from "../utils/Util";
@@ -53,8 +52,8 @@ class CQBot extends Plug {
 				return;
 			}
 			parseMessage(element.reply, event, exec).catch(e => {
-				logger.error("语料库转换失败:" + element.name);
-				logger.error(e);
+				this.logger.error("语料库转换失败:" + element.name);
+				this.logger.error(e);
 				return [CQ.text("error:" + element.name + "\n")];
 			}).then(msg => {
 				callback(msg, element);
@@ -99,7 +98,7 @@ class CQBot extends Plug {
 		return new Promise<void>((resolve, reject) => {
 			this.bot.bind("onceAll", {
 				"socket.open": (event) => {
-					logger.info("连接");
+					this.logger.info("连接");
 					event.bot.send_private_msg(2938137849, "已上线").catch(NOP);
 					resolve();
 					this.sendStateInterval = setInterval(() => {
@@ -120,11 +119,11 @@ class CQBot extends Plug {
 		return new Promise<void>((resolve, reject) => {
 			this.bot.bind("on", {
 				"socket.close": () => {
-					logger.info("断开");
+					this.logger.info("断开");
 					resolve();
 				},
 				"socket.error": () => {
-					logger.info("断开");
+					this.logger.info("断开");
 					reject();
 				},
 			});
@@ -135,21 +134,21 @@ class CQBot extends Plug {
 	private init() {
 		this.bot.bind("on", {
 			"socket.error": ({context}) => {
-				logger.warn(`连接错误[${context.code}]: ${context.reason}`);
+				this.logger.warn(`连接错误[${context.code}]: ${context.reason}`);
 			},
 			"socket.open": () => {
-				logger.info(`连接开启`);
+				this.logger.info(`连接开启`);
 			},
 			"socket.close": ({context}) => {
-				logger.info(`已关闭 [${context.code}]: ${context.reason}`);
+				this.logger.info(`已关闭 [${context.code}]: ${context.reason}`);
 				require("child_process").exec("npm stop");
 			},
 		});
 		this.bot.messageSuccess = (ret, message) => {
-			logger.debug(`${message.action}成功：${JSON.stringify(ret.data)}`);
+			this.logger.debug(`${message.action}成功：${JSON.stringify(ret.data)}`);
 		};
 		this.bot.messageFail = (reason, message) => {
-			logger.error(`${message.action}失败[${reason.retcode}]:${reason.wording}`);
+			this.logger.error(`${message.action}失败[${reason.retcode}]:${reason.wording}`);
 		};
 		this.bot.bind("on", {
 			"message.group": (event) => {
