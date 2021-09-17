@@ -20,11 +20,11 @@ export enum Design {
 export function logFuncCall(): FunctionDecorator {
 	return function (target, propertyKey, descriptor) {
 		if (typeof descriptor.value === "function") {
-			let value: Function = descriptor.value;
+			const value: Function = descriptor.value;
 			// @ts-ignore
 			descriptor.value = function (...args: any[]) {
-				let metadata = Reflect.getMetadata("custom:log", target) ?? {};
-				let array: boolean[] = metadata[propertyKey as any] ?? [];
+				const metadata = Reflect.getMetadata("custom:log", target) ?? {};
+				const array: boolean[] = metadata[propertyKey as any] ?? [];
 				array.filter(v => v).forEach((v, i) => {
 					console.log(`${Date()} ${target.constructor.name}["${String(propertyKey)}"][param at ${i}] = ${args[i]}`);
 				});
@@ -33,14 +33,14 @@ export function logFuncCall(): FunctionDecorator {
 			};
 		}
 		if (typeof descriptor.get === "function") {
-			let get = descriptor.get;
+			const get = descriptor.get;
 			descriptor.get = function () {
 				console.log(`${Date()} ${target.constructor.name}["get ${String(propertyKey)}"] be Called`);
 				return get.call(this);
 			};
 		}
 		if (typeof descriptor.set === "function") {
-			let set = descriptor.set;
+			const set = descriptor.set;
 			descriptor.set = function (value) {
 				console.log(`${Date()} ${target.constructor.name}["set ${String(propertyKey)}"] be Called`);
 				set.call(this, value);
@@ -62,7 +62,7 @@ export function logCreate(name?: string): ConstructorDecorator {
 
 export function logProp(): PropertyDecorator {
 	return function (target, propertyKey) {
-		let s = "_" + String(propertyKey);
+		const s = "_" + String(propertyKey);
 		Object.defineProperty(target, propertyKey, {
 			get() {
 				console.log(`${Date()} get ${String(propertyKey)}`);
@@ -80,8 +80,8 @@ export function logProp(): PropertyDecorator {
 
 export function logParam(): ParameterDecorator {
 	return function (target, propertyKey, parameterIndex) {
-		let metadata: { [k in PropertyKey]?: boolean[] } = Reflect.getMetadata("custom:log", target) ?? {};
-		let array = metadata[propertyKey as any] ?? [];
+		const metadata: { [k in PropertyKey]?: boolean[] } = Reflect.getMetadata("custom:log", target) ?? {};
+		const array = metadata[propertyKey as any] ?? [];
 		array[parameterIndex] = true;
 		metadata[propertyKey as any] = array;
 		Reflect.defineMetadata("custom:log", metadata, target);

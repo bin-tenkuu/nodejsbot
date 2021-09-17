@@ -92,7 +92,7 @@ export function yingHua(): Promise<YHType> {
 
 export function uploadFile(url: string, name: string): Promise<string> {
 	return new Promise<string>((resolve, reject) => {
-		let ftp = new Client();
+		const ftp = new Client();
 		ftp.connect(ftpConfig);
 		ftp.on("ready", (error) => {
 			if (error !== undefined) {

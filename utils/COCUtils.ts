@@ -6,7 +6,7 @@ export function dice(times: number, max: number): { num: number, list: Uint16Arr
 		max = 99_9999_9999;
 	}
 	let r = 0;
-	let arr = new Uint16Array(times);
+	const arr = new Uint16Array(times);
 	while (--times >= 0) {
 		arr[times] = Math.random() * max + 1;
 		r += arr[times];

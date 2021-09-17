@@ -42,9 +42,9 @@ class CQBot extends Plug {
 
 	private static sendCorpusTags(event: CQEvent<"message.private"> | CQEvent<"message.group">,
 			corpus: Iterable<Corpus>, callback: (this: void, tags: CQTag[], element: Corpus) => void) {
-		let text = onlyText(event);
+		const text = onlyText(event);
 		for (const element of corpus) {
-			let exec = element.regexp.exec(text);
+			const exec = element.regexp.exec(text);
 			if (exec === null) {
 				continue;
 			}
@@ -70,8 +70,8 @@ class CQBot extends Plug {
 			return [];
 		}
 		event.stopPropagation();
-		let {message_id, user_id} = event.context;
-		let cqTags = execArray[0].replace(/吗/g, "")
+		const {message_id, user_id} = event.context;
+		const cqTags = execArray[0].replace(/吗/g, "")
 				.replace(/(?<!\\)不/g, "\\很")
 				.replace(/(?<!\\)你/g, "\\我")
 				.replace(/(?<!\\)我/g, "\\你")
@@ -89,7 +89,7 @@ class CQBot extends Plug {
 	@canCallGroup()
 	@canCallPrivate()
 	async getHelp() {
-		let s: string = members.corpora.filter(c => c.isOpen && !c.needAdmin &&
+		const s: string = members.corpora.filter(c => c.isOpen && !c.needAdmin &&
 				c.help !== undefined).map<string>((c) => `${c.name}:${c.help}`).join("\n");
 		return [CQ.text(s)];
 	}
@@ -152,9 +152,9 @@ class CQBot extends Plug {
 		};
 		this.bot.bind("on", {
 			"message.group": (event) => {
-				let time = process.hrtime();
-				let userId = event.context.user_id;
-				let member = members.getMember(userId);
+				const time = process.hrtime();
+				const userId = event.context.user_id;
+				const member = members.getMember(userId);
 				member.name = event.context.sender.nickname;
 				member.exp++;
 				if (members.getBaned(userId)) {
@@ -185,7 +185,7 @@ class CQBot extends Plug {
 				});
 			},
 			"message.private": (event) => {
-				let time = process.hrtime();
+				const time = process.hrtime();
 				CQBot.sendCorpusTags(event, CQBot.getValues(members.corpora, CQBot.filterPrivate(event)), tags => {
 					if (tags.length < 1) {
 						return;

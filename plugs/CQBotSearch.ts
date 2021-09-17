@@ -16,22 +16,22 @@ class CQBotSearch extends Plug {
 
 	@canCallGroup()
 	async getSauceNAO(event: CQEvent<"message.group">): Promise<CQTag[]> {
-		let tag: CQTag | undefined = event.cqTags.find(tag => tag instanceof CQImage);
+		const tag: CQTag | undefined = event.cqTags.find(tag => tag instanceof CQImage);
 		if (tag === undefined) {
 			return [CQ.text("请带上图片")];
 		}
-		let url = tag.get("url");
+		const url = tag.get("url");
 		if (url === undefined) {
 			return [];
 		}
 		this.logger.info("开始搜图");
 		event.stopPropagation();
-		let {
+		const {
 			message_id: messageId,
 			sender: {nickname: nickName, user_id: userId},
 		} = event.context;
 		try {
-			let result = await sauceNAO(url);
+			const result = await sauceNAO(url);
 			// console.log(result);
 			if (result.results.length === 0) {
 				this.logger.info("搜图无结果");
@@ -41,7 +41,7 @@ class CQBotSearch extends Plug {
 					CQ.text(`搜图无结果`),
 				];
 			}
-			let [first, second, third] = result.results;
+			const [first, second, third] = result.results;
 			sendForward(event, [
 				CQ.nodeId(messageId),
 				CQ.node(nickName, userId, [
@@ -96,7 +96,6 @@ class CQBotSearch extends Plug {
 	 * @return {string}
 	 */
 	private static decodeData(index: number, data: { [p: string]: any }) {
-		let title: string;
 		let url: string = data["ext_urls"]?.join("\n") ?? "无";
 		switch (index) {
 		case 5:
@@ -114,7 +113,7 @@ class CQBotSearch extends Plug {
 		case 37:
 			return `图库:露娜汉化\n画师:${data["author"]}\n原图:${url}`;
 		case 38:
-			title = data["jp_name"] ?? data["eng_name"] ?? data.source;
+			const title: string = data["jp_name"] ?? data["eng_name"] ?? data.source;
 			url = data["creator"].toString();
 			return `图库:ehentai\n标题:${title}\n创建者:${url}`;
 		case 41:

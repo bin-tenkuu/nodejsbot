@@ -27,12 +27,12 @@ class CQBotRandomPicture extends Plug {
 	@canCallPrivate()
 	async getRandomPicture(event: CQEvent<"message.private"> | CQEvent<"message.group">): Promise<CQTag[]> {
 		event.stopPropagation();
-		let userId = event.context.user_id;
+		const userId = event.context.user_id;
 		if (this.callSet.has(userId)) {
 			return [];
 		}
 		this.callSet.add(userId);
-		let member = CQData.getMember(userId);
+		const member = CQData.getMember(userId);
 		if (member.exp < 2) {
 			return [CQ.text("不够活跃")];
 		}
@@ -42,9 +42,9 @@ class CQBotRandomPicture extends Plug {
 
 	private static async getSeTu(this: void): Promise<[CQTag]> {
 		try {
-			let data = await lolicon();
+			const data = await lolicon();
 			if (data.code !== 0) {
-				let message = CQBotRandomPicture.code(data.code);
+				const message = CQBotRandomPicture.code(data.code);
 				CQBotRandomPicture.logger.warn(`色图异常：异常返回码(${data.code})：${message}`);
 				return [CQ.text(message)];
 			}
@@ -52,7 +52,7 @@ class CQBotRandomPicture extends Plug {
 				CQBotRandomPicture.logger.warn(`色图异常：色图数量不足(${data.count})`);
 				return [CQ.text("色图数量不足")];
 			}
-			let first = data.data[0];
+			const first = data.data[0];
 			return [CQ.image(getPRegular(first.url))];
 		} catch (reason) {
 			CQBotRandomPicture.logger.info(reason);
@@ -62,7 +62,7 @@ class CQBotRandomPicture extends Plug {
 
 	private static async getTouHouPNG(this: void): Promise<[CQTag]> {
 		try {
-			let json = await paulzzhTouHou();
+			const json = await paulzzhTouHou();
 			return [CQ.image((json.url))];
 		} catch (e) {
 			return [CQ.text(`东方图API调用错误`)];
@@ -71,7 +71,7 @@ class CQBotRandomPicture extends Plug {
 
 	private static async getToubiec(this: void): Promise<[CQTag]> {
 		try {
-			let json = await toubiec();
+			const json = await toubiec();
 			return [CQ.image((json.imgurl))];
 		} catch (e) {
 			return [CQ.text(`toubiec API调用错误`)];
@@ -80,7 +80,7 @@ class CQBotRandomPicture extends Plug {
 
 	private static async getDMXK(this: void): Promise<[CQTag]> {
 		try {
-			let json = await dongManXingKong();
+			const json = await dongManXingKong();
 			return [CQ.image((json.imgurl))];
 		} catch (e) {
 			return [CQ.text(`DMXK API调用错误`)];
@@ -89,7 +89,7 @@ class CQBotRandomPicture extends Plug {
 
 	private static async getYH(this: void): Promise<[CQTag]> {
 		try {
-			let json = await yingHua();
+			const json = await yingHua();
 			return [CQ.image((json.imgurl))];
 		} catch (e) {
 			return [CQ.text(`DMXK API调用错误`)];

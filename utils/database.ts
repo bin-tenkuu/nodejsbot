@@ -66,7 +66,7 @@ class SQLControl {
 	 */
 	public get close(): () => void {
 		return () => {
-			let db = this.db;
+			const db = this.db;
 			this.db = undefined;
 			if (db === undefined) {
 				return;

@@ -37,7 +37,8 @@ class CQData extends Plug {
 		await db.start(async db => {
 			//memberMap
 			{
-				let all = await db.all<{ id: number, exp: number, baned: 0 | 1, name: string }[]>(`SELECT id, exp, baned, name FROM Members`);
+				const all = await db.all<{ id: number, exp: number, baned: 0 | 1, name: string }[]>(
+						`SELECT id, exp, baned, name FROM Members`);
 				all.forEach(value => {
 					this.memberMap.set(value.id, {exp: value.exp, baned: value.baned, name: value.name});
 				});
@@ -78,8 +79,8 @@ class CQData extends Plug {
 		this.saving = true;
 		return db.start(async db => {
 			this.logger.info("保存开始");
-			for (let memberMap of this.memberMap) {
-				let [id, {exp, baned}] = memberMap;
+			for (const memberMap of this.memberMap) {
+				const [id, {exp, baned}] = memberMap;
 				await db.run("INSERT OR IGNORE INTO Members (id) VALUES (?);", id);
 				await db.run("UPDATE Members SET exp=?,baned=?,time=? WHERE id=?;", exp, baned, Date.now(), id);
 			}

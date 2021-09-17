@@ -1,20 +1,19 @@
 import http, {IncomingMessage, ServerResponse} from "http";
-import images from "images";
+// import images from "images";
 import {Plug} from "../Plug.js";
-import {axios} from "../utils/Search.js";
-import {endlessGen} from "../utils/Util.js";
+// import {axios} from "../utils/Search.js";
+// import {endlessGen} from "../utils/Util.js";
 
 type ServerHandle = (req: IncomingMessage, res: ServerResponse) => void;
 
 function create(): Map<string, ServerHandle> {
-	return new Map<string, ServerHandle>([
-		[
-			"/exit", (req, res) => {
+	return new Map<string, ServerHandle>(Object.entries<ServerHandle>({
+		"/exit": (req, res) => {
 			res.setHeader("Content-type", "text/html; charset=utf-8");
 			res.end("开始退出\n");
 			Promise.all([...(Plug.plugs.values())].map((p) => p.uninstall())).then<void>(() => {
 				HttpOption.logger.info(">>>>>>>>>> 全部卸载完成 <<<<<<<<<<");
-				if (process.execArgv.includes("--inspect")) {
+				if (IsDebug()) {
 					return;
 				}
 				setTimeout(() => {
@@ -23,21 +22,19 @@ function create(): Map<string, ServerHandle> {
 				}, 500);
 			});
 		},
-		],
-		[
-			"404", (req, res) => {
+		"404": (req, res) => {
 			res.writeHead(404);
 			HttpOption.logger.warn(`${req.url} 404`);
 			return res.end("<a href='./exit'>http://127.0.0.1:40000/exit</a>");
 		},
-		],
-	]);
+	}));
 }
 
 class HttpOption extends Plug {
 	public server: Map<string, ServerHandle>;
 	private header?: http.Server;
-	private generator: Generator<string, never, never>;
+
+	// private generator: Generator<string, never, never>;
 
 	constructor(server: Map<string, ServerHandle>) {
 		super(module);
@@ -45,16 +42,17 @@ class HttpOption extends Plug {
 		this.description = "通过网页链接达到控制效果";
 		this.version = 0.6;
 		this.server = server;
-		let jpgUrls = Array.from<undefined, string>({length: 3}, (_, k) => `/${k}.jpg`);
-		this.generator = endlessGen(jpgUrls);
+		// const jpgUrls = Array.from<undefined, string>({length: 3}, (_, k) => `/${k}.jpg`);
+		// this.generator = endlessGen(jpgUrls);
 	}
 
+	/*
 	async setJPG(url: string) {
 		return axios.get(url).then((data) => {
-			let img = images(data.data);
-			let width = Math.min(img.size().width >> 1, 1000);
-			let buffer = img.resize(width).encode("jpg");
-			let value: string = this.generator.next().value;
+			const img = images(data.data);
+			const width = Math.min(img.size().width >> 1, 1000);
+			const buffer = img.resize(width).encode("jpg");
+			const value: string = this.generator.next().value;
 			this.server.set(value, (req, res) => {
 				res.setHeader("Content-type", "image/jpeg");
 				res.setHeader("Content-Length", buffer.length);
@@ -64,17 +62,17 @@ class HttpOption extends Plug {
 			return `http://127.0.0.1:40000${value}`;
 		});
 	}
-
+	//*/
 	private handle(req: IncomingMessage, res: ServerResponse) {
 		this.logger.info(`网页 '${req.url}' 收到请求`);
 		this.logger.info(`代理:\t${req.headers["x-forwarded-for"]}`);
-		let {remoteFamily: family, remoteAddress: address, remotePort: port} = req.socket;
+		const {remoteFamily: family, remoteAddress: address, remotePort: port} = req.socket;
 		this.logger.info(`远程地址:\t${family} -> ${address} : ${port}`);
 		(this.server.get(req.url ?? "") ?? this[404])(req, res);
 	}
 
 	async install() {
-		let server = http.createServer(
+		const server = http.createServer(
 				this.handle.bind(this),
 		).listen(40000, "127.0.0.1");
 		this.logger.info("快速结束已启动,点击 http://127.0.0.1:40000");

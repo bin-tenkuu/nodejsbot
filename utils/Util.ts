@@ -67,7 +67,7 @@ export function sendPrivate<T>({bot, context: {user_id = adminId}}: hasUser<T>,
 	if (typeof message === "string") {
 		message = CQ.parse(message);
 	}
-	let msg = message;
+	const msg = message;
 	return bot.send("send_private_msg", {
 		message: <any>msg, user_id,
 	}).catch(() => {
@@ -82,7 +82,7 @@ export function sendGroup<T>({bot, context: {group_id = adminGroup}}: hasGroup<T
 	if (typeof message === "string") {
 		message = CQ.parse(message);
 	}
-	let msg = message;
+	const msg = message;
 	return bot.send_group_msg(group_id, <any>msg).catch(() => {
 		return bot.send_group_msg(group_id, cast2Text(msg));
 	}).catch(() => {
@@ -99,10 +99,10 @@ export function sendForward<T>({bot, context: {group_id = adminGroup}}: hasGroup
 
 export function sendForwardQuick<T>({bot, context: {group_id = adminGroup, sender}}: CQEvent<"message.group">,
 		message: CQTag[]): PromiseRes<MessageId> {
-	let {user_id: userId, nickname: name} = sender;
-	let map: messageNode = message.map(tags => CQ.node(name, userId, [tags]));
+	const {user_id: userId, nickname: name} = sender;
+	const map: messageNode = message.map(tags => CQ.node(name, userId, [tags]));
 	return bot.send_group_forward_msg(group_id, map).catch(() => {
-		let map: messageNode = message.map(tags => CQ.node(name, userId, cast2Text([tags])));
+		const map: messageNode = message.map(tags => CQ.node(name, userId, cast2Text([tags])));
 		return bot.send_group_forward_msg(group_id, map);
 	}).catch(() => {
 		return bot.send_group_msg(group_id, "合并转发消息发送失败");
@@ -129,15 +129,15 @@ function cast2Text(message: CQTag[]): CQText[] {
 
 async function parseFN(body: string, event: CQEvent<"message.group"> | CQEvent<"message.private">,
 		exec: RegExpExecArray): Promise<CQTag[]> {
-	let [plugName, funName] = body.split(".");
+	const [plugName, funName] = body.split(".");
 	if (funName === undefined) {
 		return [CQ.text(body)];
 	}
-	let plug: Plug | undefined = Plug.plugs.get(plugName);
+	const plug: Plug | undefined = Plug.plugs.get(plugName);
 	if (plug === undefined) {
 		return [CQ.text(`插件${plugName}不存在`)];
 	}
-	let plugFunc: Function = Reflect.get(plug, funName);
+	const plugFunc: Function = Reflect.get(plug, funName);
 	if (typeof plugFunc !== "function") {
 		return [CQ.text(`插件${plugName}的${funName}不是方法`)];
 	}
@@ -160,7 +160,7 @@ async function parseFN(body: string, event: CQEvent<"message.group"> | CQEvent<"
 
 function parseCQ(body: string, event: CQEvent<"message.group"> | CQEvent<"message.private">,
 		exec: RegExpExecArray): CQTag {
-	let groups = exec.groups as { [key in string]?: string };
+	const groups = exec.groups as { [key in string]?: string };
 	switch (body) {
 	case "reply":
 		return CQ.reply(event.context.message_id);
@@ -175,9 +175,9 @@ function parseCQ(body: string, event: CQEvent<"message.group"> | CQEvent<"messag
 
 export async function parseMessage(template: string, message: CQEvent<"message.group"> | CQEvent<"message.private">,
 		execArray: RegExpExecArray): Promise<CQTag[]> {
-	let split = template.split(/(?<=])|(?=\[)/);
-	let tags: CQTag[] = [];
-	for (let str of split) {
+	const split = template.split(/(?<=])|(?=\[)/);
+	const tags: CQTag[] = [];
+	for (const str of split) {
 		if (str.length === 0) {
 			continue;
 		}
@@ -185,12 +185,12 @@ export async function parseMessage(template: string, message: CQEvent<"message.g
 			tags.push(CQ.text(str));
 			continue;
 		}
-		let exec = /^\[(?<head>CQ|FN):(?<body>[^\]]+)]$/.exec(str);
+		const exec = /^\[(?<head>CQ|FN):(?<body>[^\]]+)]$/.exec(str);
 		if (exec === null) {
 			tags.push(CQ.text(str));
 			continue;
 		}
-		let {head, body} = exec.groups as { head: "CQ" | "FN", body: string };
+		const {head, body} = exec.groups as { head: "CQ" | "FN", body: string };
 		switch (head) {
 		case "CQ":
 			tags.push(parseCQ(body, message, execArray));
@@ -199,7 +199,7 @@ export async function parseMessage(template: string, message: CQEvent<"message.g
 			tags.push(...await parseFN(body, message, execArray));
 			continue;
 		default:
-			let never: never = head;
+			const never: never = head;
 			tags.push(CQ.text(str));
 			console.log(never);
 		}
@@ -223,11 +223,10 @@ export function getPSmall(url: string) {
 	);
 }
 
-export function* endlessGen<T>(list: Array<T>): Generator<T, never, never> {
-	for (let n = 0; true;) {
-		if (n >= list.length) {
-			n = 0;
+export function* endlessGen<T>(list: Iterable<T>): Generator<T, never, never> {
+	while (true) {
+		for (const t of list) {
+			yield t;
 		}
-		yield list[n++];
 	}
 }

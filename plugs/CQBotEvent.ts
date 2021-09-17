@@ -19,7 +19,7 @@ class CQBotEvent extends Plug {
 		this.header = (<CQWebSocket>require("./CQBot.js").default.bot).bind("on", {
 			"notice.group_increase": (event) => {
 				event.stopPropagation();
-				let {operator_id, user_id, sub_type, group_id} = event.context;
+				const {operator_id, user_id, sub_type, group_id} = event.context;
 				let str;
 				if (operator_id === 0) {
 					str = `@${user_id} ${sub_type === "approve" ? "欢迎" : "被邀请"}入群`;
@@ -30,7 +30,7 @@ class CQBotEvent extends Plug {
 			},
 			"notice.group_decrease": (event) => {
 				event.stopPropagation();
-				let {sub_type, group_id, user_id, operator_id} = event.context;
+				const {sub_type, group_id, user_id, operator_id} = event.context;
 				if (sub_type === "kick_me") {
 					sendAdminQQ(event, `群 ${group_id} 被踢出`);
 					return;
@@ -50,36 +50,25 @@ class CQBotEvent extends Plug {
 			},
 			"request.friend": (event) => {
 				event.stopPropagation();
-				let {user_id, flag} = event.context;
+				const {user_id, flag} = event.context;
 				sendAdminQQ(event, `${user_id}请求加好友`);
 				event.bot.set_friend_add_request(flag, true).catch(NOP);
 			},
 			"request.group": (event) => {
 				event.stopPropagation();
-				let {flag, sub_type, group_id} = event.context;
+				const {flag, sub_type, group_id} = event.context;
 				sendAdminQQ(event, `${group_id}请求入群`);
 				event.bot.set_group_add_request(flag, sub_type, true);
 			},
 			"notice.offline_file": (event) => {
 				event.stopPropagation();
-				let {name, size, url} = event.context.file;
-				// sendPrivate(event, [CQ.text(`收到文件:${name}\n上传中...`)]);
-				// uploadFile(url, name).then(value => {
-				// 	let message = [
-				// 		CQ.text("上传成功\n"),
-				// 		CQ.text(`文件名:${name
-				// 		}\n文件大小:${size
-				// 		}\n文件链接:${value}`),
-				// 	];
-				// 	sendPrivate(event, message);
-				// }).catch(() => {
+				const {name, size, url} = event.context.file;
 				sendPrivate(event, [
 					CQ.text("上传失败\n"),
 					CQ.text(`文件名:${name}\n文件大小:${size}\n文件链接:${url}`),
 				]).catch(reason => {
 					this.logger.error(reason.msg);
 				});
-				// });
 			},
 		});
 	}

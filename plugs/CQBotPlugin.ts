@@ -18,30 +18,30 @@ class CQBotPlugin extends Plug {
 	async getter(event: CQEvent<"message.private"> | CQEvent<"message.group">,
 			execArray: RegExpExecArray): Promise<CQTag[]> {
 		event.stopPropagation();
-		let {type} = execArray.groups as { type?: string } ?? {};
+		const {type} = execArray.groups as { type?: string } ?? {};
 		if (type === undefined) {
 			return [];
 		}
 		switch (type) {
 		case "群":
 			return event.bot.get_group_list().then(list => {
-				let s = list.map(group => `(${group.group_id})${group.group_name}`).join("\n");
+				const s = list.map(group => `(${group.group_id})${group.group_name}`).join("\n");
 				return [CQ.text(s)];
 			});
 		case "好友":
 			return event.bot.get_friend_list().then(list => {
-				let s = list.map(friend => `(${friend.user_id})${friend.nickname}:(${friend.remark})`).join("\n");
+				const s = list.map(friend => `(${friend.user_id})${friend.nickname}:(${friend.remark})`).join("\n");
 				return [CQ.text(s)];
 			});
 		case "ban":
-			let banList: number[] = [];
-			for (let memberMap of CQData.memberMap) {
-				let [number, {baned}] = memberMap;
+			const banList: number[] = [];
+			for (const memberMap of CQData.memberMap) {
+				const [number, {baned}] = memberMap;
 				if (baned === 1) {
 					banList.push(number);
 				}
 			}
-			let s = banList.join("\n");
+			const s = banList.join("\n");
 			return [CQ.text(s)];
 				// case "poke":
 				// 	let uin = event.context.self_id;
@@ -56,7 +56,7 @@ class CQBotPlugin extends Plug {
 	async setter(event: CQEvent<"message.private"> | CQEvent<"message.group">,
 			execArray: RegExpExecArray): Promise<CQTag[]> {
 		event.stopPropagation();
-		let {type, other = ""} = execArray.groups as { type?: string, other?: string } ?? {};
+		const {type, other = ""} = execArray.groups as { type?: string, other?: string } ?? {};
 		switch (type) {
 		case "ban":
 			return [CQ.text(CQBotPlugin.setBanQQ(other, 1))];
@@ -75,7 +75,7 @@ class CQBotPlugin extends Plug {
 	async corpusList(event: CQEvent<"message.private"> | CQEvent<"message.group">,
 			execArray: RegExpExecArray): Promise<CQTag[]> {
 		event.stopPropagation();
-		let {type, open} = execArray.groups as { type?: "私聊" | "群聊", open?: "开" | "关" } ?? {};
+		const {type, open} = execArray.groups as { type?: "私聊" | "群聊", open?: "开" | "关" } ?? {};
 		let isOpen: boolean;
 		if (open === "开") {
 			isOpen = true;
@@ -99,13 +99,13 @@ class CQBotPlugin extends Plug {
 	async corpusStat(event: CQEvent<"message.private"> | CQEvent<"message.group">,
 			execArray: RegExpExecArray): Promise<CQTag[]> {
 		event.stopPropagation();
-		let {
+		const {
 			type, open, nums,
 		} = execArray.groups as { type?: "私聊" | "群聊", open?: "开" | "关", nums?: string } ?? {};
 		if (nums === undefined) {
 			return [];
 		}
-		let number = +nums;
+		const number = +nums;
 		let s: boolean;
 		if (open === "开") {
 			s = true;
@@ -114,7 +114,7 @@ class CQBotPlugin extends Plug {
 		} else {
 			return [];
 		}
-		let element = CQBotPlugin.getCorpusList(type)[number];
+		const element = CQBotPlugin.getCorpusList(type)[number];
 		if (element === undefined) {
 			return [];
 		}
@@ -127,17 +127,17 @@ class CQBotPlugin extends Plug {
 	async corpusInfo(event: CQEvent<"message.private"> | CQEvent<"message.group">,
 			execArray: RegExpExecArray): Promise<CQTag[]> {
 		event.stopPropagation();
-		let {
+		const {
 			type, nums,
 		} = execArray.groups as { type?: "私聊" | "群聊", nums?: string } ?? {};
 		if (nums === undefined) {
 			return [];
 		}
-		let element = CQBotPlugin.getCorpusList(type)[+nums];
+		const element = CQBotPlugin.getCorpusList(type)[+nums];
 		if (element === undefined) {
 			return [];
 		}
-		let stringify = JSON.stringify(element, (key, value) => {
+		const stringify = JSON.stringify(element, (key, value) => {
 			if (value instanceof RegExp) {
 				return value.toString();
 			}
@@ -151,7 +151,7 @@ class CQBotPlugin extends Plug {
 	async pluginInfo(event: CQEvent<"message.private"> | CQEvent<"message.group">,
 			execArray: RegExpExecArray): Promise<CQTag[]> {
 		event.stopPropagation();
-		let {other} = execArray.groups as { other?: string } ?? {};
+		const {other} = execArray.groups as { other?: string } ?? {};
 		if (other === undefined) {
 			return [];
 		}
@@ -159,11 +159,11 @@ class CQBotPlugin extends Plug {
 			let str = [...Plug.plugs.keys()].map((p, i) => `${i}. ${p}`).join("\n");
 			return [CQ.text(str)];
 		}
-		let plugin = Plug.plugs.get(other);
+		const plugin = Plug.plugs.get(other);
 		if (plugin === undefined) {
 			return [CQ.text("未知插件名称")];
 		}
-		let str = JSON.stringify({
+		const str = JSON.stringify({
 			...plugin.toJSON(),
 			canAutoCall: [...plugin.canAutoCall],
 		}, undefined, 1);
@@ -193,7 +193,7 @@ class CQBotPlugin extends Plug {
 	}
 
 	private static setBanQQ(text: string, ban: 0 | 1) {
-		let matches = text.match(/\d+/g) ?? [];
+		const matches = text.match(/\d+/g) ?? [];
 		for (const value of matches) {
 			CQData.getMember(+value).baned = ban;
 		}

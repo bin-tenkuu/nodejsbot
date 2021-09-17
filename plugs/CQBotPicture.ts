@@ -24,12 +24,12 @@ class CQBotPicture extends Plug {
 	async getSeTu(event: CQEvent<"message.private"> | CQEvent<"message.group">,
 			exec: RegExpExecArray): Promise<CQTag[]> {
 		event.stopPropagation();
-		let groups = {
+		const groups = {
 			keyword: exec.groups?.keyword,
 			r18: exec.groups?.r18 !== undefined,
 		};
-		let userId: number = event.context.user_id;
-		let member = CQData.getMember(userId);
+		const userId: number = event.context.user_id;
+		const member = CQData.getMember(userId);
 		if (member.exp < 5) {
 			return [CQ.text("不够活跃")];
 		}
@@ -39,13 +39,13 @@ class CQBotPicture extends Plug {
 		}
 		this.logger.info("开始色图", groups);
 		try {
-			let data = await lolicon({
+			const data = await lolicon({
 				size1200: true,
 				keyword: groups.keyword,
 				r18: +groups.r18,
 			});
 			if (data.code !== 0) {
-				let message = CQBotPicture.code(data.code);
+				const message = CQBotPicture.code(data.code);
 				this.logger.warn(`开始色图异常：异常返回码(${data.code})：${message}`);
 				if (data.code === 404) {
 					this.setuSet.add(groups.keyword ?? "");
@@ -58,9 +58,9 @@ class CQBotPicture extends Plug {
 				member.exp += 2;
 				return [CQ.text("色图数量不足")];
 			}
-			let first = data.data[0];
+			const first = data.data[0];
 			if (event.contextType === "message.group") {
-				let {
+				const {
 					message_id: messageId,
 					sender: {nickname: nickname},
 				} = event.context;
@@ -85,29 +85,29 @@ class CQBotPicture extends Plug {
 	async getPixiv(event: CQEvent<"message.group"> | CQEvent<"message.private">,
 			exec: RegExpExecArray): Promise<CQTag[]> {
 		event.stopPropagation();
-		let {pid, p} = (exec.groups as { pid?: string, p?: string }) ?? {};
+		const {pid, p} = (exec.groups as { pid?: string, p?: string }) ?? {};
 		this.logger.debug(`p站图片请求：pid:${pid},p:${p}`);
 		if (pid === undefined) {
 			return [CQ.text("pid获取失败")];
 		}
-		let userId: number = event.context.user_id;
-		let member = CQData.getMember(userId);
+		const userId: number = event.context.user_id;
+		const member = CQData.getMember(userId);
 		if (member.exp < 10) {
 			return [CQ.text("不够活跃")];
 		}
 		member.exp -= 10;
 		try {
-			let data = await pixivCat(pid);
+			const data = await pixivCat(pid);
 			if (!data.success) {
 				this.logger.info(`请求失败`);
 				return [CQ.text(data.error)];
 			}
 			this.logger.info(`多张图片:${data.multiple}`);
 			if (data.multiple) {
-				let urlsProxy = data.original_urls_proxy;
-				let length = urlsProxy.length;
+				const urlsProxy = data.original_urls_proxy;
+				const length = urlsProxy.length;
 				if (p === undefined) {
-					let {0: p0, 1: p1} = urlsProxy;
+					const {0: p0, 1: p1} = urlsProxy;
 					return [
 						CQ.text(`总共${length}张图片,这是第1,2张`),
 						CQ.image(getPRegular(p0)),
@@ -137,14 +137,14 @@ class CQBotPicture extends Plug {
 	@canCallPrivate()
 	async getTouHouPNG(event: CQEvent<"message.group"> | CQEvent<"message.private">): Promise<CQTag[]> {
 		console.log("开始东方");
-		let userId: number = event.context.user_id;
-		let member = CQData.getMember(userId);
+		const userId: number = event.context.user_id;
+		const member = CQData.getMember(userId);
 		if (member.exp < 10) {
 			return [CQ.text("不够活跃")];
 		}
 		member.exp -= 10;
 		try {
-			let json = await paulzzhTouHou();
+			const json = await paulzzhTouHou();
 			return [CQ.image((json.url)), CQ.text("作者:" + json.author)];
 		} catch (e) {
 			member.exp += 5;

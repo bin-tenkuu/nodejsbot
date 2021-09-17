@@ -17,8 +17,8 @@ class CQBotRepeat extends Plug {
 
 	@canCallGroup()
 	async getRepeat(event: CQEvent<"message.group">) {
-		let {group_id, user_id, raw_message} = event.context;
-		let node = this.repeatCache.get(group_id, new RepeatCache(raw_message));
+		const {group_id, user_id, raw_message} = event.context;
+		const node = this.repeatCache.get(group_id, new RepeatCache(raw_message));
 		if (node.addUser(user_id)) {
 			return [];
 		}
@@ -28,11 +28,11 @@ class CQBotRepeat extends Plug {
 		if (event.cqTags.some(tag => !(tag instanceof CQText))) {
 			return [];
 		}
-		let find = event.cqTags.find((tag) => (tag instanceof CQText)) as CQText | undefined;
+		const find = event.cqTags.find((tag) => (tag instanceof CQText)) as CQText | undefined;
 		if (find === undefined || /^[-+$*.]/.test(find.text)) {
 			return [];
 		}
-		let msg = CQBotRepeat.Random(...event.cqTags.map<string>(tag => {
+		const msg = CQBotRepeat.Random(...event.cqTags.map<string>(tag => {
 			if (tag instanceof CQText) {
 				return CQBotRepeat.Random(...tag.text).join("");
 			} else if (tag instanceof CQImage) {
@@ -56,7 +56,7 @@ class CQBotRepeat extends Plug {
 
 	private static Random(...arr: string[]): string[] {
 		for (let i = arr.length - 1; i > 0; i--) {
-			let j = (Math.random() * i) | 0;
+			const j = (Math.random() * i) | 0;
 			[arr[i], arr[j]] = [arr[j], arr[i]];
 		}
 		return arr;
@@ -79,7 +79,7 @@ class RepeatCache extends Equatable {
 	 * @return 是否添加成功,如果已经存在则返回 `false`
 	 */
 	public addUser(user: number): boolean {
-		let b: boolean = this.user.has(user);
+		const b: boolean = this.user.has(user);
 		b || this.user.add(user);
 		return !b;
 	}
