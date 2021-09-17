@@ -23,10 +23,9 @@ export abstract class Plug {
 
 	protected constructor(module: NodeModule) {
 		this.#state = State.create;
-		let key = this.constructor.name;
+		this.name = this.constructor.name;
 		this.module = module;
-		Plug.plugs.set(key, this);
-		this.name = key;
+		Plug.plugs.set(this.name, this);
 		this.description = "这个插件没有描述";
 		this.version = -1;
 		this.install = async function () {
@@ -110,8 +109,8 @@ export abstract class Plug {
 
 export function hrtime(time: [number, number]): void {
 	let [s, ns] = process.hrtime(time);
-	ns = ns / 1e3;
-	if (ns < 1000) {
+	ns /= 1e3;
+	if (ns < 1e3) {
 		return logger.info(`本次请求耗时:${s}秒${ns}微秒`);
 	}
 	ns = (ns | 0) / 1e3;

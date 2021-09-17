@@ -25,7 +25,7 @@ function create(): Map<string, ServerHandle> {
 		"404": (req, res) => {
 			res.writeHead(404);
 			HttpOption.logger.warn(`${req.url} 404`);
-			return res.end("<a href='./exit'>http://127.0.0.1:40000/exit</a>");
+			return res.end("<a href='/exit'>http://127.0.0.1:40000/exit</a>");
 		},
 	}));
 }
