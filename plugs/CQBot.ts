@@ -191,7 +191,7 @@ class CQBot extends Plug {
 						return;
 					}
 					hrtime(time);
-					sendPrivate(event, tags);
+					sendPrivate(event, tags).catch(NOP);
 				});
 			},
 		});

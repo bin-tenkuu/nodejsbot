@@ -3,7 +3,7 @@ import {Plug} from "../Plug.js";
 import {canCallGroup, canCallPrivate} from "../utils/Annotation.js";
 import {dongManXingKong, lolicon, paulzzhTouHou, toubiec, yingHua} from "../utils/Search.js";
 import {endlessGen, getPRegular} from "../utils/Util.js";
-import CQData from "./CQData.js";
+import {default as CQData} from "./CQData.js";
 
 
 class CQBotRandomPicture extends Plug {

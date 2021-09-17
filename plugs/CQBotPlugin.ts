@@ -1,7 +1,7 @@
 import {CQ, CQEvent, CQTag} from "go-cqwebsocket";
 import {Plug} from "../Plug.js";
 import {canCallGroup, canCallPrivate} from "../utils/Annotation.js";
-import CQData, {Corpus} from "./CQData.js";
+import {default as CQData, Corpus} from "./CQData.js";
 
 
 class CQBotPlugin extends Plug {

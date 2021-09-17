@@ -43,7 +43,7 @@ class CQBotEvent extends Plug {
 				}
 				event.bot.get_stranger_info(user_id, false).then(info => {
 					str = `@${info.nickname}(${info.user_id})${str}`;
-					sendGroup(event, [CQ.text(str)]);
+					return sendGroup(event, [CQ.text(str)]);
 				}).catch(() => {
 					sendAdminQQ(event, str);
 				});

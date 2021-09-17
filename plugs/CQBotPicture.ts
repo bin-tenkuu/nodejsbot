@@ -3,7 +3,7 @@ import {Plug} from "../Plug.js";
 import {canCallGroup, canCallPrivate} from "../utils/Annotation.js";
 import {lolicon, paulzzhTouHou, pixivCat} from "../utils/Search.js";
 import {getPRegular, sendAdminQQ, sendForward} from "../utils/Util.js";
-import CQData from "./CQData.js";
+import {default as CQData} from "./CQData.js";
 
 
 class CQBotPicture extends Plug {
