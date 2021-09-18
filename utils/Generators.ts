@@ -1,7 +1,7 @@
 const Default = Symbol();
 
 /**筛选*/
-export function* Where<T>(source: Iterable<T>, predicate: ForEachI<T, boolean>): Generator<T, void> {
+export function* Where<T>(source: Iterable<T>, predicate: ForEach<T, boolean>): Generator<T, void> {
 	let index: number = -1;
 	for (const item of source) {
 		if (predicate(item, ++index)) {
@@ -11,7 +11,7 @@ export function* Where<T>(source: Iterable<T>, predicate: ForEachI<T, boolean>):
 }
 
 /**映射*/
-export function* Select<T, TR>(source: Iterable<T>, selector: ForEachI<T, TR>): Generator<TR, void> {
+export function* Select<T, TR>(source: Iterable<T>, selector: ForEach<T, TR>): Generator<TR, void> {
 	let index: number = -1;
 	for (const item of source) {
 		yield selector(item, ++index);
@@ -19,7 +19,7 @@ export function* Select<T, TR>(source: Iterable<T>, selector: ForEachI<T, TR>): 
 }
 
 /**展开映射*/
-export function* SelectMany<T, TC, TR>(source: Iterable<T>, collectionSelector: ForEachI<T, TC[]>,
+export function* SelectMany<T, TC, TR>(source: Iterable<T>, collectionSelector: ForEach<T, TC[]>,
 		selector: (item: T, subItem: TC) => TR): Generator<TR, void> {
 	let index: number = -1;
 	for (const item of source) {
@@ -42,7 +42,7 @@ export function* Take<T>(source: Iterable<T>, count: number): Generator<T, void>
 	}
 }
 
-export function* TakeWhile<T>(source: Iterable<T>, predicate: ForEachI<T, boolean>): Generator<T, void> {
+export function* TakeWhile<T>(source: Iterable<T>, predicate: ForEach<T, boolean>): Generator<T, void> {
 	let index: number = -1;
 	for (const item of source) {
 		if (predicate(item, ++index)) {
@@ -63,7 +63,7 @@ export function* Skip<T>(source: Iterable<T>, count: number): Generator<T, void>
 	}
 }
 
-export function* SkipWhile<T>(source: Iterable<T>, predicate: ForEachI<T, boolean>): Generator<T, void> {
+export function* SkipWhile<T>(source: Iterable<T>, predicate: ForEach<T, boolean>): Generator<T, void> {
 	let index: number = -1;
 	let yielding: boolean = false;
 	for (const item of source) {
@@ -79,9 +79,10 @@ export function* SkipWhile<T>(source: Iterable<T>, predicate: ForEachI<T, boolea
 export function* GroupBy<T, TKey, TElement>(source: Iterable<T>,
 		keySelector: ForEach<T, TKey>, elementSelector: ForEach<T, TElement>): Generator<[TKey, TElement[]], void> {
 	const map: Map<TKey, TElement[]> = new Map<TKey, TElement[]>();
+	let index: number = -1;
 	for (const item of source) {
-		const key: TKey = keySelector(item);
-		const element: TElement = elementSelector(item);
+		const key: TKey = keySelector(item, ++index);
+		const element: TElement = elementSelector(item, index);
 		const items: TElement[] | undefined = map.get(key);
 		if (items === undefined) {
 			map.set(key, [element]);
@@ -193,8 +194,8 @@ export function* AsGenerator<T>(source: Iterable<T>): Generator<T, void> {
 }
 
 export function ToMap<T, TK, TE>(source: Iterable<T>,
-		keySelector: ForEachI<T, TK>,
-		elementSelector: ForEachI<T, TE>): Map<TK, TE> {
+		keySelector: ForEach<T, TK>,
+		elementSelector: ForEach<T, TE>): Map<TK, TE> {
 	const map: Map<TK, TE> = new Map<TK, TE>();
 	let index: number = -1;
 	for (const item of source) {
@@ -246,8 +247,9 @@ export function FirstOrNull<T>(source: Iterable<T>, predicate: ForEach<T, boolea
 }
 
 function FirstOrDefault<T>(source: Iterable<T>, predicate: ForEach<T, boolean> = _ => true): T | typeof Default {
+	let index: number = -1;
 	for (const item of source) {
-		if (predicate(item)) {
+		if (predicate(item, ++index)) {
 			return item;
 		}
 	}
@@ -269,8 +271,9 @@ export function LastOrNull<T>(source: Iterable<T>, predicate: ForEach<T, boolean
 
 function LastOrDefault<T>(source: Iterable<T>, predicate: ForEach<T, boolean>): T | typeof Default {
 	let last: T | typeof Default = Default;
+	let index: number = -1;
 	for (const item of source) {
-		if (predicate(item)) {
+		if (predicate(item, ++index)) {
 			last = item;
 		}
 	}
@@ -323,8 +326,9 @@ export function* Repeat<T>(element: T, count: number): Generator<T, void> {
 }
 
 export function Any<T>(source: Iterable<T>, predicate: ForEach<T, boolean> = _ => true): boolean {
+	let index: number = -1;
 	for (const item of source) {
-		if (predicate(item)) {
+		if (predicate(item, ++index)) {
 			return true;
 		}
 	}
@@ -332,8 +336,9 @@ export function Any<T>(source: Iterable<T>, predicate: ForEach<T, boolean> = _ =
 }
 
 export function All<T>(source: Iterable<T>, predicate: ForEach<T, boolean>): boolean {
+	let index: number = -1;
 	for (const item of source) {
-		if (!predicate(item)) {
+		if (!predicate(item, ++index)) {
 			return false;
 		}
 	}
@@ -341,9 +346,10 @@ export function All<T>(source: Iterable<T>, predicate: ForEach<T, boolean>): boo
 }
 
 export function Count<T>(source: Iterable<T>, predicate: ForEach<T, boolean>): number {
+	let index: number = -1;
 	let num: number = 0;
 	for (const item of source) {
-		if (predicate(item)) {
+		if (predicate(item, ++index)) {
 			++num;
 		}
 	}
@@ -351,9 +357,10 @@ export function Count<T>(source: Iterable<T>, predicate: ForEach<T, boolean>): n
 }
 
 export function BigCount<T>(source: Iterable<T>, predicate: ForEach<T, boolean>): bigint {
+	let index: number = -1;
 	let num: bigint = 0n;
 	for (const item of source) {
-		if (predicate(item)) {
+		if (predicate(item, ++index)) {
 			++num;
 		}
 	}
@@ -404,8 +411,9 @@ export function Sum<T>(source: Iterable<T>, selector?: ForEach<T, number> | unde
 			throw new Error(`Argument Cannot be undefined (selector)`);
 		}
 	} else {
+		let index: number = -1;
 		for (const item of source) {
-			sum += selector(item);
+			sum += selector(item, ++index);
 		}
 	}
 	return sum;
@@ -428,8 +436,9 @@ export function BigSum<T>(source: Iterable<T>, selector?: ForEach<T, bigint> | u
 			throw new Error(`Argument Cannot be undefined (selector)`);
 		}
 	} else {
+		let index: number = -1;
 		for (const item of source) {
-			sum += selector(item);
+			sum += selector(item, ++index);
 		}
 	}
 	return sum;
@@ -574,5 +583,4 @@ export function* LoopGen<T>(source: Iterable<T>): Generator<T, never, never> {
 	}
 }
 
-type ForEachI<T, TReturn> = (item: T, index: number) => TReturn;
-type ForEach<T, TReturn> = (item: T) => TReturn;
+type ForEach<T, TReturn> = (item: T, index: number) => TReturn;
