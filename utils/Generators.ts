@@ -1,7 +1,7 @@
 const Default = Symbol();
 
 /**筛选*/
-export function* Where<T>(source: Iterable<T>, predicate: (item: T, index: number) => boolean): Generator<T, void> {
+export function* Where<T>(source: Iterable<T>, predicate: ForEachI<T, boolean>): Generator<T, void> {
 	let index: number = -1;
 	for (const item of source) {
 		if (predicate(item, ++index)) {
@@ -11,7 +11,7 @@ export function* Where<T>(source: Iterable<T>, predicate: (item: T, index: numbe
 }
 
 /**映射*/
-export function* Select<T, TR>(source: Iterable<T>, selector: (item: T, index: number) => TR): Generator<TR, void> {
+export function* Select<T, TR>(source: Iterable<T>, selector: ForEachI<T, TR>): Generator<TR, void> {
 	let index: number = -1;
 	for (const item of source) {
 		yield selector(item, ++index);
@@ -19,7 +19,7 @@ export function* Select<T, TR>(source: Iterable<T>, selector: (item: T, index: n
 }
 
 /**展开映射*/
-export function* SelectMany<T, TC, TR>(source: Iterable<T>, collectionSelector: (item: T, index: number) => TC[],
+export function* SelectMany<T, TC, TR>(source: Iterable<T>, collectionSelector: ForEachI<T, TC[]>,
 		selector: (item: T, subItem: TC) => TR): Generator<TR, void> {
 	let index: number = -1;
 	for (const item of source) {
@@ -42,7 +42,7 @@ export function* Take<T>(source: Iterable<T>, count: number): Generator<T, void>
 	}
 }
 
-export function* TakeWhile<T>(source: Iterable<T>, predicate: (item: T, index: number) => boolean): Generator<T, void> {
+export function* TakeWhile<T>(source: Iterable<T>, predicate: ForEachI<T, boolean>): Generator<T, void> {
 	let index: number = -1;
 	for (const item of source) {
 		if (predicate(item, ++index)) {
@@ -63,7 +63,7 @@ export function* Skip<T>(source: Iterable<T>, count: number): Generator<T, void>
 	}
 }
 
-export function* SkipWhile<T>(source: Iterable<T>, predicate: (item: T, index: number) => boolean): Generator<T, void> {
+export function* SkipWhile<T>(source: Iterable<T>, predicate: ForEachI<T, boolean>): Generator<T, void> {
 	let index: number = -1;
 	let yielding: boolean = false;
 	for (const item of source) {
@@ -77,7 +77,7 @@ export function* SkipWhile<T>(source: Iterable<T>, predicate: (item: T, index: n
 }
 
 export function* GroupBy<T, TKey, TElement>(source: Iterable<T>,
-		keySelector: (item: T) => TKey, elementSelector: (item: T) => TElement): Generator<[TKey, TElement[]], void> {
+		keySelector: ForEach<T, TKey>, elementSelector: ForEach<T, TElement>): Generator<[TKey, TElement[]], void> {
 	const map: Map<TKey, TElement[]> = new Map<TKey, TElement[]>();
 	for (const item of source) {
 		const key: TKey = keySelector(item);
@@ -193,8 +193,8 @@ export function* AsGenerator<T>(source: Iterable<T>): Generator<T, void> {
 }
 
 export function ToMap<T, TK, TE>(source: Iterable<T>,
-		keySelector: (item: T, index: number) => TK,
-		elementSelector: (item: T, index: number) => TE): Map<TK, TE> {
+		keySelector: ForEachI<T, TK>,
+		elementSelector: ForEachI<T, TE>): Map<TK, TE> {
 	const map: Map<TK, TE> = new Map<TK, TE>();
 	let index: number = -1;
 	for (const item of source) {
@@ -229,7 +229,7 @@ export function* Cast<T>(source: Iterable<any>): Generator<T, void> {
 	yield* AsGenerator(source);
 }
 
-export function First<T>(source: Iterable<T>, predicate: (item: T) => boolean = _ => true): T {
+export function First<T>(source: Iterable<T>, predicate: ForEach<T, boolean> = _ => true): T {
 	const firstOrDefault: typeof Default | T = FirstOrDefault(source, predicate);
 	if (firstOrDefault === Default) {
 		throw new Error("No Match");
@@ -237,7 +237,7 @@ export function First<T>(source: Iterable<T>, predicate: (item: T) => boolean = 
 	return firstOrDefault;
 }
 
-export function FirstOrNull<T>(source: Iterable<T>, predicate: (item: T) => boolean = _ => true): T | null {
+export function FirstOrNull<T>(source: Iterable<T>, predicate: ForEach<T, boolean> = _ => true): T | null {
 	const firstOrDefault: typeof Default | T = FirstOrDefault(source, predicate);
 	if (firstOrDefault === Default) {
 		return null;
@@ -245,7 +245,7 @@ export function FirstOrNull<T>(source: Iterable<T>, predicate: (item: T) => bool
 	return firstOrDefault;
 }
 
-function FirstOrDefault<T>(source: Iterable<T>, predicate: (item: T) => boolean = _ => true): T | typeof Default {
+function FirstOrDefault<T>(source: Iterable<T>, predicate: ForEach<T, boolean> = _ => true): T | typeof Default {
 	for (const item of source) {
 		if (predicate(item)) {
 			return item;
@@ -254,7 +254,7 @@ function FirstOrDefault<T>(source: Iterable<T>, predicate: (item: T) => boolean 
 	return Default;
 }
 
-export function Last<T>(source: Iterable<T>, predicate: (item: T) => boolean = _ => true): T {
+export function Last<T>(source: Iterable<T>, predicate: ForEach<T, boolean> = _ => true): T {
 	let last: T | typeof Default = LastOrDefault(source, predicate);
 	if (last === Default) {
 		throw new Error("No Match");
@@ -262,12 +262,12 @@ export function Last<T>(source: Iterable<T>, predicate: (item: T) => boolean = _
 	return last;
 }
 
-export function LastOrNull<T>(source: Iterable<T>, predicate: (item: T) => boolean = _ => true): T | null {
+export function LastOrNull<T>(source: Iterable<T>, predicate: ForEach<T, boolean> = _ => true): T | null {
 	let last: T | typeof Default = LastOrDefault(source, predicate);
 	return last === Default ? null : last;
 }
 
-function LastOrDefault<T>(source: Iterable<T>, predicate: (item: T) => boolean): T | typeof Default {
+function LastOrDefault<T>(source: Iterable<T>, predicate: ForEach<T, boolean>): T | typeof Default {
 	let last: T | typeof Default = Default;
 	for (const item of source) {
 		if (predicate(item)) {
@@ -322,7 +322,7 @@ export function* Repeat<T>(element: T, count: number): Generator<T, void> {
 	}
 }
 
-export function Any<T>(source: Iterable<T>, predicate: (item: T) => boolean = _ => true): boolean {
+export function Any<T>(source: Iterable<T>, predicate: ForEach<T, boolean> = _ => true): boolean {
 	for (const item of source) {
 		if (predicate(item)) {
 			return true;
@@ -331,7 +331,7 @@ export function Any<T>(source: Iterable<T>, predicate: (item: T) => boolean = _ 
 	return false;
 }
 
-export function All<T>(source: Iterable<T>, predicate: (item: T) => boolean): boolean {
+export function All<T>(source: Iterable<T>, predicate: ForEach<T, boolean>): boolean {
 	for (const item of source) {
 		if (!predicate(item)) {
 			return false;
@@ -340,7 +340,7 @@ export function All<T>(source: Iterable<T>, predicate: (item: T) => boolean): bo
 	return true;
 }
 
-export function Count<T>(source: Iterable<T>, predicate: (item: T) => boolean): number {
+export function Count<T>(source: Iterable<T>, predicate: ForEach<T, boolean>): number {
 	let num: number = 0;
 	for (const item of source) {
 		if (predicate(item)) {
@@ -350,7 +350,7 @@ export function Count<T>(source: Iterable<T>, predicate: (item: T) => boolean): 
 	return num;
 }
 
-export function BigCount<T>(source: Iterable<T>, predicate: (item: T) => boolean): bigint {
+export function BigCount<T>(source: Iterable<T>, predicate: ForEach<T, boolean>): bigint {
 	let num: bigint = 0n;
 	for (const item of source) {
 		if (predicate(item)) {
@@ -384,12 +384,12 @@ export function Aggregate<T, TAcc>(source: Iterable<T>, seed: TAcc | ((acc: T, i
 	for (const item of source) {
 		accumulate = func(accumulate, item);
 	}
-	return (accumulate);
+	return accumulate;
 }
 
 export function Sum(source: Iterable<number>, selector?: undefined): number;
-export function Sum<T>(source: Iterable<T>, selector: (item: T) => number): number;
-export function Sum<T>(source: Iterable<T>, selector?: ((item: T) => number) | undefined): number {
+export function Sum<T>(source: Iterable<T>, selector: ForEach<T, number>): number;
+export function Sum<T>(source: Iterable<T>, selector?: ForEach<T, number> | undefined): number {
 	const firstOrDefault: T | typeof Default = FirstOrDefault(source);
 	if (firstOrDefault === Default) {
 		return 0;
@@ -412,8 +412,8 @@ export function Sum<T>(source: Iterable<T>, selector?: ((item: T) => number) | u
 }
 
 export function BigSum(source: Iterable<bigint>, selector?: undefined): bigint;
-export function BigSum<T>(source: Iterable<T>, selector: (item: T) => bigint): bigint;
-export function BigSum<T>(source: Iterable<T>, selector?: ((item: T) => bigint) | undefined): bigint {
+export function BigSum<T>(source: Iterable<T>, selector: ForEach<T, bigint>): bigint;
+export function BigSum<T>(source: Iterable<T>, selector?: ForEach<T, bigint> | undefined): bigint {
 	const firstOrDefault: T | typeof Default = FirstOrDefault(source);
 	if (firstOrDefault === Default) {
 		return 0n;
@@ -436,7 +436,7 @@ export function BigSum<T>(source: Iterable<T>, selector?: ((item: T) => bigint) 
 }
 
 export function Min(source: Iterable<number>, selector?: undefined): number;
-export function Min<T>(source: Iterable<T>, selector?: ((item: T) => number) | undefined): number {
+export function Min<T>(source: Iterable<T>, selector?: ForEach<T, number> | undefined): number {
 	let min: T | typeof Default = FirstOrDefault(source);
 	if (min === Default) {
 		throw new Error("source Cannot Be Empty");
@@ -456,7 +456,7 @@ export function Min<T>(source: Iterable<T>, selector?: ((item: T) => number) | u
 }
 
 export function BigMin(source: Iterable<bigint>, selector?: undefined): bigint;
-export function BigMin<T>(source: Iterable<T>, selector?: ((item: T) => bigint) | undefined): bigint {
+export function BigMin<T>(source: Iterable<T>, selector?: ForEach<T, bigint> | undefined): bigint {
 	let min: T | typeof Default = FirstOrDefault(source);
 	if (min === Default) {
 		throw new Error("source Cannot Be Empty");
@@ -476,7 +476,7 @@ export function BigMin<T>(source: Iterable<T>, selector?: ((item: T) => bigint) 
 }
 
 export function Max(source: Iterable<number>, selector?: undefined): number;
-export function Max<T>(source: Iterable<T>, selector?: ((item: T) => number) | undefined): number {
+export function Max<T>(source: Iterable<T>, selector?: ForEach<T, number> | undefined): number {
 	let max: T | typeof Default = FirstOrDefault(source);
 	if (max === Default) {
 		throw new Error("source Cannot Be Empty");
@@ -496,7 +496,7 @@ export function Max<T>(source: Iterable<T>, selector?: ((item: T) => number) | u
 }
 
 export function BigMax(source: Iterable<bigint>, selector?: undefined): bigint;
-export function BigMax<T>(source: Iterable<T>, selector?: ((item: T) => bigint) | undefined): bigint {
+export function BigMax<T>(source: Iterable<T>, selector?: ForEach<T, bigint> | undefined): bigint {
 	let max: T | typeof Default = FirstOrDefault(source);
 	if (max === Default) {
 		throw new Error("source Cannot Be Empty");
@@ -516,7 +516,7 @@ export function BigMax<T>(source: Iterable<T>, selector?: ((item: T) => bigint) 
 }
 
 export function Average(source: Iterable<number>, selector?: undefined): number;
-export function Average<T>(source: Iterable<T>, selector?: ((item: T) => number) | undefined): number {
+export function Average<T>(source: Iterable<T>, selector?: ForEach<T, number> | undefined): number {
 	const firstOrDefault: T | typeof Default = FirstOrDefault(source);
 	if (firstOrDefault === Default) {
 		throw new Error("source Cannot Be Empty");
@@ -537,7 +537,7 @@ export function Average<T>(source: Iterable<T>, selector?: ((item: T) => number)
 }
 
 export function BigAverage(source: Iterable<bigint>, selector?: undefined): bigint;
-export function BigAverage<T>(source: Iterable<T>, selector?: ((item: T) => bigint) | undefined): bigint {
+export function BigAverage<T>(source: Iterable<T>, selector?: ForEach<T, bigint> | undefined): bigint {
 	const firstOrDefault: T | typeof Default = FirstOrDefault(source);
 	if (firstOrDefault === Default) {
 		throw new Error("source Cannot Be Empty");
@@ -574,3 +574,5 @@ export function* LoopGen<T>(source: Iterable<T>): Generator<T, never, never> {
 	}
 }
 
+type ForEachI<T, TReturn> = (item: T, index: number) => TReturn;
+type ForEach<T, TReturn> = (item: T) => TReturn;
