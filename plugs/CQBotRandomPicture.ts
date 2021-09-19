@@ -1,8 +1,9 @@
-import {CQ, CQEvent, CQTag} from "go-cqwebsocket";
+import {CQ, CQTag} from "go-cqwebsocket";
 import {Plug} from "../Plug.js";
 import {canCallGroup, canCallPrivate} from "../utils/Annotation.js";
+import {LoopGen} from "../utils/Generators.js";
 import {dongManXingKong, lolicon, paulzzhTouHou, toubiec, yingHua} from "../utils/Search.js";
-import {endlessGen, getPRegular} from "../utils/Util.js";
+import {CQMessage, getPRegular} from "../utils/Util.js";
 import {default as CQData} from "./CQData.js";
 
 
@@ -18,14 +19,14 @@ class CQBotRandomPicture extends Plug {
 		this.version = 0;
 		this.callList = [];
 		this.callSet = new Set<number>();
-		this.generator = endlessGen(this.callList);
+		this.generator = LoopGen(this.callList);
 
 		this.init();
 	}
 
 	@canCallGroup()
 	@canCallPrivate()
-	async getRandomPicture(event: CQEvent<"message.private"> | CQEvent<"message.group">): Promise<CQTag[]> {
+	async getRandomPicture(event: CQMessage): Promise<CQTag[]> {
 		event.stopPropagation();
 		const userId = event.context.user_id;
 		if (this.callSet.has(userId)) {

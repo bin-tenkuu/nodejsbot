@@ -26,7 +26,7 @@ class SQLControl {
 	 * 不要关闭数据库
 	 * @param fun 数据库回调函数
 	 */
-	public async start<T = any>(fun: DatabaseHandle<T>): Promise<T> {
+	public async start<T = unknown>(fun: DatabaseHandle<T>): Promise<T> {
 		if (this.db !== undefined) {
 			this.resetBreakTime();
 			return Promise.resolve(this.db).then(fun);

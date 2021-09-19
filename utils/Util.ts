@@ -6,6 +6,8 @@ import {Plug} from "../Plug.js";
 import {canCallGroup, canCallGroupType, canCallPrivate, canCallPrivateType} from "./Annotation.js";
 import {logger} from "./logger.js";
 
+export type CQMessage = CQEvent<"message.private"> | CQEvent<"message.group">;
+
 export function isAt({cqTags}: CQEvent<"message.group">): boolean {
 	if (cqTags.length === 0) {
 		return false;
@@ -20,7 +22,7 @@ export function isAtMe({context: {self_id}, cqTags}: CQEvent<"message.group">): 
 	return cqTags.some((tag: CQTag) => tag instanceof CQAt && +tag.qq === self_id);
 }
 
-export function onlyText({context: {raw_message}}: CQEvent<"message.group" | "message.private">): string {
+export function onlyText({context: {raw_message}}: CQMessage): string {
 	if (raw_message !== undefined) {
 		return CQ.unescape(raw_message.replace(/\[[^\]]+]/g, "").trim());
 	}
@@ -53,8 +55,7 @@ export function sendAdminGroup({bot}: CQEvent<any>, message: CQTag[] | string): 
 	});
 }
 
-export function sendAuto(event: CQEvent<"message.group"> | CQEvent<"message.private">,
-		message: CQTag[] | string): void {
+export function sendAuto(event: CQMessage, message: CQTag[] | string): void {
 	if (event.contextType === "message.group") {
 		sendGroup(event, message).catch(NOP);
 	} else if (event.contextType === "message.private") {
@@ -127,8 +128,7 @@ function cast2Text(message: CQTag[]): CQText[] {
 	});
 }
 
-async function parseFN(body: string, event: CQEvent<"message.group"> | CQEvent<"message.private">,
-		exec: RegExpExecArray): Promise<CQTag[]> {
+async function parseFN(body: string, event: CQMessage, exec: RegExpExecArray): Promise<CQTag[]> {
 	const [plugName, funName] = body.split(".");
 	if (funName === undefined) {
 		return [CQ.text(body)];
@@ -158,8 +158,7 @@ async function parseFN(body: string, event: CQEvent<"message.group"> | CQEvent<"
 	}
 }
 
-function parseCQ(body: string, event: CQEvent<"message.group"> | CQEvent<"message.private">,
-		exec: RegExpExecArray): CQTag {
+function parseCQ(body: string, event: CQMessage, exec: RegExpExecArray): CQTag {
 	const groups = exec.groups as { [key in string]?: string };
 	switch (body) {
 	case "reply":
@@ -173,8 +172,7 @@ function parseCQ(body: string, event: CQEvent<"message.group"> | CQEvent<"messag
 	}
 }
 
-export async function parseMessage(template: string, message: CQEvent<"message.group"> | CQEvent<"message.private">,
-		execArray: RegExpExecArray): Promise<CQTag[]> {
+export async function parseMessage(template: string, message: CQMessage, execArray: RegExpExecArray): Promise<CQTag[]> {
 	const split = template.split(/(?<=])|(?=\[)/);
 	const tags: CQTag[] = [];
 	for (const str of split) {
@@ -213,21 +211,4 @@ type hasGroup<T> = T extends { bot: CQWebSocket, context: { group_id: number } }
 
 export function getPRegular(url: string) {
 	return url.replace("original", "master").replace(/(?<!1200)\.\w+$/, "_master1200.jpg");
-}
-
-export function getPSmall(url: string) {
-	return url.replace(/(?<=\.cat)(.+)(?=img\/)/,
-			"/c/540x540_70/",
-	).replace(/(?<!1200)\.\w+$/,
-			"_master1200.jpg",
-	);
-}
-
-export function* endlessGen<T>(list: Array<T>): Generator<T, never, never> {
-	for (let n = 0; true;) {
-		if (n >= list.length) {
-			n = 0;
-		}
-		yield list[n++];
-	}
 }

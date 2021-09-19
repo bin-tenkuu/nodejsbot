@@ -1,8 +1,8 @@
-import {CQ, CQEvent, CQTag} from "go-cqwebsocket";
+import {CQ, CQTag} from "go-cqwebsocket";
 import {Plug} from "../Plug.js";
 import {canCallGroup, canCallPrivate} from "../utils/Annotation.js";
 import {lolicon, paulzzhTouHou, pixivCat} from "../utils/Search.js";
-import {getPRegular, sendAdminQQ, sendForward} from "../utils/Util.js";
+import {CQMessage, getPRegular, sendAdminQQ, sendForward} from "../utils/Util.js";
 import {default as CQData} from "./CQData.js";
 
 
@@ -21,8 +21,7 @@ class CQBotPicture extends Plug {
 	/**获取随机色图*/
 	@canCallGroup()
 	@canCallPrivate()
-	async getSeTu(event: CQEvent<"message.private"> | CQEvent<"message.group">,
-			exec: RegExpExecArray): Promise<CQTag[]> {
+	async getSeTu(event: CQMessage, exec: RegExpExecArray): Promise<CQTag[]> {
 		event.stopPropagation();
 		const groups = {
 			keyword: exec.groups?.keyword,
@@ -82,8 +81,7 @@ class CQBotPicture extends Plug {
 	/**获取pid对应的p站图片*/
 	@canCallGroup()
 	@canCallPrivate()
-	async getPixiv(event: CQEvent<"message.group"> | CQEvent<"message.private">,
-			exec: RegExpExecArray): Promise<CQTag[]> {
+	async getPixiv(event: CQMessage, exec: RegExpExecArray): Promise<CQTag[]> {
 		event.stopPropagation();
 		const {pid, p} = (exec.groups as { pid?: string, p?: string }) ?? {};
 		this.logger.debug(`p站图片请求：pid:${pid},p:${p}`);
@@ -135,7 +133,7 @@ class CQBotPicture extends Plug {
 	/**随机东方图*/
 	@canCallGroup()
 	@canCallPrivate()
-	async getTouHouPNG(event: CQEvent<"message.group"> | CQEvent<"message.private">): Promise<CQTag[]> {
+	async getTouHouPNG(event: CQMessage): Promise<CQTag[]> {
 		console.log("开始东方");
 		const userId: number = event.context.user_id;
 		const member = CQData.getMember(userId);

@@ -1,9 +1,10 @@
-import {CQ, CQEvent, CQTag} from "go-cqwebsocket";
+import {CQ, CQTag} from "go-cqwebsocket";
 import {Plug} from "../Plug.js";
 import {canCallGroup, canCallPrivate} from "../utils/Annotation.js";
 import {dice, distribution} from "../utils/COCUtils.js";
 import {db} from "../utils/database.js";
 import {DataCache, Equatable} from "../utils/repeat.js";
+import {CQMessage} from "../utils/Util.js";
 
 class CQBotCOC extends Plug {
 	private shortKey = new Map<string, string>();
@@ -24,7 +25,7 @@ class CQBotCOC extends Plug {
 
 	@canCallGroup()
 	@canCallPrivate()
-	async getDiceStat(event: CQEvent<"message.group"> | CQEvent<"message.private">): Promise<CQTag[]> {
+	async getDiceStat(event: CQMessage): Promise<CQTag[]> {
 		event.stopPropagation();
 		let str = "";
 		this.shortKey.forEach((value, key) => {
@@ -38,8 +39,7 @@ class CQBotCOC extends Plug {
 
 	@canCallGroup()
 	@canCallPrivate()
-	async getDiceSet(event: CQEvent<"message.group"> | CQEvent<"message.private">,
-			execArray: RegExpExecArray): Promise<CQTag[]> {
+	async getDiceSet(event: CQMessage, execArray: RegExpExecArray): Promise<CQTag[]> {
 		event.stopPropagation();
 		const {key, value} = execArray.groups as { key?: string, value?: string } ?? {};
 		if (key === undefined || key.length > 5) {
@@ -64,8 +64,7 @@ class CQBotCOC extends Plug {
 
 	@canCallGroup()
 	@canCallPrivate()
-	async getDice(event: CQEvent<"message.group"> | CQEvent<"message.private">,
-			execArray: RegExpExecArray): Promise<CQTag[]> {
+	async getDice(event: CQMessage, execArray: RegExpExecArray): Promise<CQTag[]> {
 		event.stopPropagation();
 		let {times = "1", dice} = execArray.groups as { times: string, dice: string } ?? {};
 		if (dice === undefined) {
@@ -83,8 +82,7 @@ class CQBotCOC extends Plug {
 
 	@canCallGroup()
 	@canCallPrivate()
-	async getRandom(event: CQEvent<"message.group"> | CQEvent<"message.private">,
-			execArray: RegExpExecArray): Promise<CQTag[]> {
+	async getRandom(event: CQMessage, execArray: RegExpExecArray): Promise<CQTag[]> {
 		event.stopPropagation();
 		const {num, times = 2} = execArray.groups as { num?: string, times?: string } ?? {};
 		if (num === undefined) {
@@ -96,7 +94,7 @@ class CQBotCOC extends Plug {
 
 	@canCallGroup()
 	@canCallPrivate()
-	async setCheater(event: CQEvent<"message.group"> | CQEvent<"message.private">): Promise<CQTag[]> {
+	async setCheater(event: CQMessage): Promise<CQTag[]> {
 		event.stopPropagation();
 		this.cheater = !this.cheater;
 		return [CQ.text("全1" + (this.cheater ? "开" : "关"))];
@@ -104,8 +102,7 @@ class CQBotCOC extends Plug {
 
 	@canCallGroup()
 	@canCallPrivate()
-	async setDiceType(event: CQEvent<"message.group"> | CQEvent<"message.private">,
-			execArray: RegExpExecArray): Promise<CQTag[]> {
+	async setDiceType(event: CQMessage, execArray: RegExpExecArray): Promise<CQTag[]> {
 		event.stopPropagation();
 		const {operator} = execArray.groups as { operator: string } ?? {};
 		if (operator == null) {
@@ -124,8 +121,7 @@ class CQBotCOC extends Plug {
 
 	@canCallGroup()
 	@canCallPrivate()
-	async getAddedRandom(event: CQEvent<"message.group"> | CQEvent<"message.private">,
-			execArray: RegExpExecArray): Promise<CQTag[]> {
+	async getAddedRandom(event: CQMessage, execArray: RegExpExecArray): Promise<CQTag[]> {
 		event.stopPropagation();
 		const {num: numStr} = execArray.groups as {
 			num?: string

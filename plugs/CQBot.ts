@@ -5,7 +5,8 @@ import {hrtime, Plug} from "../Plug.js";
 import {canCallGroup, canCallPrivate} from "../utils/Annotation.js";
 import {Where} from "../utils/Generators.js";
 import {
-	deleteMsg, isAdminQQ, isAtMe, onlyText, parseMessage, sendForward, sendForwardQuick, sendGroup, sendPrivate,
+	CQMessage, deleteMsg, isAdminQQ, isAtMe, onlyText, parseMessage, sendForward, sendForwardQuick, sendGroup,
+	sendPrivate,
 } from "../utils/Util";
 import {Corpus, default as members} from "./CQData.js";
 
@@ -33,8 +34,8 @@ class CQBot extends Plug {
 		});
 	}
 
-	private static sendCorpusTags(event: CQEvent<"message.private"> | CQEvent<"message.group">,
-			corpus: Iterable<Corpus>, callback: (this: void, tags: CQTag[], element: Corpus) => void) {
+	private static sendCorpusTags(event: CQMessage, corpus: Generator<Corpus, void, void>,
+			callback: (this: void, tags: CQTag[], element: Corpus) => void) {
 		const text = onlyText(event);
 		for (const element of corpus) {
 			const exec = element.regexp.exec(text);
