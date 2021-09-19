@@ -20,7 +20,7 @@ export function* Select<T, TR>(source: Iterable<T>, selector: ForEach<T, TR>): G
 
 /**展开映射*/
 export function* SelectMany<T, TC, TR>(source: Iterable<T>, collectionSelector: ForEach<T, TC[]>,
-		selector: (item: T, subItem: TC) => TR): Generator<TR, void> {
+		selector: (item: T, subItem: TC) => TR): Generator<TR, void, void> {
 	let index: number = -1;
 	for (const item of source) {
 		let tcs: TC[] = collectionSelector(item, ++index);
@@ -30,7 +30,7 @@ export function* SelectMany<T, TC, TR>(source: Iterable<T>, collectionSelector: 
 	}
 }
 
-export function* Take<T>(source: Iterable<T>, count: number): Generator<T, void> {
+export function* Take<T>(source: Iterable<T>, count: number): Generator<T, void, void> {
 	if (count < 0) {
 		return;
 	}
@@ -42,7 +42,7 @@ export function* Take<T>(source: Iterable<T>, count: number): Generator<T, void>
 	}
 }
 
-export function* TakeWhile<T>(source: Iterable<T>, predicate: ForEach<T, boolean>): Generator<T, void> {
+export function* TakeWhile<T>(source: Iterable<T>, predicate: ForEach<T, boolean>): Generator<T, void, void> {
 	let index: number = -1;
 	for (const item of source) {
 		if (predicate(item, ++index)) {
@@ -53,7 +53,7 @@ export function* TakeWhile<T>(source: Iterable<T>, predicate: ForEach<T, boolean
 	}
 }
 
-export function* Skip<T>(source: Iterable<T>, count: number): Generator<T, void> {
+export function* Skip<T>(source: Iterable<T>, count: number): Generator<T, void, void> {
 	for (const item of source) {
 		if (count > 0) {
 			--count;
@@ -63,7 +63,7 @@ export function* Skip<T>(source: Iterable<T>, count: number): Generator<T, void>
 	}
 }
 
-export function* SkipWhile<T>(source: Iterable<T>, predicate: ForEach<T, boolean>): Generator<T, void> {
+export function* SkipWhile<T>(source: Iterable<T>, predicate: ForEach<T, boolean>): Generator<T, void, void> {
 	let index: number = -1;
 	let yielding: boolean = false;
 	for (const item of source) {
@@ -76,8 +76,8 @@ export function* SkipWhile<T>(source: Iterable<T>, predicate: ForEach<T, boolean
 	}
 }
 
-export function* GroupBy<T, TKey, TElement>(source: Iterable<T>,
-		keySelector: ForEach<T, TKey>, elementSelector: ForEach<T, TElement>): Generator<[TKey, TElement[]], void> {
+export function* GroupBy<T, TKey, TElement>(source: Iterable<T>, keySelector: ForEach<T, TKey>,
+		elementSelector: ForEach<T, TElement>): Generator<[TKey, TElement[]], void, void> {
 	const map: Map<TKey, TElement[]> = new Map<TKey, TElement[]>();
 	let index: number = -1;
 	for (const item of source) {
@@ -96,14 +96,14 @@ export function* GroupBy<T, TKey, TElement>(source: Iterable<T>,
 }
 
 /**连接*/
-export function* Concat<T>(first: Iterable<T>, second: Iterable<T>): Generator<T, void> {
+export function* Concat<T>(first: Iterable<T>, second: Iterable<T>): Generator<T, void, void> {
 	yield* AsGenerator(first);
 	yield* AsGenerator(second);
 }
 
 /**组合*/
 export function* Zip<T1, T2, TR>(first: Iterable<T1>, second: Iterable<T2>,
-		resultSelector: (item1: T1, item2: T2) => TR): Generator<TR, void> {
+		resultSelector: (item1: T1, item2: T2) => TR): Generator<TR, void, void> {
 	const t1s: Generator<T1, void> = AsGenerator(first);
 	const t2s: Generator<T2, void> = AsGenerator(second);
 	let next1: IteratorResult<T1, void> = t1s.next();
@@ -116,7 +116,7 @@ export function* Zip<T1, T2, TR>(first: Iterable<T1>, second: Iterable<T2>,
 }
 
 /**去重*/
-export function* Distinct<T>(source: Iterable<T>): Generator<T, void> {
+export function* Distinct<T>(source: Iterable<T>): Generator<T, void, void> {
 	const set: Set<T> = new Set();
 	for (const item of source) {
 		if (!set.has(item)) {
@@ -127,7 +127,7 @@ export function* Distinct<T>(source: Iterable<T>): Generator<T, void> {
 }
 
 /**并集*/
-export function* Union<T>(first: Iterable<T>, second: Iterable<T>): Generator<T, void> {
+export function* Union<T>(first: Iterable<T>, second: Iterable<T>): Generator<T, void, void> {
 	const set: Set<T> = new Set();
 	for (const item of first) {
 		if (set.has(item)) {
@@ -146,7 +146,7 @@ export function* Union<T>(first: Iterable<T>, second: Iterable<T>): Generator<T,
 }
 
 /**交集*/
-export function* Intersect<T>(first: Iterable<T>, second: Iterable<T>): Generator<T, void> {
+export function* Intersect<T>(first: Iterable<T>, second: Iterable<T>): Generator<T, void, void> {
 	const set: Set<T> = new Set(first);
 	for (const item of second) {
 		if (set.delete(item)) {
@@ -156,7 +156,7 @@ export function* Intersect<T>(first: Iterable<T>, second: Iterable<T>): Generato
 }
 
 /**差集(first-second)*/
-export function* Except<T>(first: Iterable<T>, second: Iterable<T>): Generator<T, void> {
+export function* Except<T>(first: Iterable<T>, second: Iterable<T>): Generator<T, void, void> {
 	const set: Set<T> = new Set(second);
 	for (const item of first) {
 		if (!set.has(item)) {
@@ -167,7 +167,7 @@ export function* Except<T>(first: Iterable<T>, second: Iterable<T>): Generator<T
 }
 
 /**反转*/
-export function* Reverse<T>(source: Iterable<T>): Generator<T, void> {
+export function* Reverse<T>(source: Iterable<T>): Generator<T, void, void> {
 	yield* AsGenerator([...source].reverse());
 }
 
@@ -187,14 +187,13 @@ export function SequenceEqual<T>(first: Iterable<T>, second: Iterable<T>,
 	return !!next2.done;
 }
 
-export function* AsGenerator<T>(source: Iterable<T>): Generator<T, void> {
+export function* AsGenerator<T>(source: Iterable<T>): Generator<T, void, void> {
 	for (const item of source) {
 		yield item;
 	}
 }
 
-export function ToMap<T, TK, TE>(source: Iterable<T>,
-		keySelector: ForEach<T, TK>,
+export function ToMap<T, TK, TE>(source: Iterable<T>, keySelector: ForEach<T, TK>,
 		elementSelector: ForEach<T, TE>): Map<TK, TE> {
 	const map: Map<TK, TE> = new Map<TK, TE>();
 	let index: number = -1;
@@ -212,7 +211,7 @@ export function ToSet<T>(source: Iterable<T>): Set<T> {
 	return new Set<T>(source);
 }
 
-export function* DefaultIfEmpty<T>(source: Iterable<any>, defaultValue: T): Generator<T, void> {
+export function* DefaultIfEmpty<T>(source: Iterable<any>, defaultValue: T): Generator<T, void, void> {
 	const iterator: Iterator<T, void> = source[Symbol.iterator]();
 	let next: IteratorResult<T, void> = iterator.next();
 	if (next.done) {
@@ -226,7 +225,7 @@ export function* DefaultIfEmpty<T>(source: Iterable<any>, defaultValue: T): Gene
 	}
 }
 
-export function* Cast<T>(source: Iterable<any>): Generator<T, void> {
+export function* Cast<T>(source: Iterable<any>): Generator<T, void, void> {
 	yield* AsGenerator(source);
 }
 
@@ -312,14 +311,14 @@ export function ElementAtOrNull<T>(source: Iterable<T>, index: number): T | null
 	return null;
 }
 
-export function* Range(start: number, count: number, step: number = 1): Generator<number, void> {
+export function* Range(start: number, count: number, step: number = 1): Generator<number, void, void> {
 	yield start;
 	for (let i = -count | 0; i < 0; ++i) {
 		yield start += step;
 	}
 }
 
-export function* Repeat<T>(element: T, count: number): Generator<T, void> {
+export function* Repeat<T>(element: T, count: number): Generator<T, void, void> {
 	for (let i = -count | 0; i < 0; ++i) {
 		yield element;
 	}
@@ -566,12 +565,12 @@ export function BigAverage<T>(source: Iterable<T>, selector?: ForEach<T, bigint>
 	}
 }
 
-export function* Append<T>(source: Iterable<T>, ...elements: T[]): Generator<T, void> {
+export function* Append<T>(source: Iterable<T>, ...elements: T[]): Generator<T, void, void> {
 	yield* AsGenerator(source);
 	yield* AsGenerator(elements);
 }
 
-export function* Prepend<T>(source: Iterable<T>, ...elements: T[]): Generator<T, void> {
+export function* Prepend<T>(source: Iterable<T>, ...elements: T[]): Generator<T, void, void> {
 	yield* AsGenerator(elements);
 	yield* AsGenerator(source);
 }

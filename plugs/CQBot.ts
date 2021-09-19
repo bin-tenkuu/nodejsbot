@@ -3,6 +3,7 @@ import {MessageId, PromiseRes, Status} from "go-cqwebsocket/out/Interfaces";
 import {adminGroup, adminId, CQWS} from "../config/config.json";
 import {hrtime, Plug} from "../Plug.js";
 import {canCallGroup, canCallPrivate} from "../utils/Annotation.js";
+import {Where} from "../utils/Generators.js";
 import {
 	deleteMsg, isAdminQQ, isAtMe, onlyText, parseMessage, sendForward, sendForwardQuick, sendGroup, sendPrivate,
 } from "../utils/Util";
@@ -30,14 +31,6 @@ class CQBot extends Plug {
 				clearInterval(this.sendStateInterval);
 			}
 		});
-	}
-
-	private static* getValues(corpora: Corpus[], filter: Filter<Corpus>): Generator<Corpus, void> {
-		for (const corpus of corpora) {
-			if (filter(corpus)) {
-				yield corpus;
-			}
-		}
 	}
 
 	private static sendCorpusTags(event: CQEvent<"message.private"> | CQEvent<"message.group">,
@@ -160,7 +153,7 @@ class CQBot extends Plug {
 				if (members.getBaned(userId)) {
 					return;
 				}
-				CQBot.sendCorpusTags(event, CQBot.getValues(members.corpora, CQBot.filterGroup(event)), (tags, element) => {
+				CQBot.sendCorpusTags(event, CQBot.filterGroup(event), (tags, element) => {
 					if (tags.length < 1) {
 						return;
 					}
@@ -186,7 +179,7 @@ class CQBot extends Plug {
 			},
 			"message.private": (event) => {
 				const time = process.hrtime();
-				CQBot.sendCorpusTags(event, CQBot.getValues(members.corpora, CQBot.filterPrivate(event)), tags => {
+				CQBot.sendCorpusTags(event, CQBot.filterPrivate(event), (tags) => {
 					if (tags.length < 1) {
 						return;
 					}
@@ -197,21 +190,19 @@ class CQBot extends Plug {
 		});
 	}
 
-	private static filterPrivate(event: CQEvent<"message.private">): Filter<Corpus> {
+	private static filterPrivate(event: CQEvent<"message.private">): Generator<Corpus, void, void> {
 		if (isAdminQQ(event)) {
-			return (c: Corpus) => c.canPrivate;
+			return Where(members.corpora, (c) => c.canPrivate);
 		}
-		return (c: Corpus) => c.isOpen && !c.needAdmin && c.canPrivate;
+		return Where(members.corpora, (c) => c.isOpen && !c.needAdmin && c.canPrivate);
 	}
 
-	private static filterGroup(event: CQEvent<"message.group">): Filter<Corpus> {
+	private static filterGroup(event: CQEvent<"message.group">): Generator<Corpus, void, void> {
 		if (isAdminQQ(event)) {
-			return (c: Corpus) => c.canGroup;
+			return Where(members.corpora, (c) => c.canGroup);
 		}
-		return (c: Corpus) => c.isOpen && !c.needAdmin && c.canGroup;
+		return Where(members.corpora, (c) => c.isOpen && !c.needAdmin && c.canGroup);
 	}
 }
 
 export default new CQBot();
-
-type Filter<T> = (obj: T) => boolean

@@ -223,10 +223,11 @@ export function getPSmall(url: string) {
 	);
 }
 
-export function* endlessGen<T>(list: Iterable<T>): Generator<T, never, never> {
-	while (true) {
-		for (const t of list) {
-			yield t;
+export function* endlessGen<T>(list: Array<T>): Generator<T, never, never> {
+	for (let n = 0; true;) {
+		if (n >= list.length) {
+			n = 0;
 		}
+		yield list[n++];
 	}
 }

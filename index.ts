@@ -2,11 +2,11 @@ import {logger} from "./utils/logger.js";
 import {hrtime} from "./Plug.js";
 
 declare global {
-	function NOP(): void
+	function NOP(e: any): void
 
 	function IsDebug(): boolean;
 }
-global.NOP = () => undefined;
+global.NOP = (e) => logger.debug(e);
 global.IsDebug = process.execArgv.includes("--inspect") ? () => true : () => false;
 
 //*
