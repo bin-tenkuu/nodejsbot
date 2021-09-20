@@ -4,13 +4,12 @@ export type DiceResult = { num: number, list: Uint32Array, max: number };
 
 export function dice(times: number, max: number): DiceResult {
 	times |= 0;
-	max |= 0;
 	if (times > 99 || times < 1) {
 		return {num: 0, list: Uint32Array.of(), max: 0};
 	}
-	++max;
-	if (max > 42_9496_7296) {
-		max = 42_9496_7296;
+	max = Math.trunc(max + 1);
+	if (max > 1e10) {
+		max = 1e10;
 	} else if (max < 2) {
 		max = 2;
 	}
@@ -22,7 +21,7 @@ export function dice(times: number, max: number): DiceResult {
 	return {
 		num: r,
 		list: arr,
-		max: max,
+		max: max - 1,
 	};
 }
 
