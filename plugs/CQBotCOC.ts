@@ -1,7 +1,7 @@
 import {CQ, CQTag} from "go-cqwebsocket";
 import {Plug} from "../Plug.js";
 import {canCallGroup, canCallPrivate} from "../utils/Annotation.js";
-import {dice, distribution} from "../utils/COCUtils.js";
+import {dice, DiceResult, distribution} from "../utils/COCUtils.js";
 import {db} from "../utils/database.js";
 import {DataCache, Equatable} from "../utils/repeat.js";
 import {CQMessage} from "../utils/Util.js";
@@ -180,23 +180,7 @@ class CQBotCOC extends Plug {
 		const num: number = +(groups.num ?? 1);
 		const op = groups.op ?? "+";
 		const max = groups.max;
-		if (max !== undefined && max !== "") {
-			let dices: { num: number, list: Uint16Array };
-			if (cheater) {
-				dices = {
-					list: new Uint16Array(num).fill(1),
-					num: num,
-				};
-			} else {
-				dices = dice(num, +max);
-			}
-			return {
-				origin: `${num}d${max}`,
-				op,
-				...dices,
-				max: +max,
-			};
-		} else {
+		if (max === undefined || max === "") {
 			return {
 				op: op,
 				num: num,
@@ -205,6 +189,16 @@ class CQBotCOC extends Plug {
 				max: num,
 			};
 		}
+		let dices: DiceResult = cheater ? {
+			list: new Uint32Array(num).fill(1),
+			num: num,
+			max: +max,
+		} : dice(num, +max);
+		return {
+			origin: `${dices.list.length}d${dices.max}`,
+			op,
+			...dices,
+		};
 	}
 
 	private static calculate(handles: Calc[]): number {
@@ -238,7 +232,7 @@ class CQBotCOC extends Plug {
 }
 
 type EffectFunc = (data: Calc) => void;
-type Calc = { op: "+" | "-" | "*", num: number, list: Uint16Array | null, origin: string, max: number, state?: string };
+type Calc = { op: "+" | "-" | "*", num: number, list: Uint32Array | null, origin: string, max: number, state?: string };
 
 class DiceCache extends Equatable {
 	public max: number;
@@ -263,7 +257,7 @@ class SpecialEffects {
 		],
 		"wrf": [
 			"温柔f", data => {
-				const list: Uint16Array | null = data.list;
+				const list: Uint32Array | null = data.list;
 				if (list === null) {
 					return;
 				}
@@ -276,7 +270,7 @@ class SpecialEffects {
 		],
 		"cbf": [
 			"残暴f", data => {
-				const list: Uint16Array | null = data.list;
+				const list: Uint32Array | null = data.list;
 				if (list === null) {
 					return;
 				}

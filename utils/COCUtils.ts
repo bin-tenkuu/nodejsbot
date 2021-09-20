@@ -1,19 +1,28 @@
-export function dice(times: number, max: number): { num: number, list: Uint16Array } {
-	if (times > 99) {
-		return {num: 0, list: Uint16Array.of()};
+import {randomInt} from "crypto";
+
+export type DiceResult = { num: number, list: Uint32Array, max: number };
+
+export function dice(times: number, max: number): DiceResult {
+	times |= 0;
+	max |= 0;
+	if (times > 99 || times < 1) {
+		return {num: 0, list: Uint32Array.of(), max: 0};
 	}
-	if (max > 9999999999) {
-		max = 99_9999_9999;
+	++max;
+	if (max > 42_9496_7296) {
+		max = 42_9496_7296;
+	} else if (max < 2) {
+		max = 2;
 	}
 	let r = 0;
-	const arr = new Uint16Array(times);
+	const arr = new Uint32Array(times);
 	while (--times >= 0) {
-		arr[times] = Math.random() * max + 1;
-		r += arr[times];
+		r += arr[times] = randomInt(1, max) | 0;
 	}
 	return {
 		num: r,
 		list: arr,
+		max: max,
 	};
 }
 
