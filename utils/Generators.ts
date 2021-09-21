@@ -31,6 +31,10 @@ export function* Select<T, TResult>(source: Iterable<T>,
 	}
 }
 
+export function SelectMany<T, TCollection>(source: Iterable<T>,
+		collectionSelector: ForEach<T, TCollection[]>): Generator<TCollection, void, void>;
+export function SelectMany<T, TCollection, TResult>(source: Iterable<T>, collectionSelector: ForEach<T, TCollection[]>,
+		selector: (item: T, subItem: TCollection) => TResult): Generator<TResult, void, void>;
 /**
  * 将序列的每个元素投影到 `Iterable<T>` 并将结果序列合并为一个序列。
  * @param source 一个要投影的值序列。
@@ -39,8 +43,9 @@ export function* Select<T, TResult>(source: Iterable<T>,
  * @return 一个 `Generator<TResult>`，其元素是通过以下方法得到的：对 source 的每个元素调用一对多转换函数 collectionSelector，然后将这些序列元素中的每一个元素及其相应的源元素映射到一个结果元素。
  * @constructor
  */
-export function* SelectMany<T, TC, TResult>(source: Iterable<T>, collectionSelector: ForEach<T, TC[]>,
-		selector: (item: T, subItem: TC) => TResult): Generator<TResult, void, void> {
+export function* SelectMany<T, TCollection, TResult>(source: Iterable<T>, collectionSelector: ForEach<T, TCollection[]>,
+		selector?: (item: T, subItem: TCollection) => TResult): Generator<unknown, void, void> {
+	selector ??= (_, n) => n as unknown as TResult;
 	let index: number = -1;
 	for (const item of source) {
 		for (const tc of collectionSelector(item, ++index)) {
@@ -131,11 +136,30 @@ export function* SkipWhile<T>(source: Iterable<T>, predicate: ForEach<T, boolean
  * @return [TKey, TValue[]]对
  * @constructor
  */
-export function* GroupBy<T, TKey, TValue>(source: Iterable<T>, keySelector: ForEach<T, TKey>,
-		elementSelector: ForEach<T, TValue>): Generator<[TKey, TValue[]], void, void> {
+export function GroupBy<T, TKey, TValue>(source: Iterable<T>, keySelector: ForEach<T, TKey>,
+		elementSelector: ForEach<T, TValue>): Generator<[TKey, TValue[]], void, void>;
+/**
+ * 根据指定的键选择器函数对序列中的元素进行分组，并且通过使用指定的函数对每个组中的元素进行投影。
+ * @param source 要对其元素进行分组的 Iterable<T>。
+ * @param keySelector 用于提取每个元素的键的函数。
+ * @param elementSelector 用于将每个源元素映射到 [TKey, TValue[]] 中的元素的函数。
+ * @param resultSelector 用于从每个组中创建结果值的函数。
+ * @return 类型为 TResult 的元素的集合，其中的每个元素都表示对一个组及其键的投影。
+ * @constructor
+ */
+export function GroupBy<T, TKey, TValue, TResult>(source: Iterable<T>, keySelector: ForEach<T, TKey>,
+		elementSelector: ForEach<T, TValue>,
+		resultSelector: (item: TKey, list: TValue[]) => TResult): Generator<TResult, void, void>;
+export function* GroupBy<T, TKey, TValue, TResult>(source: Iterable<T>, keySelector: ForEach<T, TKey>,
+		elementSelector: ForEach<T, TValue>,
+		resultSelector?: (item: TKey, list: TValue[]) => TResult): Generator<unknown, void, void> {
 	const map: Map<TKey, TValue[]> = ToLookUp(source, keySelector, elementSelector);
-	for (const item of map) {
-		yield item;
+	if (resultSelector === undefined) {
+		yield* AsGenerator(map);
+	} else {
+		for (const [key, list] of map) {
+			yield resultSelector(key, list);
+		}
 	}
 }
 
@@ -228,6 +252,9 @@ export function* Concat<T>(first: Iterable<T>, second: Iterable<T>): Generator<T
 	yield* AsGenerator(second);
 }
 
+export function Zip<T1, T2>(first: Iterable<T1>, second: Iterable<T2>): Generator<[T1, T2], void, void>;
+export function Zip<T1, T2, TResult>(first: Iterable<T1>, second: Iterable<T2>,
+		resultSelector: (item1: T1, item2: T2) => TResult): Generator<TResult, void, void>;
 /**
  * 将指定函数应用于两个序列的对应元素，以生成结果序列。
  * @param first 要合并的第一个序列。
@@ -237,7 +264,8 @@ export function* Concat<T>(first: Iterable<T>, second: Iterable<T>): Generator<T
  * @constructor
  */
 export function* Zip<T1, T2, TResult>(first: Iterable<T1>, second: Iterable<T2>,
-		resultSelector: (item1: T1, item2: T2) => TResult): Generator<TResult, void, void> {
+		resultSelector?: (item1: T1, item2: T2) => TResult): Generator<unknown, void, void> {
+	resultSelector ??= (item1: T1, item2: T2) => [item1, item2] as unknown as TResult;
 	const t1s: Generator<T1, void> = AsGenerator(first);
 	const t2s: Generator<T2, void> = AsGenerator(second);
 	let next1: IteratorResult<T1, void> = t1s.next();
@@ -379,6 +407,9 @@ export function ToArray<T>(source: Iterable<T>): T[] {
 	return Array.from(source);
 }
 
+export function ToMap<T, TKey>(source: Iterable<T>, keySelector: ForEach<T, TKey>): Map<TKey, T>;
+export function ToMap<T, TKey, TValue>(source: Iterable<T>, keySelector: ForEach<T, TKey>,
+		elementSelector: ForEach<T, TValue>): Map<TKey, TValue>;
 /**
  * 从 `Iterable<T>` 创建一个 `Map<TKey,TValue>`。
  * @param source 要从其创建 `Map<TKey,TValue>` 的 `Iterable<T>`。
@@ -388,7 +419,8 @@ export function ToArray<T>(source: Iterable<T>): T[] {
  * @constructor
  */
 export function ToMap<T, TKey, TValue>(source: Iterable<T>, keySelector: ForEach<T, TKey>,
-		elementSelector: ForEach<T, TValue>): Map<TKey, TValue> {
+		elementSelector?: ForEach<T, TValue>): Map<TKey, TValue> {
+	elementSelector ??= item => item as unknown as TValue;
 	const map: Map<TKey, TValue> = new Map<TKey, TValue>();
 	let index: number = -1;
 	for (const item of source) {
@@ -535,7 +567,7 @@ export function LastOrNull<T>(source: Iterable<T>, predicate: ForEach<T, boolean
 	return last === Default ? null : last;
 }
 
-function LastOrDefault<T>(source: Iterable<T>, predicate: ForEach<T, boolean>): T | typeof Default {
+function LastOrDefault<T>(source: Iterable<T>, predicate: ForEach<T, boolean> = _ => true): T | typeof Default {
 	let last: T | typeof Default = Default;
 	let index: number = -1;
 	for (const item of source) {
