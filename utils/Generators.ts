@@ -134,7 +134,6 @@ export function* SkipWhile<T>(source: Iterable<T>, predicate: ForEach<T, boolean
 export function* GroupBy<T, TKey, TValue>(source: Iterable<T>, keySelector: ForEach<T, TKey>,
 		elementSelector: ForEach<T, TValue>): Generator<[TKey, TValue[]], void, void> {
 	const map: Map<TKey, TValue[]> = ToLookUp(source, keySelector, elementSelector);
-	ToLookUp(source, keySelector, elementSelector);
 	for (const item of map) {
 		yield item;
 	}
@@ -613,7 +612,7 @@ export function* Range(start: number, count: number, step: number = 1): Generato
  * 生成包含一个重复值的序列。
  * @param element 要重复的值。
  * @param count 在生成序列中重复该值的次数。
- * @return 一个包含重复值的 IEnumerable<T>。
+ * @return 一个包含重复值的 `Iterable<T>`。
  * @constructor
  */
 export function* Repeat<T>(element: T, count: number): Generator<T, void, void> {
@@ -1047,7 +1046,14 @@ export function* Prepend<T>(source: Iterable<T>, ...elements: T[]): Generator<T,
 
 export function* LoopGen<T>(source: Iterable<T>): Generator<T, never, never> {
 	while (true) {
-		yield* AsGenerator(source);
+		let hasItem = false;
+		for (let item of source) {
+			yield item;
+			hasItem = true;
+		}
+		if (!hasItem) {
+			throw new Error("source is Empty");
+		}
 	}
 }
 
