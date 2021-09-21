@@ -8,8 +8,8 @@ export function dice(times: number, max: number): DiceResult {
 		return {num: 0, list: Uint32Array.of(), max: 0};
 	}
 	max = Math.trunc(max + 1);
-	if (max > 1e10) {
-		max = 1e10;
+	if (max > 4294967296) {
+		max = 4294967295;
 	} else if (max < 2) {
 		max = 2;
 	}

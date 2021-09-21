@@ -85,12 +85,6 @@
 			"reply": "[FN:CQBotPlugin.corpusInfo]",
 			"needAdmin": true
 		}, {
-			"name": "来点图",
-			"regexp": "^[来來发發给給][张張个個幅点點份][图圖]片?$",
-			"reply": "[FN:CQBotRandomPicture.getRandomPicture]",
-			"help": "随机图片",
-			"isOpen": false
-		}, {
 			"name": "来点[<r18>][<key>]色图",
 			"regexp": "^[来來发發给給][张張个個幅点點份](?<r18>[Rr]18的?)?(?<keyword>.*)?[色瑟][图圖]$",
 			"reply": "[FN:CQBotPicture.getSeTu]",
