@@ -1,13 +1,13 @@
 import {existsSync, openSync} from "fs";
 import {Database, ISqlite, open as openSqlite} from "sqlite";
-import {Database as Db3, Statement as Sm3} from "sqlite3";
+import {Database as Db3} from "sqlite3";
 import {logger} from "./logger.js";
 
-type DatabaseHandle<T = any> = (this: void, db: Database<Db3, Sm3>) => T | Promise<T>;
+type DatabaseHandle<T = any> = (this: void, db: Database) => T | Promise<T>;
 
 class SQLControl {
 	private readonly config: ISqlite.Config;
-	private db: Database<Db3, Sm3> | undefined;
+	private db: Database | undefined;
 	private breakTime: NodeJS.Timeout | undefined;
 
 	constructor(path = "./db.db") {
@@ -30,7 +30,7 @@ class SQLControl {
 		return this.open().then(fun);
 	}
 
-	private open(): Promise<Database<Db3, Sm3>> {
+	private open(): Promise<Database> {
 		if (this.db !== undefined) {
 			this.resetBreakTime();
 			return Promise.resolve(this.db);
