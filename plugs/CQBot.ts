@@ -8,7 +8,7 @@ import {
 	CQMessage, deleteMsg, isAdminQQ, isAtMe, onlyText, parseMessage, sendForward, sendForwardQuick, sendGroup,
 	sendPrivate,
 } from "../utils/Util";
-import {Corpus, default as members} from "./CQData.js";
+import {Corpus, default as CQDate} from "./CQData.js";
 
 class CQBot extends Plug {
 	public bot: CQWebSocket;
@@ -24,19 +24,14 @@ class CQBot extends Plug {
 		this.init();
 	}
 
-	/**发送bot信息*/
-	private sendState(state: Status["stat"]) {
-		this.bot.send_group_msg(adminGroup, `数据包丢失总数:${state.packet_lost
-		}\n接受信息总数:${state.message_received}\n发送信息总数:${state.message_sent}`).catch(() => {
-			if (this.sendStateInterval !== undefined) {
-				clearInterval(this.sendStateInterval);
-			}
-		});
-	}
-
-	private static sendCorpusTags(event: CQMessage, corpus: Generator<Corpus, void, void>,
-			callback: (this: void, tags: CQTag[], element: Corpus) => void) {
+	private static sendCorpusTags(event: CQMessage, callback: (this: void, tags: CQTag[], element: Corpus) => void) {
 		const text = onlyText(event);
+		let corpus: Generator<Corpus, void, void>;
+		if (event.contextType === "message.private") {
+			corpus = this.filterPrivate(event);
+		} else {
+			corpus = this.filterGroup(event);
+		}
 		for (const element of corpus) {
 			const exec = element.regexp.exec(text);
 			if (exec === null) {
@@ -56,6 +51,20 @@ class CQBot extends Plug {
 				return;
 			}
 		}
+	}
+
+	private static filterPrivate(event: CQEvent<"message.private">): Generator<Corpus, void, void> {
+		if (isAdminQQ(event)) {
+			return Where(CQDate.corpora, (c) => c.canPrivate);
+		}
+		return Where(CQDate.corpora, (c) => c.isOpen && !c.needAdmin && c.canPrivate);
+	}
+
+	private static filterGroup(event: CQEvent<"message.group">): Generator<Corpus, void, void> {
+		if (isAdminQQ(event)) {
+			return Where(CQDate.corpora, (c) => c.canGroup);
+		}
+		return Where(CQDate.corpora, (c) => c.isOpen && !c.needAdmin && c.canGroup);
 	}
 
 	@canCallGroup()
@@ -83,7 +92,7 @@ class CQBot extends Plug {
 	@canCallGroup()
 	@canCallPrivate()
 	async getHelp() {
-		const s: string = members.corpora.filter(c => c.isOpen && !c.needAdmin &&
+		const s: string = CQDate.corpora.filter(c => c.isOpen && !c.needAdmin &&
 				c.help !== undefined).map<string>((c) => `${c.name}:${c.help}`).join("\n");
 		return [CQ.text(s)];
 	}
@@ -125,6 +134,16 @@ class CQBot extends Plug {
 		});
 	}
 
+	/**发送bot信息*/
+	private sendState(state: Status["stat"]) {
+		this.bot.send_group_msg(adminGroup, `数据包丢失总数:${state.packet_lost
+		}\n接受信息总数:${state.message_received}\n发送信息总数:${state.message_sent}`).catch(() => {
+			if (this.sendStateInterval !== undefined) {
+				clearInterval(this.sendStateInterval);
+			}
+		});
+	}
+
 	private init() {
 		this.bot.bind("on", {
 			"socket.error": ({context}) => {
@@ -148,13 +167,11 @@ class CQBot extends Plug {
 			"message.group": (event) => {
 				const time = process.hrtime();
 				const userId = event.context.user_id;
-				const member = members.getMember(userId);
-				member.name = event.context.sender.nickname;
-				member.exp++;
-				if (members.getBaned(userId)) {
+				CQDate.getMember(userId).exp++;
+				if (CQDate.getBaned(userId)) {
 					return;
 				}
-				CQBot.sendCorpusTags(event, CQBot.filterGroup(event), (tags, element) => {
+				CQBot.sendCorpusTags(event, (tags, element) => {
 					if (tags.length < 1) {
 						return;
 					}
@@ -180,7 +197,7 @@ class CQBot extends Plug {
 			},
 			"message.private": (event) => {
 				const time = process.hrtime();
-				CQBot.sendCorpusTags(event, CQBot.filterPrivate(event), (tags) => {
+				CQBot.sendCorpusTags(event, (tags) => {
 					if (tags.length < 1) {
 						return;
 					}
@@ -189,20 +206,6 @@ class CQBot extends Plug {
 				});
 			},
 		});
-	}
-
-	private static filterPrivate(event: CQEvent<"message.private">): Generator<Corpus, void, void> {
-		if (isAdminQQ(event)) {
-			return Where(members.corpora, (c) => c.canPrivate);
-		}
-		return Where(members.corpora, (c) => c.isOpen && !c.needAdmin && c.canPrivate);
-	}
-
-	private static filterGroup(event: CQEvent<"message.group">): Generator<Corpus, void, void> {
-		if (isAdminQQ(event)) {
-			return Where(members.corpora, (c) => c.canGroup);
-		}
-		return Where(members.corpora, (c) => c.isOpen && !c.needAdmin && c.canGroup);
 	}
 }
 

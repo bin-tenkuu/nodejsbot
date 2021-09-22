@@ -1,16 +1,16 @@
-import {Plug} from "../Plug.js";
 import {corpora} from "../config/corpus.json";
+import {Plug} from "../Plug.js";
 import {db} from "../utils/database.js";
 
 class CQData extends Plug {
 
-	readonly memberMap: Map<number, Member>;
+	public readonly memberMap: Map<number, Member>;
 	corpora: Corpus[];
 
 	private autoSaveTimeout: NodeJS.Timeout | undefined;
 	private saving: boolean;
 
-	constructor() {
+	public constructor() {
 		super(module);
 		this.name = "QQ机器人";
 		this.description = "用于连接go-cqhttp服务的bot";
@@ -21,7 +21,7 @@ class CQData extends Plug {
 		this.saving = false;
 	}
 
-	async install() {
+	public async install() {
 		this.corpora = corpora.map(msg => ({
 			name: msg.name ?? "",
 			regexp: new RegExp(msg.regexp ?? "$^"),
@@ -34,27 +34,25 @@ class CQData extends Plug {
 			canPrivate: msg.canPrivate !== false,
 			help: msg.help,
 		}));
+		// this.memberMap
 		await db.start(async db => {
-			//memberMap
-			{
-				const all = await db.all<{ id: number, exp: number, baned: 0 | 1, name: string }[]>(
-						`SELECT id, exp, baned, name FROM Members`);
-				all.forEach(value => {
-					this.memberMap.set(value.id, {exp: value.exp, baned: value.baned, name: value.name});
-				});
+			const all = await db.all<{ id: number, exp: number, baned: 0 | 1, name: string }[]>(
+					`SELECT id, exp, baned, name FROM Members`);
+			for (const {id, ...member} of all) {
+				this.memberMap.set(id, member);
 			}
 		}).catch(db.close);
 		this.autoSave();
 	}
 
-	async uninstall() {
+	public async uninstall() {
 		if (this.autoSaveTimeout !== undefined) {
 			clearTimeout(this.autoSaveTimeout);
 		}
 		return this.save();
 	}
 
-	getMember(id: number): Member {
+	public getMember(id: number): Member {
 		let member: Member | undefined = this.memberMap.get(id);
 		if (member === undefined) {
 			member = {baned: 0, exp: 0, name: ""};
@@ -63,7 +61,7 @@ class CQData extends Plug {
 		return member;
 	}
 
-	getBaned(id: number): boolean {
+	public getBaned(id: number): boolean {
 		let member: Member | undefined = this.memberMap.get(id);
 		if (member === undefined) {
 			member = {baned: 0, exp: 0, name: ""};
@@ -77,16 +75,21 @@ class CQData extends Plug {
 			return;
 		}
 		this.saving = true;
-		return db.start(async db => {
-			this.logger.info("保存开始");
+		this.logger.info("保存开始");
+		const sql = `REPLACE INTO Members(id, exp, time, baned) VALUES ($id, $exp, $time, $baned);`;
+		await db.prepare(sql, async stmt => {
 			for (const memberMap of this.memberMap) {
 				const [id, {exp, baned}] = memberMap;
-				await db.run("INSERT OR IGNORE INTO Members (id) VALUES (?);", id);
-				await db.run("UPDATE Members SET exp=?,baned=?,time=? WHERE id=?;", exp, baned, Date.now(), id);
+				await stmt.run({
+					$id: id,
+					$exp: exp,
+					$time: Date.now(),
+					$baned: baned,
+				});
 			}
-			this.saving = false;
-			this.logger.info("保存结束");
 		}).catch(db.close);
+		this.logger.info("保存结束");
+		this.saving = false;
 	}
 
 	private autoSave(): void {

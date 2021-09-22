@@ -1,13 +1,14 @@
 import {existsSync, openSync} from "fs";
-import {Database, ISqlite, open as openSqlite} from "sqlite";
-import {Database as Db3, Statement} from "sqlite3";
+import {Database, ISqlite, open as openSqlite, Statement} from "sqlite";
+import {Database as Db3, Statement as Sm3} from "sqlite3";
 import {logger} from "./logger.js";
 
-type DatabaseHandle<T = any> = (this: void, db: Database<Db3, Statement>) => T | Promise<T>;
+type DatabaseHandle<T = any> = (this: void, db: Database<Db3, Sm3>) => T | Promise<T>;
+type StatementHandle = (this: void, stmt: Statement<Sm3>) => Promise<void>;
 
 class SQLControl {
 	private readonly config: ISqlite.Config;
-	private db: Database<Db3, Statement> | undefined;
+	private db: Database<Db3, Sm3> | undefined;
 	private breakTime: NodeJS.Timeout | undefined;
 
 	constructor(path = "./db.db") {
@@ -26,15 +27,39 @@ class SQLControl {
 	 * 不要关闭数据库
 	 * @param fun 数据库回调函数
 	 */
-	public async start<T = unknown>(fun: DatabaseHandle<T>): Promise<T> {
-		if (this.db !== undefined) {
-			this.resetBreakTime();
-			return Promise.resolve(this.db).then(fun);
-		}
+	public start<T = unknown>(fun: DatabaseHandle<T>): Promise<T> {
 		return this.open().then(fun);
 	}
 
-	private open(): Promise<Database<Db3, Statement>> {
+	/**
+	 * @param sql 预编译 SQL 语句
+	 * @param fun SQL 回调函数
+	 */
+	public prepare(sql: ISqlite.SqlType, fun: StatementHandle): Promise<void> {
+		return this.open().then(async db => {
+			let statement: Statement<Sm3> | undefined;
+			try {
+				statement = await db.prepare(sql);
+				await fun(statement);
+			} catch (e) {
+				logger.error(e);
+			} finally {
+				if (statement !== undefined) {
+					try {
+						await statement.finalize();
+					} catch (e) {
+						logger.error(e);
+					}
+				}
+			}
+		}).catch(this.close);
+	}
+
+	private open(): Promise<Database<Db3, Sm3>> {
+		if (this.db !== undefined) {
+			this.resetBreakTime();
+			return Promise.resolve(this.db);
+		}
 		return openSqlite(this.config).then(db => {
 			this.db = db;
 			db.db.on("close", () => {
@@ -64,15 +89,18 @@ class SQLControl {
 	 * 关闭数据库
 	 * @private
 	 */
-	public get close(): () => void {
-		return () => {
+	public get close(): (e?: any) => Promise<void> {
+		return async (e?: any) => {
+			if (e !== undefined) {
+				logger.error(e);
+			}
 			const db = this.db;
 			this.db = undefined;
 			if (db === undefined) {
 				return;
 			}
 			this.clearBreakTime();
-			db.close().catch(e => logger.error(e));
+			return db.close().catch(e => logger.error(e));
 		};
 	}
 }

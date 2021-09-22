@@ -1,33 +1,30 @@
 -- COCShortKey
-create table COCShortKey (
-  key varchar(5) not null
-    constraint COCShortKey_pk
-      primary key,
-  value varchar(10) not null
+CREATE TABLE COCShortKey
+(
+	key VARCHAR(5) NOT NULL
+		CONSTRAINT pk_key
+			PRIMARY KEY,
+	value VARCHAR(10) NOT NULL
 );
 -- Members
-create table Members (
-  id integer(11) not null
-    constraint id
-      primary key,
-  name varchar(7) default null,
-  exp integer default 0,
-  time integer(14) default 0,
-  baned integer(1) default 0
-);
--- PixivBan
-create table PixivBan (
-  id integer(10) not null
-    constraint id
-      primary key
+CREATE TABLE Members
+(
+	id INTEGER(11) NOT NULL
+		CONSTRAINT pk_id
+			PRIMARY KEY,
+	name VARCHAR(7) DEFAULT NULL,
+	exp INTEGER DEFAULT 0,
+	time INTEGER(14) DEFAULT 0,
+	baned INTEGER(1) DEFAULT 0
 );
 -- pokeGroup
-create table pokeGroup (
-  id integer
-    constraint pokeGroup_pk
-      primary key autoincrement,
-  text varchar(255) not null
+CREATE TABLE pokeGroup
+(
+	id INTEGER
+		CONSTRAINT pk_id
+			PRIMARY KEY AUTOINCREMENT,
+	text VARCHAR(255) NOT NULL
 );
 
-create unique index pokeGroup_id_uindex
-  on pokeGroup (id);
+CREATE UNIQUE INDEX uk_id
+	ON pokeGroup (id);

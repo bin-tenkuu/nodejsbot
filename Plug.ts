@@ -1,4 +1,4 @@
-import {getLogger, Logger} from "log4js";
+import {Logger} from "log4js";
 import {logger} from "./utils/logger.js";
 
 const State = {
@@ -17,7 +17,6 @@ export abstract class Plug {
 	public version: number;
 	public error: any;
 	public declare readonly __proto__: Readonly<this>;
-	private static declare _logger: Logger;
 
 	#state: typeof State[keyof typeof State];
 
@@ -70,6 +69,16 @@ export abstract class Plug {
 		this.logger.debug("fix:\t" + module.filename);
 	}
 
+	public static hrtime(time: [number, number]): void {
+		let [s, ns] = process.hrtime(time);
+		ns /= 1e3;
+		if (ns < 1e3) {
+			return logger.info(`本次请求耗时:${s}秒${ns}微秒`);
+		}
+		ns = (ns | 0) / 1e3;
+		return logger.info(`本次请求耗时:${s}秒${ns}毫秒`);
+	}
+
 	public async install(): Promise<void> {
 	}
 
@@ -80,6 +89,18 @@ export abstract class Plug {
 		return `${this.constructor.name} {name: ${this.name}, version: ${this.version}, State: ${this.#state}`;
 	}
 
+	public toJSON() {
+		return {"name": this.name, "version": this.version, "State": this.state};
+	}
+
+	[Symbol.toStringTag](): string {
+		return this.constructor.name;
+	}
+
+	public static get logger(): Logger {
+		return logger;
+	}
+
 	public get installed() {
 		return this.#state === State.installed;
 	}
@@ -88,33 +109,7 @@ export abstract class Plug {
 		return this.#state;
 	}
 
-	public toJSON() {
-		return {"name": this.name, "version": this.version, "State": this.state};
-	}
-
-	protected get logger(): Logger {
-		// @ts-ignore
-		return this.constructor.logger;
-	}
-
-	public static get logger(): Logger {
-		if (this._logger === undefined) {
-			this._logger = getLogger(this.name);
-		}
-		return this._logger;
-	}
-
-	[Symbol.toStringTag](): string {
-		return this.constructor.name;
-	}
-
-	public static hrtime(time: [number, number]): void {
-		let [s, ns] = process.hrtime(time);
-		ns /= 1e3;
-		if (ns < 1e3) {
-			return logger.info(`本次请求耗时:${s}秒${ns}微秒`);
-		}
-		ns = (ns | 0) / 1e3;
-		return logger.info(`本次请求耗时:${s}秒${ns}毫秒`);
+	public get logger(): Logger {
+		return logger;
 	}
 }
