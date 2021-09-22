@@ -76,16 +76,16 @@ class CQData extends Plug {
 		}
 		this.saving = true;
 		this.logger.info("保存开始");
-		const sql = `REPLACE INTO Members(id, exp, time, baned) VALUES ($id, $exp, $time, $baned);`;
-		await db.prepare(sql, async stmt => {
-			for (const memberMap of this.memberMap) {
-				const [id, {exp, baned}] = memberMap;
-				await stmt.run({
-					$id: id,
-					$exp: exp,
-					$time: Date.now(),
-					$baned: baned,
-				});
+		await db.start(async db => {
+			// this.memberMap
+			{
+				const sql = `REPLACE INTO Members(id, exp, time, baned) VALUES ($id, $exp, $time, $baned);`;
+				const stmt = await db.prepare(sql);
+				for (const memberMap of this.memberMap) {
+					const [id, {exp, baned}] = memberMap;
+					await stmt.run({$id: id, $exp: exp, $time: Date.now(), $baned: baned});
+				}
+				await stmt.finalize();
 			}
 		}).catch(db.close);
 		this.logger.info("保存结束");
