@@ -1,12 +1,12 @@
 import {getLogger, Logger} from "log4js";
 import {logger} from "./utils/logger.js";
 
-enum State {
-	create,
-	installed,
-	uninstalled,
-	error
-}
+const State = {
+	create: 0,
+	installed: 1,
+	uninstalled: 2,
+	error: 3,
+} as const;
 
 export abstract class Plug {
 	public static readonly plugs: Map<string, Plug> = new Map<string, Plug>();
@@ -19,7 +19,7 @@ export abstract class Plug {
 	public declare readonly __proto__: Readonly<this>;
 	private static declare _logger: Logger;
 
-	#state: State;
+	#state: typeof State[keyof typeof State];
 
 	protected constructor(module: NodeModule) {
 		this.#state = State.create;
@@ -70,24 +70,22 @@ export abstract class Plug {
 		this.logger.debug("fix:\t" + module.filename);
 	}
 
-	/**@abstract*/
 	public async install(): Promise<void> {
 	}
 
-	/**@abstract*/
 	public async uninstall(): Promise<void> {
 	}
 
 	public toString() {
-		return `{name: ${this.name}, version: ${this.version}}\t-> ${this.constructor.name}`;
+		return `${this.constructor.name} {name: ${this.name}, version: ${this.version}, State: ${this.#state}`;
 	}
 
 	public get installed() {
 		return this.#state === State.installed;
 	}
 
-	public get state(): string {
-		return State[this.#state];
+	public get state(): number {
+		return this.#state;
 	}
 
 	public toJSON() {
@@ -105,14 +103,18 @@ export abstract class Plug {
 		}
 		return this._logger;
 	}
-}
 
-export function hrtime(time: [number, number]): void {
-	let [s, ns] = process.hrtime(time);
-	ns /= 1e3;
-	if (ns < 1e3) {
-		return logger.info(`本次请求耗时:${s}秒${ns}微秒`);
+	[Symbol.toStringTag](): string {
+		return this.constructor.name;
 	}
-	ns = (ns | 0) / 1e3;
-	return logger.info(`本次请求耗时:${s}秒${ns}毫秒`);
+
+	public static hrtime(time: [number, number]): void {
+		let [s, ns] = process.hrtime(time);
+		ns /= 1e3;
+		if (ns < 1e3) {
+			return logger.info(`本次请求耗时:${s}秒${ns}微秒`);
+		}
+		ns = (ns | 0) / 1e3;
+		return logger.info(`本次请求耗时:${s}秒${ns}毫秒`);
+	}
 }

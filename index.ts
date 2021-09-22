@@ -1,5 +1,5 @@
 import {logger} from "./utils/logger.js";
-import {hrtime} from "./Plug.js";
+import {Plug} from "./Plug.js";
 
 declare global {
 	function NOP(e: any): void
@@ -23,7 +23,7 @@ Promise.resolve().then(async () => {
 	// await require("./plugs/CQBotSearch").default;
 	await require("./plugs/CQBotPicture").default;
 	await require("./plugs/test").default;
-	hrtime(time);
+	Plug.hrtime(time);
 }).then(() => {
 	logger.info("启动完成");
 	module.children = [];

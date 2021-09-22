@@ -1,7 +1,7 @@
 import {CQ, CQEvent, CQTag, CQWebSocket, messageNode} from "go-cqwebsocket";
 import {MessageId, PromiseRes, Status} from "go-cqwebsocket/out/Interfaces";
 import {adminGroup, adminId, CQWS} from "../config/config.json";
-import {hrtime, Plug} from "../Plug.js";
+import {Plug} from "../Plug.js";
 import {canCallGroup, canCallPrivate} from "../utils/Annotation.js";
 import {Where} from "../utils/Generators.js";
 import {
@@ -175,7 +175,7 @@ class CQBot extends Plug {
 					} else {
 						pro.catch(NOP);
 					}
-					hrtime(time);
+					Plug.hrtime(time);
 				});
 			},
 			"message.private": (event) => {
@@ -184,7 +184,7 @@ class CQBot extends Plug {
 					if (tags.length < 1) {
 						return;
 					}
-					hrtime(time);
+					Plug.hrtime(time);
 					sendPrivate(event, tags).catch(NOP);
 				});
 			},
