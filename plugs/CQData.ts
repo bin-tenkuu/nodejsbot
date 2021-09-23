@@ -33,6 +33,7 @@ class CQData extends Plug {
 			canGroup: msg.canGroup !== false,
 			canPrivate: msg.canPrivate !== false,
 			help: msg.help,
+			maxLength: msg.maxLength ?? 0,
 		}));
 		// this.memberMap
 		await db.start(async db => {
@@ -110,8 +111,8 @@ class CQData extends Plug {
 export default new CQData();
 
 export type Corpus = {
-	name: string, regexp: RegExp, reply: string,
-	forward: boolean, needAdmin: boolean, isOpen: boolean, delMSG: number,
-	canGroup: boolean, canPrivate: boolean, help: string | undefined
+	name: string, regexp: RegExp, reply: string, forward: boolean,
+	needAdmin: boolean, isOpen: boolean, delMSG: number, canGroup: boolean,
+	canPrivate: boolean, help: string | undefined, maxLength: number
 };
 export type Member = { exp: number, baned: 0 | 1, name: string };

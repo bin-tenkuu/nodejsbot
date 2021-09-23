@@ -5,12 +5,14 @@
 			"name": ".ping",
 			"regexp": "^\\.ping$",
 			"reply": ".pong!",
-			"help": "测试bot是否连接正常"
+			"help": "测试bot是否连接正常",
+			"maxLength": 5
 		}, {
-			"name": ".dp <num>",
-			"regexp": "^\\.dp *(?<num>\\d+)?",
+			"name": ".dp<num>",
+			"regexp": "^\\.dp ?(?<num>\\d+)?",
 			"reply": "[FN:CQBotCOC.getAddedRandom]",
-			"help": "5分钟之内加投骰"
+			"help": "5分钟之内加投骰",
+			"maxLength": 6
 		}, {
 			"name": ".[Dd] <表达式> <...>",
 			"regexp": "^\\.[dD] +(?:(?<times>\\d)#)?(?<dice>[^ ]+)",
@@ -19,16 +21,19 @@
 		}, {
 			"name": ".dall1:打开全1模式",
 			"regexp": "^\\.dall1$",
-			"reply": "[FN:CQBotCOC.setCheater]"
+			"reply": "[FN:CQBotCOC.setCheater]",
+			"maxLength": 6
 		}, {
 			"name": ".d[bug|(wr|cb|aj)f?]:打开/关闭特殊模式",
 			"regexp": "^\\.d(?<operator>\\w{2,3})$",
-			"reply": "[FN:CQBotCOC.setDiceType]"
+			"reply": "[FN:CQBotCOC.setDiceType]",
+			"maxLength": 7
 		}, {
 			"name": ".dstat",
 			"regexp": "^\\.dstat$",
 			"reply": "[FN:CQBotCOC.getDiceStat]",
-			"help": "查看全部简写"
+			"help": "查看全部简写",
+			"maxLength": 6
 		}, {
 			"name": ".dset <key>[=<value>]",
 			"regexp": "^\\.dset +(?<key>\\w[\\w\\d]+)(?:=(?<value>[+\\-*d0-9#]+))?",
@@ -38,13 +43,15 @@
 			"name": ".help|帮助",
 			"regexp": "^\\.(help|帮助)$",
 			"reply": "[FN:CQBot.getHelp]",
-			"forward": true
+			"forward": true,
+			"maxLength": 6
 		}, {
 			"name": ".色图失败列表",
 			"regexp": "^\\.色图失败列表$",
 			"reply": "[FN:CQBotPicture.getSetuSet]",
 			"forward": true,
-			"needAdmin": true
+			"needAdmin": true,
+			"maxLength": 7
 		}, {
 			"name": ".插件<other>",
 			"regexp": "^\\.插件(?<other>.*)$",
@@ -89,52 +96,61 @@
 			"regexp": "^[来來发發给給][张張个個幅点點份](?<r18>[Rr]18的?)?(?<keyword>.*)?[色瑟][图圖]$",
 			"reply": "[FN:CQBotPicture.getSeTu]",
 			"delMSG": 20,
-			"help": "来点色图,可选参数:r18,关键字"
+			"help": "来点色图,可选参数:r18,关键字",
+			"maxLength": 20
 		}, {
 			"name": "来点东方图",
 			"regexp": "^来点东方图$",
 			"reply": "[FN:CQBotPicture.getTouHouPNG]",
-			"isOpen": false
+			"isOpen": false,
+			"maxLength": 5
 		}, {
 			"name": "看_p站<pid>[-<p>]",
 			"regexp": "^看{1,2}p站(?<pid>\\d+)(?:-(?<p>\\d+))?$",
 			"reply": "[FN:CQBotPicture.getPixiv]",
 			"delMSG": 60,
-			"help": "看看p站带上pid发送"
+			"help": "看看p站带上pid发送",
+			"maxLength": 15
 		}, {
 			"name": "为什么呢",
 			"regexp": "^为什么呢$",
 			"reply": "[CQ:reply]是啊，为什么呢，我也在寻找原因呢",
 			"canPrivate": false,
-			"isOpen": false
+			"isOpen": false,
+			"maxLength": 4
 		}, {
 			"name": "有病吧",
 			"regexp": "^有病吧$",
 			"reply": "你治得好么?",
 			"canPrivate": false,
-			"isOpen": false
+			"isOpen": false,
+			"maxLength": 3
 		}, {
 			"name": "太强了",
 			"regexp": "^(?:tql|太强了)$",
 			"reply": "[FN:CQBotPlugin.getTQL]",
 			"canPrivate": false,
-			"isOpen": false
+			"isOpen": false,
+			"maxLength": 3
 		}, {
 			"name": ".搜图",
 			"regexp": "^\\.搜图$",
 			"reply": "[FN:CQBotSearch.getSauceNAO]",
 			"help": "带上图片发送",
-			"isOpen": false
+			"isOpen": false,
+			"maxLength": 3
 		}, {
 			"name": "(复读)",
 			"regexp": "^.+$",
 			"reply": "[FN:CQBotRepeat.getRepeat]",
-			"canPrivate": false
+			"canPrivate": false,
+			"maxLength": 50
 		}, {
 			"name": "(@复读AI)",
 			"regexp": "^.*$",
 			"reply": "[FN:CQBot.MemeAI]",
-			"canPrivate": false
+			"canPrivate": false,
+			"maxLength": 50
 		}, {
 			"name": "(保留值)",
 			"regexp": "$^",
@@ -144,7 +160,8 @@
 			"forward": true,
 			"needAdmin": true,
 			"canPrivate": false,
-			"canGroup": false
+			"canGroup": false,
+			"maxLength": 1
 		}
 	]
 }

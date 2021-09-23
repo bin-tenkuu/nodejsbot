@@ -10,7 +10,7 @@ configure(<Configuration>{
 				type: "messagePassThrough",
 			},
 		},
-		dataLog: <DateFileAppender>{
+		infoLog: <DateFileAppender>{
 			type: "dateFile",
 			filename: "./logs/date.log",
 			pattern: "yyyy-MM-dd",
@@ -24,10 +24,14 @@ configure(<Configuration>{
 	},
 	categories: {
 		"default": {
-			appenders: ["consoleLog", "dataLog"],
-			level: "all",
+			appenders: ["consoleLog", "infoLog"],
+			level: "info",
 			enableCallStack: true,
 		},
 	},
 });
-export const logger = getLogger("default");
+const logger = getLogger();
+
+export {
+	logger,
+};

@@ -1,6 +1,5 @@
 import _axios from "axios";
-import Client from "ftp";
-import {ftp as ftpConfig, SauceNAOkey} from "../config/config.json";
+import {SauceNAOkey} from "../config/config.json";
 import {
 	DMXKType, loliconDate, loliconPost, paulzzhTouHouType, pixivCatType, sauceNAOResult, toubiecType, YHType,
 } from "./SearchType";
@@ -89,29 +88,3 @@ export function yingHua(): Promise<YHType> {
 		return data.data;
 	});
 }
-
-export function uploadFile(url: string, name: string): Promise<string> {
-	return new Promise<string>((resolve, reject) => {
-		const ftp = new Client();
-		ftp.connect(ftpConfig);
-		ftp.on("ready", (error) => {
-			if (error !== undefined) {
-				return reject(error);
-			}
-			axios.get(url, {responseType: "stream"}).then(value => {
-				ftp.put(value.data, "./files/" + name, false, error => {
-					if (error === undefined) {
-						ftp.end();
-						return resolve(`http://pan.binsrc.club/files/${name}`);
-					} else {
-						ftp.destroy();
-						return reject(error);
-					}
-				});
-			}).catch((e) => {
-				return reject(e);
-			});
-		});
-	});
-}
-

@@ -7,7 +7,11 @@
 	},
 	"main": "index.js",
 	"files": [
-		"config/*.json", "plugs/*.js", "utils/*.js", "index.js", "Plug.js"
+		"config/*.json",
+		"plugs/*.js",
+		"utils/*.js",
+		"index.js",
+		"Plug.js"
 	],
 	"type": "commonjs",
 	"scripts": {
@@ -22,20 +26,17 @@
 	"author": "bin",
 	"license": "MIT",
 	"devDependencies": {
-		"@types/ftp": "^0.3.32",
 		"@types/node": "^16.7.13"
 	},
 	"dependencies": {
 		"axios": "^0.21.4",
-		"ftp": "^0.3.10",
 		"go-cqwebsocket": "^6.0.1",
 		"images": "^3.2.3",
 		"log4js": "^6.3.0",
 		"node-cache": "^5.1.2",
 		"reflect-metadata": "^0.1.13",
 		"sqlite": "^4.0.23",
-		"sqlite3": "^5.0.2",
-		"xmldom-ts": "^0.3.1"
+		"sqlite3": "^5.0.2"
 	},
 	"private": true
 }
