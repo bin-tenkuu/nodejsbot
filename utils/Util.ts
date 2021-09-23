@@ -1,10 +1,12 @@
 import {CQ, CQEvent, CQTag, CQWebSocket, messageNode} from "go-cqwebsocket";
 import {MessageId, PromiseRes} from "go-cqwebsocket/out/Interfaces";
-import {CQAt, CQImage, CQText} from "go-cqwebsocket/out/tags";
+import {CQAt, CQText} from "go-cqwebsocket/out/tags";
+import {getLogger} from "log4js";
 import {adminGroup, adminId} from "../config/config.json";
 import {Plug} from "../Plug.js";
 import {canCallGroup, canCallGroupType, canCallPrivate, canCallPrivateType} from "./Annotation.js";
-import {logger} from "./logger.js";
+
+const logger = getLogger("Util");
 
 export type CQMessage = CQEvent<"message.private"> | CQEvent<"message.group">;
 
@@ -37,7 +39,7 @@ export function isAdminGroup<T>({context: {group_id}}: hasGroup<T>): boolean {
 	return group_id === adminGroup;
 }
 
-export function sendAdminQQ({bot}: CQEvent<any>, message: CQTag[] | string): void {
+export function sendAdminQQ<T>({bot}: hasBot<T>, message: CQTag[] | string): void {
 	if (typeof message === "string") {
 		message = CQ.parse(message);
 	}
@@ -46,7 +48,7 @@ export function sendAdminQQ({bot}: CQEvent<any>, message: CQTag[] | string): voi
 	});
 }
 
-export function sendAdminGroup({bot}: CQEvent<any>, message: CQTag[] | string): void {
+export function sendAdminGroup<T>({bot}: hasBot<T>, message: CQTag[] | string): void {
 	if (typeof message === "string") {
 		message = CQ.parse(message);
 	}
@@ -120,12 +122,7 @@ export function deleteMsg({bot}: CQEvent<any>, id: number, delay: number = 0): N
 }
 
 function cast2Text(message: CQTag[]): CQText[] {
-	return message.map<CQText>(tag => {
-		if (tag instanceof CQImage) {
-			return CQ.text(`[图片:${tag.file}]`);
-		}
-		return <CQText>tag;
-	});
+	return message.map<CQText>(tag => tag instanceof CQText ? tag : CQ.text(tag.toString()));
 }
 
 async function parseFN(body: string, event: CQMessage, exec: RegExpExecArray): Promise<CQTag[]> {
@@ -199,13 +196,13 @@ export async function parseMessage(template: string, message: CQMessage, execArr
 		default:
 			const never: never = head;
 			tags.push(CQ.text(str));
-			console.log(never);
+			logger.warn(never);
 		}
 	}
 	return tags;
 }
 
-
+type hasBot<T> = T extends { bot: CQWebSocket } ? T : never;
 type hasUser<T> = T extends { bot: CQWebSocket, context: { user_id: number } } ? T : never;
 type hasGroup<T> = T extends { bot: CQWebSocket, context: { group_id: number } } ? T : never;
 

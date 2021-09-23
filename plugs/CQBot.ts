@@ -126,8 +126,12 @@ class CQBot extends Plug {
 
 	/**发送bot信息*/
 	private sendState(state: Status["stat"]) {
-		this.bot.send_group_msg(adminGroup, `数据包丢失总数:${state.packet_lost
-		}\n接受信息总数:${state.message_received}\n发送信息总数:${state.message_sent}`).catch(() => {
+		let msg = [
+			CQ.text(`数据包丢失总数:${state.packet_lost
+			}\n接受信息总数:${state.message_received
+			}\n发送信息总数:${state.message_sent}`),
+		];
+		this.bot.send_group_msg(adminGroup, msg).catch(() => {
 			if (this.sendStateInterval !== undefined) {
 				clearInterval(this.sendStateInterval);
 			}

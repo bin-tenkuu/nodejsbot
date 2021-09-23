@@ -1,5 +1,5 @@
-import {logger} from "./utils/logger.js";
 import {Plug} from "./Plug.js";
+import {logger} from "./utils/logger.js";
 
 declare global {
 	function NOP(e: any): void

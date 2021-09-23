@@ -1,5 +1,4 @@
-import {Logger} from "log4js";
-import {logger} from "./utils/logger.js";
+import {Logable} from "./utils/logger.js";
 
 const State = {
 	create: 0,
@@ -8,19 +7,18 @@ const State = {
 	error: 3,
 } as const;
 
-export abstract class Plug {
+export abstract class Plug extends Logable {
 	public static readonly plugs: Map<string, Plug> = new Map<string, Plug>();
 	public readonly module: NodeModule;
 	public canAutoCall: Set<string>;
 	public name: string;
 	public description: string;
 	public version: number;
-	public error: any;
 	public declare readonly __proto__: Readonly<this>;
-
 	#state: typeof State[keyof typeof State];
 
 	protected constructor(module: NodeModule) {
+		super();
 		this.#state = State.create;
 		this.name = this.constructor.name;
 		this.module = module;
@@ -36,10 +34,9 @@ export abstract class Plug {
 					return;
 				}
 				await this.__proto__.install.call(this);
-				this.logger.info("已启动 %s", this.toString());
+				this.logger.info("已启动\t" + this.toString());
 				this.#state = State.installed;
 			} catch (e) {
-				this.#state = State.error;
 				this.error = e;
 			} finally {
 				this.module.children = [];
@@ -51,20 +48,19 @@ export abstract class Plug {
 					return;
 				}
 				await this.__proto__.uninstall.call(this);
-				this.logger.info("已停止 %s", this.toString());
+				this.logger.info("已停止\t" + this.toString());
 				if (this.#state === State.error) {
 					return;
 				}
 				this.#state = State.uninstalled;
 			} catch (e) {
-				this.#state = State.error;
 				this.error = e;
 			} finally {
 				this.module.children = [];
 			}
 		};
 		this.#state = State.uninstalled;
-		this.error = undefined;
+		this._error = undefined;
 		this.canAutoCall ??= new Set();
 		this.logger.debug("fix:\t" + module.filename);
 	}
@@ -73,10 +69,10 @@ export abstract class Plug {
 		let [s, ns] = process.hrtime(time);
 		ns /= 1e3;
 		if (ns < 1e3) {
-			return logger.info(`本次请求耗时:${s}秒${ns}微秒`);
+			return this.logger.info(`本次请求耗时:${s}秒${ns}微秒`);
 		}
 		ns = (ns | 0) / 1e3;
-		return logger.info(`本次请求耗时:${s}秒${ns}毫秒`);
+		return this.logger.info(`本次请求耗时:${s}秒${ns}毫秒`);
 	}
 
 	public async install(): Promise<void> {
@@ -97,8 +93,16 @@ export abstract class Plug {
 		return this.constructor.name;
 	}
 
-	public static get logger(): Logger {
-		return logger;
+	public _error: any;
+
+	public get error() {
+		return this._error;
+	}
+
+	public set error(e: any) {
+		this.#state = State.error;
+		this._error = e;
+		this.logger.error(e);
 	}
 
 	public get installed() {
@@ -107,9 +111,5 @@ export abstract class Plug {
 
 	public get state(): number {
 		return this.#state;
-	}
-
-	public get logger(): Logger {
-		return logger;
 	}
 }

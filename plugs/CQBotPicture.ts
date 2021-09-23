@@ -134,7 +134,7 @@ class CQBotPicture extends Plug {
 	@canCallGroup()
 	@canCallPrivate()
 	async getTouHouPNG(event: CQMessage): Promise<CQTag[]> {
-		console.log("开始东方");
+		this.logger.log("开始东方");
 		const userId: number = event.context.user_id;
 		const member = CQData.getMember(userId);
 		if (member.exp < 10) {

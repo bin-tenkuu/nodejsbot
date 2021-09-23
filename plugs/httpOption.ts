@@ -16,7 +16,7 @@ function create(): Map<string, ServerHandle> {
 					return;
 				}
 				setTimeout(() => {
-					console.log("退出");
+					HttpOption.logger.log("退出");
 					process.exit(0);
 				}, 500);
 			});
@@ -45,6 +45,18 @@ class HttpOption extends Plug {
 		// this.generator = endlessGen(jpgUrls);
 	}
 
+	async install() {
+		const server = http.createServer(
+				this.handle.bind(this),
+		).listen(40000, "127.0.0.1");
+		this.logger.info("快速结束已启动,点击 http://127.0.0.1:40000");
+		this.header = server;
+	}
+
+	async uninstall() {
+		this.header?.close();
+	}
+
 	/*
 	async setJPG(url: string) {
 		return axios.get(url).then((data) => {
@@ -68,18 +80,6 @@ class HttpOption extends Plug {
 		const {remoteFamily: family, remoteAddress: address, remotePort: port} = req.socket;
 		this.logger.info(`远程地址:\t${family} -> ${address} : ${port}`);
 		(this.server.get(req.url ?? "") ?? this[404])(req, res);
-	}
-
-	async install() {
-		const server = http.createServer(
-				this.handle.bind(this),
-		).listen(40000, "127.0.0.1");
-		this.logger.info("快速结束已启动,点击 http://127.0.0.1:40000");
-		this.header = server;
-	}
-
-	async uninstall() {
-		this.header?.close();
 	}
 
 	private get 404(): ServerHandle {
