@@ -95,7 +95,7 @@ class CQBot extends Plug {
 			callback: (this: void, tags: CQTag[], element: Corpus) => void | Promise<any>) {
 		const text = onlyText(event);
 		let corpus = this.filterCorpus(event);
-		corpus = Where(corpus, c => c.maxLength < 1 || text.length > c.maxLength);
+		corpus = Where(corpus, c => text.length >= c.minLength && text.length <= c.maxLength);
 		for (const element of corpus) {
 			const exec = element.regexp.exec(text);
 			if (exec === null) {

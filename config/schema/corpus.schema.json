@@ -77,10 +77,15 @@
 						"description": "帮助文本",
 						"default": null
 					},
+					"minLength": {
+						"type": "number",
+						"description": "目标文本的最小长度, 不够时跳过 regexp 匹配",
+						"default": 0
+					},
 					"maxLength": {
 						"type": "number",
 						"description": "目标文本的最大长度, 超出时跳过 regexp 匹配",
-						"default": 0
+						"default": 100
 					}
 				},
 				"required": ["name", "regexp"],
