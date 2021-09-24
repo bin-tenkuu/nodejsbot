@@ -94,8 +94,7 @@ class CQBot extends Plug {
 	private static async sendCorpusTags(event: CQMessage,
 			callback: (this: void, tags: CQTag[], element: Corpus) => void | Promise<any>) {
 		const text = onlyText(event);
-		let corpus = this.filterCorpus(event);
-		corpus = Where(corpus, c => text.length >= c.minLength && text.length <= c.maxLength);
+		let corpus = this.filterCorpus(event, text.length);
 		for (const element of corpus) {
 			const exec = element.regexp.exec(text);
 			if (exec === null) {
@@ -112,13 +111,14 @@ class CQBot extends Plug {
 		}
 	}
 
-	private static filterCorpus(event: CQMessage): Generator<Corpus, void, void> {
+	private static filterCorpus(event: CQMessage, length: number): Generator<Corpus, void, void> {
 		let gen: Generator<Corpus, void, void> = Where(CQDate.corpora, _ => !event.isCanceled);
 		if (event.contextType === "message.private") {
 			gen = Where(gen, (c) => c.canPrivate);
 		} else {
 			gen = Where(gen, (c) => c.canGroup);
 		}
+		gen = Where(gen, (c) => length >= c.minLength && length <= c.maxLength);
 		if (isAdminQQ(event)) {
 			return gen;
 		} else {
