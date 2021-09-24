@@ -48,7 +48,7 @@ class CQBotCOC extends Plug {
 		if (value === undefined) {
 			db.start(async db => {
 				await db.run(`DELETE FROM COCShortKey WHERE KEY = ?`, key);
-			}).catch(db.close);
+			});
 			this.shortKey.delete(key);
 			return [CQ.text(`删除key:${key}`)];
 		}
@@ -58,7 +58,7 @@ class CQBotCOC extends Plug {
 		this.shortKey.set(key, value);
 		db.start(async db => {
 			await db.run(`INSERT INTO COCShortKey(key, value) VALUES (?, ?)`, key, value);
-		}).catch(db.close);
+		});
 		return [CQ.text(`添加key:${key}=${value}`)];
 	}
 
@@ -142,35 +142,6 @@ class CQBotCOC extends Plug {
 		return [CQ.text(`${calc.origin}：[${calc.list}]=${calc.num}\n[${cache.list}]`)];
 	}
 
-	private readShortKey() {
-		db.start(async db => {
-			const all = await db.all<{ key: string, value: string }[]>(`SELECT KEY, VALUE FROM COCShortKey`);
-			all.forEach(({key, value}) => this.shortKey.set(key, value));
-		}).catch(db.close);
-	}
-
-	private dice(str: string, userId: number): string {
-		const handles = str.split(/(?=[+\-*])/).map<Calc>(value => {
-			return CQBotCOC.castString(value, this.cheater);
-		});
-		if (handles.length === 1) {
-			const calc: Calc = handles[0];
-			if (calc.list !== null) {
-				this.cache.set(userId, new DiceCache(calc.max, calc!.list));
-				SpecialEffects.runFunc(this.specialEffects, calc);
-				return `${calc.origin}：[${calc.list}]=${calc.num}${calc.state ?? ""}`;
-			} else {
-				return `${calc.op}${calc.origin}=${calc.num}`;
-			}
-		}
-		let preRet: string = handles.filter(v => v.list !== null).map((v) => {
-			return `${v.origin}：[${v.list}]=${v.num}`;
-		}).join("\n");
-		str = handles.map(value => `${value.op}${value.origin}`).join("");
-		const sumNum = CQBotCOC.calculate(handles);
-		return `${preRet}\n${str}=${sumNum}`;
-	}
-
 	private static castString(value: string, cheater: boolean): Calc {
 		const groups = /^(?<op>[+\-*])?(?<num>\d+)?(?:[dD](?<max>\d+))?$/.exec(value)?.groups as {
 			op?: "+" | "-" | "*"
@@ -228,6 +199,35 @@ class CQBotCOC extends Plug {
 			}
 			return arr;
 		}, [0, 1])[0];
+	}
+
+	private readShortKey() {
+		db.start(async db => {
+			const all = await db.all<{ key: string, value: string }[]>(`SELECT KEY, VALUE FROM COCShortKey`);
+			all.forEach(({key, value}) => this.shortKey.set(key, value));
+		});
+	}
+
+	private dice(str: string, userId: number): string {
+		const handles = str.split(/(?=[+\-*])/).map<Calc>(value => {
+			return CQBotCOC.castString(value, this.cheater);
+		});
+		if (handles.length === 1) {
+			const calc: Calc = handles[0];
+			if (calc.list !== null) {
+				this.cache.set(userId, new DiceCache(calc.max, calc!.list));
+				SpecialEffects.runFunc(this.specialEffects, calc);
+				return `${calc.origin}：[${calc.list}]=${calc.num}${calc.state ?? ""}`;
+			} else {
+				return `${calc.op}${calc.origin}=${calc.num}`;
+			}
+		}
+		let preRet: string = handles.filter(v => v.list !== null).map((v) => {
+			return `${v.origin}：[${v.list}]=${v.num}`;
+		}).join("\n");
+		str = handles.map(value => `${value.op}${value.origin}`).join("");
+		const sumNum = CQBotCOC.calculate(handles);
+		return `${preRet}\n${str}=${sumNum}`;
 	}
 }
 
@@ -320,10 +320,6 @@ class SpecialEffects {
 		],
 	});
 
-	private static getFunc(key: string): EffectFunc {
-		return (this.Effects[key] ?? this.Effects["bug"])![1];
-	}
-
 	public static runFunc(key: string, calc: Calc): void {
 		return this.getFunc(key)(calc);
 	}
@@ -338,6 +334,10 @@ class SpecialEffects {
 
 	public static has(key: string): boolean {
 		return Reflect.has(this.Effects, key);
+	}
+
+	private static getFunc(key: string): EffectFunc {
+		return (this.Effects[key] ?? this.Effects["bug"])![1];
 	}
 }
 

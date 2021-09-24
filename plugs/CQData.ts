@@ -36,14 +36,14 @@ class CQData extends Plug {
 			maxLength: msg.maxLength ?? 0,
 		}));
 		// this.memberMap
-		await db.start(async db => {
+		db.start(async db => {
 			const all = await db.all<{ id: number, exp: number, baned: 0 | 1, name: string }[]>(
 					`SELECT id, exp, baned, name FROM Members`);
 			for (const {id, ...member} of all) {
 				this.memberMap.set(id, member);
 			}
-		}).catch(db.close);
-		this.autoSave();
+			this.autoSave();
+		});
 	}
 
 	public async uninstall() {
@@ -75,12 +75,14 @@ class CQData extends Plug {
 		if (this.saving) {
 			return;
 		}
-		this.saving = true;
-		this.logger.info("保存开始");
-		await db.start(async db => {
+		db.start(async db => {
+			this.saving = true;
+			this.logger.info("保存开始");
 			// this.memberMap
 			{
-				const sql = `REPLACE INTO Members(id, exp, time, baned) VALUES ($id, $exp, $time, $baned);`;
+				const sql = `INSERT INTO Members(id, name, exp, time, baned)
+        VALUES ($id, $name, $exp, $time, $baned)
+        ON CONFLICT(id) DO UPDATE SET name=$id, exp=$exp, time=$time, baned=$baned;`;
 				const stmt = await db.prepare(sql);
 				for (const memberMap of this.memberMap) {
 					const [id, {exp, baned}] = memberMap;
@@ -88,9 +90,9 @@ class CQData extends Plug {
 				}
 				await stmt.finalize();
 			}
-		}).catch(db.close);
-		this.logger.info("保存结束");
-		this.saving = false;
+			this.logger.info("保存结束");
+			this.saving = false;
+		});
 	}
 
 	private autoSave(): void {

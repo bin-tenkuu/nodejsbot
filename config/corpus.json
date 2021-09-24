@@ -110,7 +110,7 @@
 			"reply": "[FN:CQBotPicture.getPixiv]",
 			"delMSG": 60,
 			"help": "看看p站带上pid发送",
-			"maxLength": 15
+			"maxLength": 20
 		}, {
 			"name": "为什么呢",
 			"regexp": "^为什么呢$",

@@ -1,83 +1,88 @@
 import {existsSync, openSync} from "fs";
-import {Database, ISqlite, open as openSqlite} from "sqlite";
-import {Database as Db3} from "sqlite3";
+import {Logger} from "log4js";
+import {Database} from "sqlite";
+import {verbose} from "sqlite3";
 import {Logable} from "./logger.js";
 
-type DatabaseHandle<T = any> = (this: void, db: Database) => T | Promise<T>;
+type DatabaseHandle = (this: void, db: SQLite) => Promise<void>;
 
 class SQLControl extends Logable {
-	private readonly config: ISqlite.Config;
-	private db: Database | undefined;
+	private readonly db: SQLite;
 	private breakTime: NodeJS.Timeout | undefined;
 
-	constructor(path = "./db.db") {
+	constructor(filename = "./db.db") {
 		super();
-		if (!existsSync(path)) {
-			openSync(path, "w");
+		if (!existsSync(filename)) {
+			openSync(filename, "w");
 		}
-		this.config = {
-			filename: path,
-			driver: Db3,
-		};
 		this.breakTime = undefined;
-		this.db = undefined;
+		this.db = new SQLite(filename, this);
+		process.on("beforeExit", _ => {
+			this.close().catch(NOP);
+		});
 	}
 
 	/**
 	 * 不要关闭数据库
 	 * @param fun 数据库回调函数
 	 */
-	public start<T = unknown>(fun: DatabaseHandle<T>): Promise<T> {
-		return this.open().then(fun);
+	public start(fun: DatabaseHandle): void | Promise<void> {
+		return this.open().then(fun).catch(this.close);
 	}
 
-	private open(): Promise<Database> {
-		if (this.db !== undefined) {
-			this.resetBreakTime();
-			return Promise.resolve(this.db);
-		}
-		return openSqlite(this.config).then(db => {
-			this.db = db;
-			db.db.on("close", () => {
-				this.logger.debug("DB Close");
-				this.db = undefined;
-			});
-			this.setBreakTime();
-			return db;
+	private open(): Promise<SQLite> {
+		return this.isOpen ? Promise.resolve(this.db) : this.db.open().then(() => {
+			return this.db;
 		});
-	}
-
-	private clearBreakTime(): void {
-		this.breakTime !== undefined && clearTimeout(this.breakTime);
-		this.breakTime = undefined;
-	}
-
-	private setBreakTime(time: number = 1000 * 60 * 10) {
-		this.breakTime = setTimeout(this.close, time);
-	}
-
-	private resetBreakTime() {
-		this.clearBreakTime();
-		this.setBreakTime();
 	}
 
 	/**
 	 * 关闭数据库
 	 * @private
 	 */
-	public get close(): (e?: any) => Promise<void> {
-		return async (e?: any) => {
-			if (e !== undefined) {
-				this.logger.error(e);
-			}
-			const db = this.db;
-			this.db = undefined;
-			if (db === undefined) {
-				return;
-			}
-			this.clearBreakTime();
-			return db.close().catch(e => this.logger.error(e));
-		};
+	public get close(): () => Promise<void> {
+		return () => this.isClose ? Promise.resolve() : this.db.close().catch(NOP);
+	}
+
+	public get isOpen(): boolean {
+		return this.db.isOpen;
+	}
+
+	public get isClose(): boolean {
+		return this.db.isClose;
+	}
+}
+
+class SQLite extends Database implements Logable {
+	public isClose: boolean = false;
+	private readonly _logger: Logger;
+
+	public get logger(): Logger {
+		return this._logger;
+	}
+
+	constructor(filename: string, logger: Logable) {
+		super({
+			filename: filename,
+			driver: verbose().Database,
+		});
+		this._logger = logger.logger;
+	}
+
+	public open(): Promise<void> {
+		return super.open().then(() => {
+			this.db.on("close", () => {
+				this.isClose = true;
+				this.logger.debug("DB Close");
+			}).on("error", err => {
+				this.isClose = true;
+				this.logger.error(err);
+			});
+		});
+	}
+
+	public get isOpen(): boolean {
+		return !this.isClose;
 	}
 }
 
