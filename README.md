@@ -11,6 +11,7 @@
 <details><summary>老DD了</summary>
 <img src="logo.png" alt="咩真可爱" title="三字母人快爬啊啊啊啊啊" />
 </details>
+
 ## 3. 使用
 
 1. 在 `./config` 目录下新建 `config.json` 文件并写入以下内容:
@@ -35,7 +36,7 @@
 3. bot 使用 `sqlite` 数据库, 新建脚本在 `db.sql` 文件中, 请自行新建 `db.db` 文件
 4. `npm install` , `tsc` , `npm start`
 5. 如果想要打包:
-    1. 运行 `npm pack`
-    2. 将根目录中生成的 `nodejsbot-1.0.0.tgz` 文件上传至服务器解压
-    3. 运行 `tar -zxvf nodejsbot-1.0.0.tgz` , `cd package` , `npm update` `npm start`
+	1. 运行 `npm pack`
+	2. 将根目录中生成的 `nodejsbot-1.0.0.tgz` 文件上传至服务器解压
+	3. 运行 `tar -zxvf nodejsbot-1.0.0.tgz` , `cd package` , `npm update` `npm start`
 
