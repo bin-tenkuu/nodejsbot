@@ -1,5 +1,5 @@
 import {
-	BaseLayout, ColoredLayout, Configuration, configure, ConsoleAppender, DateFileAppender, getLogger, Logger,
+	BaseLayout, ColoredLayout, Configuration, configure, ConsoleAppender, DateFileAppender, getLogger as getter, Logger,
 	LogLevelFilterAppender, SyncfileAppender,
 } from "log4js";
 
@@ -18,7 +18,7 @@ configure(<Configuration>{
 			encoding: "utf-8",
 			compress: false,
 			alwaysIncludePattern: true,
-			daysToKeep: 5,
+			daysToKeep: 6,
 			keepFileExt: true,
 			layout: <BaseLayout>{
 				type: "basic",
@@ -57,7 +57,11 @@ configure(<Configuration>{
 	pm2InstanceVar: undefined,
 	disableClustering: false,
 });
-export const logger = getLogger();
+export const logger = getLogger("default");
+
+export function getLogger(name?: string) {
+	return getter(name + "\t");
+}
 
 export class Logable {
 	private static _logger: Logger = logger;

@@ -22,8 +22,8 @@ Promise.resolve().then(async () => {
 	await require("./plugs/CQBotRepeat").default;
 	// await require("./plugs/CQBotSearch").default;
 	await require("./plugs/CQBotPicture").default;
-	await require("./plugs/test").default;
-	Plug.hrtime(time);
+	// await require("./plugs/test").default;
+	Plug.hrtime(time, "初始化");
 }).then(() => {
 	logger.info("启动完成");
 	module.children = [];

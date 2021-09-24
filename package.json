@@ -36,7 +36,7 @@
 		"node-cache": "^5.1.2",
 		"reflect-metadata": "^0.1.13",
 		"sqlite": "^4.0.23",
-		"sqlite3": "^5.0.2"
+		"sqlite3": "^4.2.0"
 	},
 	"private": true
 }

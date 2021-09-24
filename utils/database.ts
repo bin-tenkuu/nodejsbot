@@ -1,7 +1,7 @@
 import {existsSync, openSync} from "fs";
 import {Logger} from "log4js";
 import {Database} from "sqlite";
-import {verbose} from "sqlite3";
+import {Database as Db3} from "sqlite3";
 import {Logable} from "./logger.js";
 
 type DatabaseHandle = (this: void, db: SQLite) => Promise<void>;
@@ -40,8 +40,11 @@ class SQLControl extends Logable {
 	 * 关闭数据库
 	 * @private
 	 */
-	public get close(): () => Promise<void> {
-		return () => this.isClose ? Promise.resolve() : this.db.close().catch(NOP);
+	public get close(): (e?: any) => Promise<void> {
+		return (e?: any) => {
+			this.logger.error(e);
+			return this.isClose ? Promise.resolve() : this.db.close().catch(NOP);
+		};
 	}
 
 	public get isOpen(): boolean {
@@ -54,7 +57,6 @@ class SQLControl extends Logable {
 }
 
 class SQLite extends Database implements Logable {
-	public isClose: boolean = false;
 	private readonly _logger: Logger;
 
 	public get logger(): Logger {
@@ -64,7 +66,7 @@ class SQLite extends Database implements Logable {
 	constructor(filename: string, logger: Logable) {
 		super({
 			filename: filename,
-			driver: verbose().Database,
+			driver: Db3,
 		});
 		this._logger = logger.logger;
 	}
@@ -72,13 +74,19 @@ class SQLite extends Database implements Logable {
 	public open(): Promise<void> {
 		return super.open().then(() => {
 			this.db.on("close", () => {
-				this.isClose = true;
+				this._isClose = true;
 				this.logger.debug("DB Close");
 			}).on("error", err => {
-				this.isClose = true;
+				this._isClose = true;
 				this.logger.error(err);
 			});
 		});
+	}
+
+	public _isClose: boolean = false;
+
+	public get isClose(): boolean {
+		return this.db === null || !this._isClose;
 	}
 
 	public get isOpen(): boolean {

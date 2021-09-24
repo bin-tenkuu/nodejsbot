@@ -106,7 +106,9 @@ class CQBot extends Plug {
 				this.logger.error(e);
 				return [CQ.text("error:" + element.name + "\n")];
 			});
-			await callback(msg, element);
+			if (msg.length > 0) {
+				await callback(msg, element);
+			}
 		}
 	}
 
@@ -165,7 +167,7 @@ class CQBot extends Plug {
 				if (CQDate.getBaned(userId)) {
 					return;
 				}
-				CQBot.sendCorpusTags(event, (tags, element) => {
+				CQBot.sendCorpusTags(event, async (tags, element) => {
 					if (tags.length < 1) {
 						return;
 					}
@@ -180,26 +182,24 @@ class CQBot extends Plug {
 						}
 					}
 					if (element.delMSG > 0) {
-						return pro.then(value => {
+						await pro.then(value => {
 							deleteMsg(event, value.message_id, element.delMSG);
 						}, NOP);
 					} else {
-						return pro.catch(NOP);
+						await pro.catch(NOP);
 					}
-				}).catch(NOP).finally(() => {
-					Plug.hrtime(time);
-				});
+					Plug.hrtime(time, element.name);
+				}).catch(NOP);
 			},
 			"message.private": (event) => {
 				const time = process.hrtime();
-				CQBot.sendCorpusTags(event, (tags) => {
+				CQBot.sendCorpusTags(event, async (tags, c) => {
 					if (tags.length < 1) {
 						return;
 					}
-					return sendPrivate(event, tags).catch(NOP);
-				}).catch(NOP).finally(() => {
-					Plug.hrtime(time);
-				});
+					await sendPrivate(event, tags).catch(NOP);
+					Plug.hrtime(time, c.name);
+				}).catch(NOP);
 			},
 		});
 	}

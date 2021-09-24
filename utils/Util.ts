@@ -1,7 +1,7 @@
 import {CQ, CQEvent, CQTag, CQWebSocket, messageNode} from "go-cqwebsocket";
 import {MessageId, PromiseRes} from "go-cqwebsocket/out/Interfaces";
 import {CQAt, CQText} from "go-cqwebsocket/out/tags";
-import {getLogger} from "log4js";
+import {getLogger} from "./logger.js";
 import {adminGroup, adminId} from "../config/config.json";
 import {Plug} from "../Plug.js";
 import {canCallGroup, canCallGroupType, canCallPrivate, canCallPrivateType} from "./Annotation.js";
