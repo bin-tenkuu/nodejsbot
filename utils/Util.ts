@@ -1,10 +1,10 @@
 import {CQ, CQEvent, CQTag, CQWebSocket, messageNode} from "go-cqwebsocket";
 import {MessageId, PromiseRes} from "go-cqwebsocket/out/Interfaces";
 import {CQAt, CQText} from "go-cqwebsocket/out/tags";
-import {getLogger} from "./logger.js";
 import {adminGroup, adminId} from "../config/config.json";
 import {Plug} from "../Plug.js";
 import {canCallGroup, canCallGroupType, canCallPrivate, canCallPrivateType} from "./Annotation.js";
+import {getLogger} from "./logger.js";
 
 const logger = getLogger("Util");
 
@@ -39,20 +39,20 @@ export function isAdminGroup<T>({context: {group_id}}: hasGroup<T>): boolean {
 	return group_id === adminGroup;
 }
 
-export function sendAdminQQ<T>({bot}: hasBot<T>, message: CQTag[] | string): void {
+export function sendAdminQQ<T>({bot}: hasBot<T>, message: CQTag[] | string): Promise<void> | void {
 	if (typeof message === "string") {
 		message = CQ.parse(message);
 	}
-	bot.send_private_msg(adminId, <any>message).catch(() => {
+	return bot.send_private_msg(adminId, <any>message).then(undefined, () => {
 		logger.warn("管理员消息发送失败");
 	});
 }
 
-export function sendAdminGroup<T>({bot}: hasBot<T>, message: CQTag[] | string): void {
+export function sendAdminGroup<T>({bot}: hasBot<T>, message: CQTag[] | string): Promise<void> | void {
 	if (typeof message === "string") {
 		message = CQ.parse(message);
 	}
-	bot.send_group_msg(adminGroup, <any>message).catch(() => {
+	return bot.send_group_msg(adminGroup, <any>message).then(undefined, () => {
 		logger.warn("管理群消息发送失败");
 	});
 }

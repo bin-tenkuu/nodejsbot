@@ -1,12 +1,12 @@
 import {CQ, CQEvent, CQTag, CQWebSocket, messageNode} from "go-cqwebsocket";
 import {MessageId, PromiseRes, Status} from "go-cqwebsocket/out/Interfaces";
-import {adminGroup, adminId, CQWS} from "../config/config.json";
+import {adminGroup, CQWS} from "../config/config.json";
 import {Plug} from "../Plug.js";
 import {canCallGroup, canCallPrivate} from "../utils/Annotation.js";
 import {Where} from "../utils/Generators.js";
 import {
-	CQMessage, deleteMsg, isAdminQQ, isAtMe, onlyText, parseMessage, sendForward, sendForwardQuick, sendGroup,
-	sendPrivate,
+	CQMessage, deleteMsg, isAdminQQ, isAtMe, onlyText, parseMessage, sendAdminQQ, sendForward, sendForwardQuick,
+	sendGroup, sendPrivate,
 } from "../utils/Util";
 import {Corpus, default as CQDate} from "./CQData.js";
 
@@ -75,7 +75,7 @@ class CQBot extends Plug {
 	}
 
 	async uninstall() {
-		await this.bot.send_private_msg(adminId, "即将下线").catch(NOP);
+		await sendAdminQQ({bot: this.bot}, "即将下线");
 		return new Promise<void>((resolve, reject) => {
 			this.bot.bind("on", {
 				"socket.close": () => {
