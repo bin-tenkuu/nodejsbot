@@ -42,7 +42,7 @@ class SQLControl extends Logable {
 	 */
 	public get close(): (e?: any) => Promise<void> {
 		return (e?: any) => {
-			this.logger.error(e);
+			e != null && this.logger.error(e);
 			return this.isClose ? Promise.resolve() : this.db.close().catch(NOP);
 		};
 	}
@@ -56,19 +56,15 @@ class SQLControl extends Logable {
 	}
 }
 
-class SQLite extends Database implements Logable {
-	private readonly _logger: Logger;
-
-	public get logger(): Logger {
-		return this._logger;
-	}
+class SQLite extends Database {
+	private readonly logger: Logger;
 
 	constructor(filename: string, logger: Logable) {
 		super({
 			filename: filename,
 			driver: Db3,
 		});
-		this._logger = logger.logger;
+		this.logger = logger.logger;
 	}
 
 	public open(): Promise<void> {
