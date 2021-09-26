@@ -94,7 +94,7 @@
 			"needAdmin": true
 		}, {
 			"name": "来点[<r18>][<key>]色图",
-			"regexp": "^[来來发發给給][张張个個幅点點份](?<r18>[Rr]18的?)?(?<keyword>.*)?[色瑟][图圖]$",
+			"regexp": "^[来來发發给給][张張个個幅点點份](?<r18>[Rr]18的?)?(?<keyword>.*)?[涩色瑟s铯][图圖t]$",
 			"reply": "[FN:CQBotPicture.getSeTu]",
 			"delMSG": 20,
 			"help": "来点色图,可选参数:r18,关键字",
@@ -103,7 +103,6 @@
 			"name": "来点东方图",
 			"regexp": "^来点东方图$",
 			"reply": "[FN:CQBotPicture.getTouHouPNG]",
-			"isOpen": false,
 			"minLength": 5
 		}, {
 			"name": "看_p站<pid>[-<p>]",
@@ -134,8 +133,7 @@
 			"name": ".搜图",
 			"regexp": "^\\.搜图$",
 			"reply": "[FN:CQBotSearch.getSauceNAO]",
-			"help": "带上图片发送",
-			"isOpen": false
+			"help": "带上图片发送"
 		}, {
 			"name": "(复读)",
 			"regexp": "^",

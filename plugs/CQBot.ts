@@ -163,14 +163,12 @@ class CQBot extends Plug {
 			"message.group": (event) => {
 				const time = process.hrtime();
 				const userId = event.context.user_id;
-				CQDate.getMember(userId).exp++;
-				if (CQDate.getBaned(userId)) {
+				const member = CQDate.getMember(userId);
+				member.exp++;
+				if (member.baned) {
 					return;
 				}
 				CQBot.sendCorpusTags(event, async (tags, element) => {
-					if (tags.length < 1) {
-						return;
-					}
 					let pro: PromiseRes<MessageId>;
 					if (!element.forward) {
 						pro = sendGroup(event, tags);
@@ -194,9 +192,6 @@ class CQBot extends Plug {
 			"message.private": (event) => {
 				const time = process.hrtime();
 				CQBot.sendCorpusTags(event, async (tags, c) => {
-					if (tags.length < 1) {
-						return;
-					}
 					await sendPrivate(event, tags).catch(NOP);
 					Plug.hrtime(time, c.name);
 				}).catch(NOP);

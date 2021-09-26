@@ -16,12 +16,12 @@ Promise.resolve().then(async () => {
 	await require("./plugs/httpOption").default.install();
 	await require("./plugs/CQBot").default.install();
 
-	await require("./plugs/CQBotCOC").default;
+	await require("./plugs/CQBotCOC").default.install();
 	await require("./plugs/CQBotEvent").default.install();
-	await require("./plugs/CQBotPlugin").default;
-	await require("./plugs/CQBotRepeat").default;
-	// await require("./plugs/CQBotSearch").default;
-	await require("./plugs/CQBotPicture").default;
+	await require("./plugs/CQBotPlugin").default.install();
+	await require("./plugs/CQBotRepeat").default.install();
+	await require("./plugs/CQBotSearch").default.install();
+	await require("./plugs/CQBotPicture").default.install();
 	// await require("./plugs/test").default;
 	Plug.hrtime(time, "初始化");
 }).then(() => {

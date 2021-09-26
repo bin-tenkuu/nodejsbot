@@ -48,12 +48,6 @@ class CQBotRepeat extends Plug {
 		return [CQ.text(CQBotRepeat.Random(...msg).join(""))];
 	}
 
-	async install() {
-	}
-
-	async uninstall() {
-	}
-
 	private static Random(...arr: string[]): string[] {
 		for (let i = arr.length - 1; i > 0; i--) {
 			const j = (Math.random() * i) | 0;
@@ -84,15 +78,15 @@ class RepeatCache extends Equatable {
 		return !b;
 	}
 
-	public get times(): number {
-		return this.user.size;
-	}
-
 	public equal(obj: any): boolean {
 		if (obj instanceof RepeatCache) {
 			return this.msg === obj.msg;
 		}
 		return false;
+	}
+
+	public get times(): number {
+		return this.user.size;
 	}
 }
 

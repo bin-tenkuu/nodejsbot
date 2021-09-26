@@ -214,4 +214,8 @@ export class Member implements IMember {
 		this._name = value;
 		this.modified();
 	}
+
+	public get baned(): boolean {
+		return this._is_baned !== 0;
+	}
 }

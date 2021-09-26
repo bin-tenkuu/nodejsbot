@@ -49,12 +49,12 @@ class CQBotPicture extends Plug {
 				if (data.code === 404) {
 					this.setuSet.add(groups.keyword ?? "");
 				}
-				member.exp += 5;
+				member.exp += 4;
 				return [CQ.text(message)];
 			}
 			if (data.count < 1) {
 				this.logger.warn(`开始色图异常：色图数量不足(${data.count})`);
-				member.exp += 2;
+				member.exp += 3;
 				return [CQ.text("色图数量不足")];
 			}
 			const first = data.data[0];
@@ -65,15 +65,15 @@ class CQBotPicture extends Plug {
 				} = event.context;
 				sendForward(event, [
 					CQ.nodeId(messageId),
-					CQ.node(nickname, userId, `标题：${first.title}
-作者：${first.author}\n原图：www.pixiv.net/i/${first.pid}\np${first.p}`),
+					CQ.node(nickname, userId, `标题：${first.title
+					}\n作者：${first.author}\n原图：www.pixiv.net/i/${first.pid}\np${first.p}`),
 					CQ.node(nickname, userId, CQ.escape(first.tags.join("\n"))),
 				]).catch(NOP);
 			}
 			return [CQ.image(getPRegular(first.url))];
 		} catch (reason) {
 			sendAdminQQ(event, "色图坏了");
-			this.logger.info(reason);
+			this.logger.error(reason);
 			return [CQ.text("未知错误,或网络错误")];
 		}
 	}
@@ -90,10 +90,10 @@ class CQBotPicture extends Plug {
 		}
 		const userId: number = event.context.user_id;
 		const member = CQData.getMember(userId);
-		if (member.exp < 10) {
+		if (member.exp < 5) {
 			return [CQ.text("不够活跃")];
 		}
-		member.exp -= 10;
+		member.exp -= 5;
 		try {
 			const data = await pixivCat(pid);
 			if (!data.success) {
@@ -104,28 +104,20 @@ class CQBotPicture extends Plug {
 			if (data.multiple) {
 				const urlsProxy = data.original_urls_proxy;
 				const length = urlsProxy.length;
-				if (p === undefined) {
-					const {0: p0, 1: p1} = urlsProxy;
-					return [
-						CQ.text(`总共${length}张图片,这是第1,2张`),
-						CQ.image(getPRegular(p0)),
-						CQ.image(getPRegular(p1)),
-					];
-				} else {
-					let ps: number = +p;
-					ps = ps >= length ? length - 1 : ps < 1 ? 1 : ps;
-					return [
-						CQ.text(`总共${length}张图片,这是第${ps},${ps + 1}张`),
-						CQ.image(getPRegular(urlsProxy[ps - 1])),
-						CQ.image(getPRegular(urlsProxy[ps])),
-					];
-				}
+				let ps: number = p === undefined ? 1 : +p;
+				ps = ps >= length ? length - 1 : ps < 1 ? 1 : ps;
+				return [
+					CQ.text(`总共${length}张图片,这是第${ps},${ps + 1}张`),
+					CQ.image(getPRegular(urlsProxy[ps - 1])),
+					CQ.image(getPRegular(urlsProxy[ps])),
+				];
 			} else {
 				return [CQ.image(getPRegular(data.original_url_proxy))];
 			}
 		} catch (e) {
 			member.exp += 5;
 			sendAdminQQ(event, "p站图片加载出错");
+			this.logger.error(e);
 			return [CQ.text("网络请求错误或内部错误")];
 		}
 	}
@@ -137,15 +129,16 @@ class CQBotPicture extends Plug {
 		this.logger.log("开始东方");
 		const userId: number = event.context.user_id;
 		const member = CQData.getMember(userId);
-		if (member.exp < 10) {
+		if (member.exp < 5) {
 			return [CQ.text("不够活跃")];
 		}
-		member.exp -= 10;
+		member.exp -= 5;
 		try {
 			const json = await paulzzhTouHou();
 			return [CQ.image((json.url)), CQ.text("作者:" + json.author)];
 		} catch (e) {
 			member.exp += 5;
+			this.logger.error(e);
 			return [CQ.text(`东方图API调用错误`)];
 		}
 	}

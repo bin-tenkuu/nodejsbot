@@ -83,12 +83,6 @@ class CQBotSearch extends Plug {
 		}
 	}
 
-	async install() {
-	}
-
-	async uninstall() {
-	}
-
 	/**
 	 * 解析部分数据
 	 * @param {number}index
