@@ -24,36 +24,6 @@ class CQBot extends Plug {
 		this.init();
 	}
 
-	@canCallGroup()
-	async MemeAI(event: CQEvent<"message.group">, execArray: RegExpExecArray) {
-		if (!isAtMe(event)) {
-			return [];
-		}
-		event.stopPropagation();
-		const {message_id, user_id} = event.context;
-		const cqTags = execArray[0].replace(/吗/g, "")
-				.replace(/(?<!\\)不/g, "\\很")
-				.replace(/(?<!\\)你/g, "\\我")
-				.replace(/(?<!\\)我/g, "\\你")
-				.replace(/(?<![没\\])有/g, "\\没有")
-				.replace(/(?<!\\)没有/g, "\\有")
-				.replace(/[？?]/g, "!")
-				.replace(/\\/g, "");
-		return [
-			CQ.reply(message_id),
-			CQ.at(user_id),
-			CQ.text(cqTags),
-		];
-	}
-
-	@canCallGroup()
-	@canCallPrivate()
-	async getHelp() {
-		const s: string = CQDate.corpora.filter(c => c.isOpen && !c.needAdmin &&
-				c.help !== undefined).map<string>((c) => `${c.name}:${c.help}`).join("\n");
-		return [CQ.text(s)];
-	}
-
 	async install() {
 		return new Promise<void>((resolve, reject) => {
 			this.bot.bind("onceAll", {
@@ -89,6 +59,36 @@ class CQBot extends Plug {
 			});
 			this.bot.disconnect();
 		});
+	}
+
+	@canCallGroup()
+	protected async MemeAI(event: CQEvent<"message.group">, execArray: RegExpExecArray) {
+		if (!isAtMe(event)) {
+			return [];
+		}
+		event.stopPropagation();
+		const {message_id, user_id} = event.context;
+		const cqTags = execArray[0].replace(/吗/g, "")
+				.replace(/(?<!\\)不/g, "\\很")
+				.replace(/(?<!\\)你/g, "\\我")
+				.replace(/(?<!\\)我/g, "\\你")
+				.replace(/(?<![没\\])有/g, "\\没有")
+				.replace(/(?<!\\)没有/g, "\\有")
+				.replace(/[？?]/g, "!")
+				.replace(/\\/g, "");
+		return [
+			CQ.reply(message_id),
+			CQ.at(user_id),
+			CQ.text(cqTags),
+		];
+	}
+
+	@canCallGroup()
+	@canCallPrivate()
+	protected async getHelp() {
+		const s: string = CQDate.corpora.filter(c => c.isOpen && !c.needAdmin &&
+				c.help !== undefined).map<string>((c) => `${c.name}:${c.help}`).join("\n");
+		return [CQ.text(s)];
 	}
 
 	private static async sendCorpusTags(event: CQMessage,
@@ -164,7 +164,7 @@ class CQBot extends Plug {
 				const time = process.hrtime();
 				const userId = event.context.user_id;
 				const member = CQDate.getMember(userId);
-				member.exp++;
+				member.addExp(1);
 				if (member.baned) {
 					return;
 				}

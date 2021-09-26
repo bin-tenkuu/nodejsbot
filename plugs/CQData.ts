@@ -1,6 +1,9 @@
+import {CQ} from "go-cqwebsocket";
 import {corpora} from "../config/corpus.json";
 import {Plug} from "../Plug.js";
+import {canCallGroup, canCallPrivate} from "../utils/Annotation.js";
 import {db} from "../utils/database.js";
+import {CQMessage} from "../utils/Util.js";
 
 class CQData extends Plug {
 
@@ -77,22 +80,16 @@ class CQData extends Plug {
 		return this.memberMap.values();
 	}
 
-	public getBaned(id: number): boolean {
-		let member: Member | undefined = this.memberMap.get(id);
-		if (member === undefined) {
-			member = new Member(id);
-			this.memberMap.set(id, member);
-		}
-		return member.is_baned === 1;
+	public setBaned(id: number, is_baned: 0 | 1 | boolean): void {
+		this.getMember(id).is_baned = is_baned ? 1 : 0;
 	}
 
-	public setBaned(id: number, is_baned: 0 | 1 | boolean): void {
-		let member: Member | undefined = this.memberMap.get(id);
-		if (member === undefined) {
-			member = new Member(id);
-			this.memberMap.set(id, member);
-		}
-		member.is_baned = is_baned ? 1 : 0;
+	@canCallGroup()
+	@canCallPrivate()
+	protected async getState(event: CQMessage) {
+		const qq: number = event.context.user_id;
+		const {exp, is_baned}: Member = this.getMember(qq);
+		return [CQ.at(qq), CQ.text(`ban?:${"否是"[is_baned]} 活跃:${exp}`)];
 	}
 
 	private async save(): Promise<void> {
@@ -164,6 +161,16 @@ export class Member implements IMember {
 			this._exp = obj.exp;
 			this._is_baned = obj?.is_baned;
 			this._gmt_modified = obj.gmt_modified;
+		}
+	}
+
+	public addExp(exp: number): boolean {
+		exp += this._exp;
+		if (exp < 0) {
+			return false;
+		} else {
+			this.exp = exp;
+			return true;
 		}
 	}
 

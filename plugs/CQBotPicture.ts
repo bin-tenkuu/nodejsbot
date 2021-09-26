@@ -21,7 +21,7 @@ class CQBotPicture extends Plug {
 	/**获取随机色图*/
 	@canCallGroup()
 	@canCallPrivate()
-	async getSeTu(event: CQMessage, exec: RegExpExecArray): Promise<CQTag[]> {
+	protected async getSeTu(event: CQMessage, exec: RegExpExecArray): Promise<CQTag[]> {
 		event.stopPropagation();
 		const groups = {
 			keyword: exec.groups?.keyword,
@@ -29,10 +29,9 @@ class CQBotPicture extends Plug {
 		};
 		const userId: number = event.context.user_id;
 		const member = CQData.getMember(userId);
-		if (member.exp < 5) {
+		if (!member.addExp(-5)) {
 			return [CQ.text("不够活跃")];
 		}
-		member.exp -= 5;
 		if (this.setuSet.has(groups.keyword ?? "")) {
 			return [];
 		}
@@ -49,12 +48,12 @@ class CQBotPicture extends Plug {
 				if (data.code === 404) {
 					this.setuSet.add(groups.keyword ?? "");
 				}
-				member.exp += 4;
+				member.addExp(4);
 				return [CQ.text(message)];
 			}
 			if (data.count < 1) {
 				this.logger.warn(`开始色图异常：色图数量不足(${data.count})`);
-				member.exp += 3;
+				member.addExp(3);
 				return [CQ.text("色图数量不足")];
 			}
 			const first = data.data[0];
@@ -81,7 +80,7 @@ class CQBotPicture extends Plug {
 	/**获取pid对应的p站图片*/
 	@canCallGroup()
 	@canCallPrivate()
-	async getPixiv(event: CQMessage, exec: RegExpExecArray): Promise<CQTag[]> {
+	protected async getPixiv(event: CQMessage, exec: RegExpExecArray): Promise<CQTag[]> {
 		event.stopPropagation();
 		const {pid, p} = (exec.groups as { pid?: string, p?: string }) ?? {};
 		this.logger.debug(`p站图片请求：pid:${pid},p:${p}`);
@@ -90,10 +89,9 @@ class CQBotPicture extends Plug {
 		}
 		const userId: number = event.context.user_id;
 		const member = CQData.getMember(userId);
-		if (member.exp < 5) {
+		if (!member.addExp(-5)) {
 			return [CQ.text("不够活跃")];
 		}
-		member.exp -= 5;
 		try {
 			const data = await pixivCat(pid);
 			if (!data.success) {
@@ -115,7 +113,7 @@ class CQBotPicture extends Plug {
 				return [CQ.image(getPRegular(data.original_url_proxy))];
 			}
 		} catch (e) {
-			member.exp += 5;
+			member.addExp(5);
 			sendAdminQQ(event, "p站图片加载出错");
 			this.logger.error(e);
 			return [CQ.text("网络请求错误或内部错误")];
@@ -125,19 +123,18 @@ class CQBotPicture extends Plug {
 	/**随机东方图*/
 	@canCallGroup()
 	@canCallPrivate()
-	async getTouHouPNG(event: CQMessage): Promise<CQTag[]> {
+	protected async getTouHouPNG(event: CQMessage): Promise<CQTag[]> {
 		this.logger.log("开始东方");
 		const userId: number = event.context.user_id;
 		const member = CQData.getMember(userId);
-		if (member.exp < 5) {
+		if (!member.addExp(-5)) {
 			return [CQ.text("不够活跃")];
 		}
-		member.exp -= 5;
 		try {
 			const json = await paulzzhTouHou();
 			return [CQ.image((json.url)), CQ.text("作者:" + json.author)];
 		} catch (e) {
-			member.exp += 5;
+			member.addExp(5);
 			this.logger.error(e);
 			return [CQ.text(`东方图API调用错误`)];
 		}
@@ -145,7 +142,7 @@ class CQBotPicture extends Plug {
 
 	@canCallGroup()
 	@canCallPrivate()
-	async getSetuSet(): Promise<CQTag[]> {
+	protected async getSetuSet(): Promise<CQTag[]> {
 		return [CQ.text(["", ...this.setuSet].join("\n"))];
 	}
 

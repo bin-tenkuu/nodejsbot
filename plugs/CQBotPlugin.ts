@@ -16,7 +16,7 @@ class CQBotPlugin extends Plug {
 
 	@canCallPrivate()
 	@canCallGroup()
-	async getter(event: CQMessage, execArray: RegExpExecArray): Promise<CQTag[]> {
+	protected async getter(event: CQMessage, execArray: RegExpExecArray): Promise<CQTag[]> {
 		event.stopPropagation();
 		const {type} = execArray.groups as { type?: string } ?? {};
 		if (type === undefined) {
@@ -52,7 +52,7 @@ class CQBotPlugin extends Plug {
 
 	@canCallPrivate()
 	@canCallGroup()
-	async setter(event: CQMessage, execArray: RegExpExecArray): Promise<CQTag[]> {
+	protected async setter(event: CQMessage, execArray: RegExpExecArray): Promise<CQTag[]> {
 		event.stopPropagation();
 		const {type, other = ""} = execArray.groups as { type?: string, other?: string } ?? {};
 		switch (type) {
@@ -70,7 +70,7 @@ class CQBotPlugin extends Plug {
 	 */
 	@canCallPrivate()
 	@canCallGroup()
-	async corpusList(event: CQMessage, execArray: RegExpExecArray): Promise<CQTag[]> {
+	protected async corpusList(event: CQMessage, execArray: RegExpExecArray): Promise<CQTag[]> {
 		event.stopPropagation();
 		const {type, open} = execArray.groups as { type?: "私聊" | "群聊", open?: "开" | "关" } ?? {};
 		let isOpen: boolean;
@@ -93,7 +93,7 @@ class CQBotPlugin extends Plug {
 	 */
 	@canCallPrivate()
 	@canCallGroup()
-	async corpusStat(event: CQMessage, execArray: RegExpExecArray): Promise<CQTag[]> {
+	protected async corpusStat(event: CQMessage, execArray: RegExpExecArray): Promise<CQTag[]> {
 		event.stopPropagation();
 		const {
 			type, open, nums,
@@ -120,7 +120,7 @@ class CQBotPlugin extends Plug {
 
 	@canCallPrivate()
 	@canCallGroup()
-	async corpusInfo(event: CQMessage, execArray: RegExpExecArray): Promise<CQTag[]> {
+	protected async corpusInfo(event: CQMessage, execArray: RegExpExecArray): Promise<CQTag[]> {
 		event.stopPropagation();
 		const {
 			type, nums,
@@ -143,7 +143,7 @@ class CQBotPlugin extends Plug {
 
 	@canCallPrivate()
 	@canCallGroup()
-	async pluginInfo(event: CQMessage, execArray: RegExpExecArray): Promise<CQTag[]> {
+	protected async pluginInfo(event: CQMessage, execArray: RegExpExecArray): Promise<CQTag[]> {
 		event.stopPropagation();
 		const {other} = execArray.groups as { other?: string } ?? {};
 		if (other === undefined) {
@@ -166,7 +166,7 @@ class CQBotPlugin extends Plug {
 
 	@canCallPrivate()
 	@canCallGroup()
-	async getTQL(): Promise<CQTag[]> {
+	protected async getTQL(): Promise<CQTag[]> {
 		if (Math.random() < 0.8) {
 			return [];
 		}

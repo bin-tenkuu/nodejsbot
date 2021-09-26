@@ -15,7 +15,7 @@ class CQBotSearch extends Plug {
 	}
 
 	@canCallGroup()
-	async getSauceNAO(event: CQEvent<"message.group">): Promise<CQTag[]> {
+	protected async getSauceNAO(event: CQEvent<"message.group">): Promise<CQTag[]> {
 		const tag: CQTag | undefined = event.cqTags.find(tag => tag instanceof CQImage);
 		if (tag === undefined) {
 			return [CQ.text("请带上图片")];

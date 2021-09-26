@@ -25,7 +25,7 @@ class CQBotCOC extends Plug {
 
 	@canCallGroup()
 	@canCallPrivate()
-	async getDiceStat(event: CQMessage): Promise<CQTag[]> {
+	protected async getDiceStat(event: CQMessage): Promise<CQTag[]> {
 		event.stopPropagation();
 		let str = "";
 		this.shortKey.forEach((value, key) => {
@@ -39,7 +39,7 @@ class CQBotCOC extends Plug {
 
 	@canCallGroup()
 	@canCallPrivate()
-	async getDiceSet(event: CQMessage, execArray: RegExpExecArray): Promise<CQTag[]> {
+	protected async getDiceSet(event: CQMessage, execArray: RegExpExecArray): Promise<CQTag[]> {
 		event.stopPropagation();
 		const {key, value} = execArray.groups as { key?: string, value?: string } ?? {};
 		if (key === undefined || key.length > 5) {
@@ -64,7 +64,7 @@ class CQBotCOC extends Plug {
 
 	@canCallGroup()
 	@canCallPrivate()
-	async getDice(event: CQMessage, execArray: RegExpExecArray): Promise<CQTag[]> {
+	protected async getDice(event: CQMessage, execArray: RegExpExecArray): Promise<CQTag[]> {
 		event.stopPropagation();
 		let {times = "1", dice} = execArray.groups as { times: string, dice: string } ?? {};
 		if (dice === undefined) {
@@ -82,7 +82,7 @@ class CQBotCOC extends Plug {
 
 	@canCallGroup()
 	@canCallPrivate()
-	async getRandom(event: CQMessage, execArray: RegExpExecArray): Promise<CQTag[]> {
+	protected async getRandom(event: CQMessage, execArray: RegExpExecArray): Promise<CQTag[]> {
 		event.stopPropagation();
 		const {num, times = 2} = execArray.groups as { num?: string, times?: string } ?? {};
 		if (num === undefined) {
@@ -94,7 +94,7 @@ class CQBotCOC extends Plug {
 
 	@canCallGroup()
 	@canCallPrivate()
-	async setCheater(event: CQMessage): Promise<CQTag[]> {
+	protected async setCheater(event: CQMessage): Promise<CQTag[]> {
 		event.stopPropagation();
 		this.cheater = !this.cheater;
 		return [CQ.text("全1" + (this.cheater ? "开" : "关"))];
@@ -102,7 +102,7 @@ class CQBotCOC extends Plug {
 
 	@canCallGroup()
 	@canCallPrivate()
-	async setDiceType(event: CQMessage, execArray: RegExpExecArray): Promise<CQTag[]> {
+	protected async setDiceType(event: CQMessage, execArray: RegExpExecArray): Promise<CQTag[]> {
 		event.stopPropagation();
 		const {operator} = execArray.groups as { operator: string } ?? {};
 		if (operator == null) {
@@ -121,7 +121,7 @@ class CQBotCOC extends Plug {
 
 	@canCallGroup()
 	@canCallPrivate()
-	async getAddedRandom(event: CQMessage, execArray: RegExpExecArray): Promise<CQTag[]> {
+	protected async getAddedRandom(event: CQMessage, execArray: RegExpExecArray): Promise<CQTag[]> {
 		event.stopPropagation();
 		const {num: numStr} = execArray.groups as {
 			num?: string
