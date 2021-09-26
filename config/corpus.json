@@ -138,12 +138,12 @@
 			"isOpen": false
 		}, {
 			"name": "(复读)",
-			"regexp": "^.+$",
+			"regexp": "^",
 			"reply": "[FN:CQBotRepeat.getRepeat]",
 			"canPrivate": false
 		}, {
 			"name": "(@复读AI)",
-			"regexp": "^.*$",
+			"regexp": "^",
 			"reply": "[FN:CQBot.MemeAI]",
 			"canPrivate": false
 		}, {

@@ -36,12 +36,22 @@ class CQData extends Plug {
 			minLength: msg.minLength ?? 0,
 			maxLength: msg.maxLength ?? 100,
 		}));
-		// this.memberMap
 		db.start(async db => {
-			const all = await db.all<{ id: number, exp: number, baned: 0 | 1, name: string }[]>(
-					`SELECT id, exp, baned, name FROM Members`);
-			for (const {id, ...member} of all) {
-				this.memberMap.set(id, member);
+			let sql: string;
+			// this.memberMap
+			{
+				sql = "SELECT id, name, exp, gmt_modified, is_baned FROM Members LIMIT $size*$page,$size;";
+				const sqlData = {$size: 100, $page: 0};
+				const stmt = await db.prepare(sql, sqlData);
+				let result: IMember[];
+				do {
+					this.logger.debug(`select Members size:${sqlData.$page * sqlData.$size}`);
+					result = await stmt.all<IMember[]>(sqlData);
+					++sqlData.$page;
+					for (const iMember of result) {
+						this.memberMap.set(iMember.id, new Member(iMember));
+					}
+				} while (result.length === sqlData.$size);
 			}
 			this.autoSave();
 		});
@@ -57,41 +67,60 @@ class CQData extends Plug {
 	public getMember(id: number): Member {
 		let member: Member | undefined = this.memberMap.get(id);
 		if (member === undefined) {
-			member = {baned: 0, exp: 0, name: ""};
+			member = new Member(id);
 			this.memberMap.set(id, member);
 		}
 		return member;
 	}
 
+	public getMembers(): IterableIterator<Member> {
+		return this.memberMap.values();
+	}
+
 	public getBaned(id: number): boolean {
 		let member: Member | undefined = this.memberMap.get(id);
 		if (member === undefined) {
-			member = {baned: 0, exp: 0, name: ""};
+			member = new Member(id);
 			this.memberMap.set(id, member);
 		}
-		return member.baned === 1;
+		return member.is_baned === 1;
+	}
+
+	public setBaned(id: number, is_baned: 0 | 1 | boolean): void {
+		let member: Member | undefined = this.memberMap.get(id);
+		if (member === undefined) {
+			member = new Member(id);
+			this.memberMap.set(id, member);
+		}
+		member.is_baned = is_baned ? 1 : 0;
 	}
 
 	private async save(): Promise<void> {
 		if (this.saving) {
 			return;
 		}
+		this.saving = true;
 		db.start(async db => {
-			this.saving = true;
-			this.logger.info("保存开始");
 			// this.memberMap
 			{
-				const sql = `INSERT INTO Members(id, name, exp, time, baned)
-        VALUES ($id, $name, $exp, $time, $baned)
-        ON CONFLICT(id) DO UPDATE SET name=$id, exp=$exp, time=$time, baned=$baned;`;
+				this.logger.info("保存开始(Members)");
+				let n = 0;
+				const sql = `INSERT INTO Members(id, name, exp, gmt_modified, is_baned, gmt_create)
+        VALUES ($id, $name, $exp, $time, $baned, $time)
+        ON CONFLICT(id) DO UPDATE SET name=$name, exp=$exp, gmt_modified=$time, is_baned=$baned;`;
 				const stmt = await db.prepare(sql);
-				for (const memberMap of this.memberMap) {
-					const [id, {exp, baned}] = memberMap;
-					await stmt.run({$id: id, $exp: exp, $time: Date.now(), $baned: baned});
+				for (const member of this.memberMap.values()) {
+					if (!member.is_modified) {
+						continue;
+					}
+					const {id, exp, is_baned, name, gmt_modified} = member;
+					await stmt.run({$id: id, $exp: exp, $time: gmt_modified, $baned: is_baned, $name: name});
+					member.is_modified = false;
+					++n;
 				}
 				await stmt.finalize();
+				this.logger.info("保存结束(Members):" + n);
 			}
-			this.logger.info("保存结束");
 			this.saving = false;
 		});
 	}
@@ -118,4 +147,71 @@ export type Corpus = {
 	needAdmin: boolean, isOpen: boolean, delMSG: number, canGroup: boolean,
 	canPrivate: boolean, help: string | undefined, minLength: number, maxLength: number
 };
-export type Member = { exp: number, baned: 0 | 1, name: string };
+
+type IMember = { readonly id: number, name: string, exp: number, gmt_modified: number, is_baned: 0 | 1, };
+
+export class Member implements IMember {
+	public is_modified: boolean = false;
+	private readonly _id: number;
+
+	constructor(obj: IMember | number) {
+		if (typeof obj === "number") {
+			this._id = obj;
+			return;
+		} else {
+			this._id = obj.id;
+			this._name = obj.name;
+			this._exp = obj.exp;
+			this._is_baned = obj?.is_baned;
+			this._gmt_modified = obj.gmt_modified;
+		}
+	}
+
+	private modified() {
+		this._gmt_modified = Date.now();
+		this.is_modified = true;
+	}
+
+	private _is_baned: 0 | 1 = 0;
+
+	private _gmt_modified: number = 0;
+
+	private _name: string = "";
+
+	private _exp: number = 0;
+
+	public get exp() {
+		return this._exp;
+	}
+
+	public set exp(v) {
+		this._exp = v;
+		this.modified();
+	}
+
+	public get gmt_modified(): number {
+		return this._gmt_modified;
+	}
+
+	public get id(): number {
+		return this._id;
+	}
+
+	public get is_baned(): 0 | 1 {
+		return this._is_baned;
+	}
+
+	public set is_baned(value: 0 | 1) {
+		this._is_baned = value;
+		this.modified();
+	}
+
+	public get name(): string {
+		return this._name;
+	}
+
+	public set name(value: string) {
+		this._name = value;
+		this.modified();
+	}
+}

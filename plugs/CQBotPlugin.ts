@@ -2,7 +2,7 @@ import {CQ, CQTag} from "go-cqwebsocket";
 import {Plug} from "../Plug.js";
 import {canCallGroup, canCallPrivate} from "../utils/Annotation.js";
 import {CQMessage} from "../utils/Util.js";
-import {default as CQData, Corpus} from "./CQData.js";
+import {Corpus, default as CQData} from "./CQData.js";
 
 
 class CQBotPlugin extends Plug {
@@ -35,10 +35,9 @@ class CQBotPlugin extends Plug {
 			});
 		case "ban":
 			const banList: number[] = [];
-			for (const memberMap of CQData.memberMap) {
-				const [number, {baned}] = memberMap;
-				if (baned === 1) {
-					banList.push(number);
+			for (const {id, is_baned} of CQData.getMembers()) {
+				if (is_baned === 1) {
+					banList.push(id);
 				}
 			}
 			const s = banList.join("\n");
@@ -190,7 +189,7 @@ class CQBotPlugin extends Plug {
 	private static setBanQQ(text: string, ban: 0 | 1) {
 		const matches = text.match(/\d+/g) ?? [];
 		for (const value of matches) {
-			CQData.getMember(+value).baned = ban;
+			CQData.setBaned(+value, ban);
 		}
 		return matches.join("\n");
 	}

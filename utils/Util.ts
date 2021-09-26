@@ -67,13 +67,8 @@ export function sendAuto(event: CQMessage, message: CQTag[] | string): void {
 
 export function sendPrivate<T>({bot, context: {user_id = adminId}}: hasUser<T>,
 		message: CQTag[] | string): PromiseRes<MessageId> {
-	if (typeof message === "string") {
-		message = CQ.parse(message);
-	}
-	const msg = message;
-	return bot.send("send_private_msg", {
-		message: <any>msg, user_id,
-	}).catch(() => {
+	const msg = typeof message === "string" ? CQ.parse(message) : message;
+	return bot.send_private_msg(user_id, <any>msg).catch(() => {
 		return bot.send_private_msg(user_id, cast2Text(msg));
 	}).catch(() => {
 		return bot.send_private_msg(user_id, "私聊消息发送失败");
@@ -82,10 +77,7 @@ export function sendPrivate<T>({bot, context: {user_id = adminId}}: hasUser<T>,
 
 export function sendGroup<T>({bot, context: {group_id = adminGroup}}: hasGroup<T>,
 		message: CQTag[] | string): PromiseRes<MessageId> {
-	if (typeof message === "string") {
-		message = CQ.parse(message);
-	}
-	const msg = message;
+	const msg = typeof message === "string" ? CQ.parse(message) : message;
 	return bot.send_group_msg(group_id, <any>msg).catch(() => {
 		return bot.send_group_msg(group_id, cast2Text(msg));
 	}).catch(() => {

@@ -70,6 +70,11 @@ class CQBotEvent extends Plug {
 					this.logger.error(reason.msg);
 				});
 			},
+			"notice.client_status": (event) => {
+				const {client: {device_name, device_kind}, online} = event.context;
+				sendAdminQQ(event, `其他客户端(${online ? "上线" : "下线"}):\n设备名称:${device_name
+				}\n设备类型:${device_kind}`);
+			},
 		});
 	}
 

@@ -47,7 +47,7 @@ class CQBotCOC extends Plug {
 		}
 		if (value === undefined) {
 			db.start(async db => {
-				await db.run(`DELETE FROM COCShortKey WHERE KEY = ?`, key);
+				await db.run("DELETE FROM COCShortKey WHERE key=?", key);
 			});
 			this.shortKey.delete(key);
 			return [CQ.text(`删除key:${key}`)];
@@ -57,7 +57,7 @@ class CQBotCOC extends Plug {
 		}
 		this.shortKey.set(key, value);
 		db.start(async db => {
-			await db.run(`INSERT INTO COCShortKey(key, value) VALUES (?, ?)`, key, value);
+			await db.run("INSERT INTO COCShortKey(key, value) VALUES (?, ?);", key, value);
 		});
 		return [CQ.text(`添加key:${key}=${value}`)];
 	}
@@ -203,7 +203,7 @@ class CQBotCOC extends Plug {
 
 	private readShortKey() {
 		db.start(async db => {
-			const all = await db.all<{ key: string, value: string }[]>(`SELECT KEY, VALUE FROM COCShortKey`);
+			const all = await db.all<{ key: string, value: string }[]>("SELECT key, value FROM COCShortKey;");
 			all.forEach(({key, value}) => this.shortKey.set(key, value));
 		});
 	}
