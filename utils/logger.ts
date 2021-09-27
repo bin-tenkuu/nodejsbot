@@ -73,12 +73,15 @@ export class Logable {
 	public static get logger(): Logger {
 		if (this !== Logable) {
 			Object.defineProperty(this, "_logger", {
-				configurable: true, enumerable: true,
+				configurable: true,
+				enumerable: false,
 				value: getLogger(this.name),
 			});
 			Object.defineProperty(this, "logger", {
-				configurable: true, enumerable: false,
-				get: LoggerGetter, set: undefined,
+				configurable: true,
+				enumerable: false,
+				get: LoggerGetter,
+				set: undefined,
 			});
 		}
 		return this._logger;
