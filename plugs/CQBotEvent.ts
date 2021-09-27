@@ -99,8 +99,8 @@ class CQBotEvent extends Plug {
 			this.cache.set(qq, true);
 		}
 		event.stopPropagation();
-		const {exp, is_baned}: Member = CQData.getMember(qq);
-		return [CQ.at(qq), CQ.text(`ban?:${"否是"[is_baned]} 活跃:${exp}`)];
+		const {exp}: Member = CQData.getMember(qq);
+		return [CQ.at(qq), CQ.text(`${exp}`)];
 	}
 
 }
