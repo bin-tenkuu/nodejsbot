@@ -1,24 +1,20 @@
-import {CQ, CQWebSocket} from "go-cqwebsocket";
+import {CQ, CQTag, CQWebSocket} from "go-cqwebsocket";
 import {PartialSocketHandle} from "go-cqwebsocket/out/Interfaces";
 import {Plug} from "../Plug.js";
 import {canCallGroup, canCallPrivate} from "../utils/Annotation.js";
-import {Member} from "../utils/Models.js";
 import {DataCache} from "../utils/repeat.js";
 import {CQMessage, sendAdminQQ, sendGroup, sendPrivate} from "../utils/Util.js";
 import CQData from "./CQData.js";
 
 class CQBotEvent extends Plug {
-	private header?: PartialSocketHandle;
-	private cache: DataCache<boolean>;
+	private header: PartialSocketHandle | undefined = undefined;
+	private readonly cache = new DataCache<number, boolean>();
 
 	constructor() {
 		super(module);
 		this.name = "QQ其他-事件";
 		this.description = "QQ的各种事件，非群聊";
 		this.version = 0.1;
-
-		this.header = undefined;
-		this.cache = new DataCache();
 	}
 
 	async install() {
@@ -90,7 +86,7 @@ class CQBotEvent extends Plug {
 
 	@canCallGroup()
 	@canCallPrivate()
-	protected async getState(event: CQMessage) {
+	protected async getState(event: CQMessage, execArray: RegExpExecArray): Promise<CQTag[]> {
 		const qq: number = event.context.user_id;
 		if (event.contextType === "message.group") {
 			if (this.cache.has(qq)) {
@@ -99,7 +95,7 @@ class CQBotEvent extends Plug {
 			this.cache.set(qq, true);
 		}
 		event.stopPropagation();
-		const {exp}: Member = CQData.getMember(qq);
+		const exp = CQData.getMember(+(execArray.groups?.qq ?? qq)).exp;
 		return [CQ.at(qq), CQ.text(`${exp}`)];
 	}
 

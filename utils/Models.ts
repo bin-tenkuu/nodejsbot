@@ -215,11 +215,46 @@ export class Member implements IMember, JSONAble {
 	}
 }
 
-export type Corpus = {
-	name: string, regexp: RegExp, reply: string, forward: boolean,
-	needAdmin: boolean, isOpen: boolean, delMSG: number, canGroup: boolean,
-	canPrivate: boolean, help: string | undefined, minLength: number, maxLength: number
+type ICorpus = {
+	name: string, regexp: string, reply?: string, forward?: boolean,
+	needAdmin?: boolean, isOpen?: boolean, delMSG?: number, canGroup?: boolean,
+	canPrivate?: boolean, help?: string | undefined, minLength?: number, maxLength?: number
+	limitTime?: number
 };
+
+export class Corpus {
+	public canGroup: boolean;
+	public canPrivate: boolean;
+	public delMSG: number;
+	public forward: boolean;
+	public help: string | undefined;
+	public isOpen: boolean;
+	public maxLength: number;
+	public minLength: number;
+	public name: string;
+	public needAdmin: boolean;
+	public reply: string;
+	public regexp: RegExp;
+
+	// public limitTime: number;
+
+	constructor(msg: ICorpus) {
+		this.name = msg.name ?? "";
+		this.regexp = new RegExp(msg.regexp ?? "$^");
+		this.reply = msg.reply ?? "";
+		this.forward = msg.forward === true;
+		this.needAdmin = msg.needAdmin === true;
+		this.isOpen = msg.isOpen !== false;
+		this.delMSG = msg.delMSG ?? 0;
+		this.canGroup = msg.canGroup !== false;
+		this.canPrivate = msg.canPrivate !== false;
+		this.help = msg.help;
+		this.minLength = msg.minLength ?? 0;
+		this.maxLength = msg.maxLength ?? 100;
+		// this.limitTime = msg.limitTime ?? 0;
+	}
+}
+
 export type IPage = { page: number, size: number }
 
 export class Page implements IPage, JSONAble {

@@ -86,6 +86,11 @@
 						"type": "number",
 						"description": "目标文本的最大长度, 超出时跳过 regexp 匹配",
 						"default": 100
+					},
+					"limitTime": {
+						"type": "number",
+						"description": "限制时间, 单位秒",
+						"default": 0
 					}
 				},
 				"required": ["name", "regexp"],

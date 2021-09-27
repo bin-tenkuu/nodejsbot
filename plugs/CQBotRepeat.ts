@@ -6,7 +6,9 @@ import {canCallGroup} from "../utils/Annotation.js";
 import {DataCache} from "../utils/repeat.js";
 
 class CQBotRepeat extends Plug {
-	private repeatCache = new DataCache<RepeatCache>(undefined, (l, r) => l.msg === r.msg);
+	private repeatCache = new DataCache<number, RepeatCache>(undefined,
+			(l, r) => l.msg === r.msg,
+	);
 
 	constructor() {
 		super(module);

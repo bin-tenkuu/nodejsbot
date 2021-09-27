@@ -7,7 +7,7 @@ import {default as CQData} from "./CQData.js";
 
 
 class CQBotPicture extends Plug {
-	public setuSet: Set<string>;
+	public setuSet = new Set<string>();
 
 
 	constructor() {
@@ -15,7 +15,11 @@ class CQBotPicture extends Plug {
 		this.name = "QQ群聊-图片相关";
 		this.description = "QQ群聊发送各种图片";
 		this.version = 0;
-		this.setuSet = new Set<string>();
+	}
+
+	public async uninstall(): Promise<void> {
+		this.logger.info(`${[...this.setuSet].join(" | ")}`);
+		return super.uninstall();
 	}
 
 	/**获取随机色图*/

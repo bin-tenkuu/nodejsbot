@@ -4,37 +4,20 @@ import {db} from "../utils/database.js";
 import {Corpus, IMember, IPage, Member, Page} from "../utils/Models.js";
 
 class CQData extends Plug {
-	public corpora: Corpus[];
-	private readonly memberMap: Map<number, Member>;
-	private autoSaveTimeout: NodeJS.Timeout | undefined;
-	private saving: boolean;
+	public corpora: Corpus[] = [];
+	private readonly memberMap = new Map<number, Member>();
+	private autoSaveTimeout: NodeJS.Timeout | undefined = undefined;
+	private saving: boolean = false;
 
 	public constructor() {
 		super(module);
 		this.name = "QQ机器人";
 		this.description = "用于连接go-cqhttp服务的bot";
 		this.version = 0;
-		this.corpora = [];
-		this.memberMap = new Map();
-		this.autoSaveTimeout = undefined;
-		this.saving = false;
 	}
 
 	public async install() {
-		this.corpora = corpora.map(msg => ({
-			name: msg.name ?? "",
-			regexp: new RegExp(msg.regexp ?? "$^"),
-			reply: msg.reply ?? "",
-			forward: msg.forward === true,
-			needAdmin: msg.needAdmin === true,
-			isOpen: msg.isOpen !== false,
-			delMSG: msg.delMSG ?? 0,
-			canGroup: msg.canGroup !== false,
-			canPrivate: msg.canPrivate !== false,
-			help: msg.help,
-			minLength: msg.minLength ?? 0,
-			maxLength: msg.maxLength ?? 100,
-		}));
+		this.corpora = corpora.map(msg => new Corpus(msg));
 		db.async(async db => {
 			// this.memberMap
 			{

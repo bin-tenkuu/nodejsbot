@@ -6,13 +6,12 @@ import {canCallGroup, canCallPrivate} from "../utils/Annotation.js";
 import {Where} from "../utils/Generators.js";
 import {Corpus} from "../utils/Models.js";
 import {
-	CQMessage, deleteMsg, isAdminQQ, isAtMe, onlyText, parseMessage, sendAdminQQ, sendForward, sendForwardQuick,
-	sendGroup, sendPrivate,
+	CQMessage, deleteMsg, isAdminQQ, isAtMe, onlyText, parseMessage, sendAdminQQ, sendForward, sendForwardQuick, sendGroup, sendPrivate,
 } from "../utils/Util";
 import {default as CQDate} from "./CQData.js";
 
 class CQBot extends Plug {
-	public bot: CQWebSocket;
+	public bot: CQWebSocket = new CQWebSocket(CQWS);
 
 	private sendStateInterval?: NodeJS.Timeout;
 
@@ -21,7 +20,6 @@ class CQBot extends Plug {
 		this.name = "QQ机器人";
 		this.description = "用于连接go-cqhttp服务的bot";
 		this.version = 0;
-		this.bot = new CQWebSocket(CQWS);
 		this.init();
 	}
 
@@ -169,9 +167,9 @@ class CQBot extends Plug {
 				if (member.baned) {
 					return;
 				}
-				CQBot.sendCorpusTags(event, async (tags, element) => {
+				CQBot.sendCorpusTags(event, async (tags, corpus) => {
 					let pro: PromiseRes<MessageId>;
-					if (!element.forward) {
+					if (!corpus.forward) {
 						pro = sendGroup(event, tags);
 					} else {
 						if (tags[0].tagName === "node") {
@@ -180,21 +178,21 @@ class CQBot extends Plug {
 							pro = sendForwardQuick(event, tags);
 						}
 					}
-					if (element.delMSG > 0) {
+					if (corpus.delMSG > 0) {
 						await pro.then(value => {
-							deleteMsg(event, value.message_id, element.delMSG);
+							deleteMsg(event, value.message_id, corpus.delMSG);
 						}, NOP);
 					} else {
 						await pro.catch(NOP);
 					}
-					Plug.hrtime(time, element.name);
+					Plug.hrtime(time, corpus.name);
 				}).catch(NOP);
 			},
 			"message.private": (event) => {
 				const time = process.hrtime();
-				CQBot.sendCorpusTags(event, async (tags, c) => {
+				CQBot.sendCorpusTags(event, async (tags, corpus) => {
 					await sendPrivate(event, tags).catch(NOP);
-					Plug.hrtime(time, c.name);
+					Plug.hrtime(time, corpus.name);
 				}).catch(NOP);
 			},
 		});

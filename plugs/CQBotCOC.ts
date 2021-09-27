@@ -8,18 +8,17 @@ import {CQMessage} from "../utils/Util.js";
 
 class CQBotCOC extends Plug {
 	private shortKey = new Map<string, string>();
-	private cheater: boolean;
-	private cache: DataCache<DiceCache>;
-	private specialEffects: string;
+	private cheater: boolean = false;
+	private readonly cache = new DataCache<number, DiceCache>(undefined,
+			(l, r) => l.max === r.max,
+	);
+	private specialEffects: string = "bug";
 
 	constructor() {
 		super(module);
 		this.name = "QQ群聊-COC跑团相关";
 		this.description = "一些跑团常用功能";
 		this.version = 1;
-		this.cheater = false;
-		this.cache = new DataCache<DiceCache>(undefined, (l, r) => l.max === r.max);
-		this.specialEffects = "bug";
 		this.readShortKey();
 	}
 

@@ -2,8 +2,8 @@ import Cache from "node-cache";
 
 export type IEqual<T> = (l: T, r: T) => boolean;
 
-export class DataCache<T> {
-	public _equatable: IEqual<T>;
+export class DataCache<TKey extends Cache.Key, TValue> {
+	public _equatable: IEqual<TValue>;
 	private cache: Cache;
 
 	/**
@@ -11,17 +11,17 @@ export class DataCache<T> {
 	 * @param options 未明确指定时,不克隆,过期时间1h,过期后删除
 	 * @param equatable 比较器,默认使用强比较
 	 */
-	constructor(options?: Cache.Options | undefined | null, equatable: IEqual<T> = (l, r) => l === r) {
+	constructor(options?: Cache.Options | undefined | null, equatable: IEqual<TValue> = (l, r) => l === r) {
 		this.cache = new Cache(options ?? {useClones: false, stdTTL: 600, deleteOnExpire: true});
 		this._equatable = equatable;
 	}
 
-	get(key: number, data?: undefined): T | undefined;
+	get(key: TKey, data?: undefined): TValue | undefined;
 
-	get(key: number, data: T): T;
+	get(key: TKey, data: TValue): TValue;
 
-	get(key: number, data: T | undefined): T | undefined {
-		let node = this.cache.get<T>(key);
+	get(key: TKey, data: TValue | undefined): TValue | undefined {
+		let node = this.cache.get<TValue>(key);
 		if (data == null) {
 			return node;
 		}
@@ -32,15 +32,15 @@ export class DataCache<T> {
 		return node;
 	}
 
-	set(key: number, data: T): void {
+	set(key: TKey, data: TValue): void {
 		this.cache.set(key, data);
 	}
 
-	del(key: number): void {
+	del(key: TKey): void {
 		this.cache.del(key);
 	}
 
-	has(key: number): boolean {
+	has(key: TKey): boolean {
 		return this.cache.has(key);
 	}
 
