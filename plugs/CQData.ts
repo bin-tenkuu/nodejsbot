@@ -73,7 +73,7 @@ class CQData extends Plug {
 				let n = 0;
 				const stmt = db.prepare<IMember>(`INSERT INTO Members(id, name, exp, gmt_modified, is_baned, gmt_create)
         VALUES ($id, $name, $exp, $time, $baned, $time)
-        ON CONFLICT(id) DO UPDATE SET name=$name, exp=$exp, gmt_modified=$time, is_baned=$baned;`);
+        ON CONFLICT(id) DO UPDATE SET name=$name, exp=$exp, gmt_modified=$gmt_modified, is_baned=$baned;`);
 				for (const member of this.memberMap.values()) {
 					if (!member.is_modified) {
 						continue;
