@@ -1,6 +1,6 @@
 import {
-	BaseLayout, ColoredLayout, Configuration, configure, ConsoleAppender, DateFileAppender, getLogger as getter, Logger,
-	LogLevelFilterAppender, SyncfileAppender,
+	BaseLayout, ColoredLayout, Configuration, configure, ConsoleAppender, DateFileAppender, getLogger as getter, Logger, LogLevelFilterAppender,
+	SyncfileAppender,
 } from "log4js";
 
 configure(<Configuration>{
@@ -63,12 +63,23 @@ export function getLogger(name?: string) {
 	return getter(name + "\t");
 }
 
+function LoggerGetter(this: { _logger: Logger }): Logger {
+	return this._logger;
+}
+
 export class Logable {
 	private static _logger: Logger = logger;
 
 	public static get logger(): Logger {
-		if (!Object.getOwnPropertyNames(this).includes("_logger")) {
-			this._logger = getLogger(this.name);
+		if (this !== Logable) {
+			Object.defineProperty(this, "_logger", {
+				configurable: true, enumerable: true,
+				value: getLogger(this.name),
+			});
+			Object.defineProperty(this, "logger", {
+				configurable: true, enumerable: false,
+				get: LoggerGetter, set: undefined,
+			});
 		}
 		return this._logger;
 	}

@@ -7,8 +7,7 @@
 
 *.tgz
 /logs
-/config/*.json
-!/config/schema/
+/config/config.json
 /db.db
 *.js
 /*.json

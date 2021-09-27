@@ -72,7 +72,7 @@ class CQData extends Plug {
 				this.logger.info("保存开始(Members)");
 				let n = 0;
 				const stmt = db.prepare<IMember>(`INSERT INTO Members(id, name, exp, gmt_modified, is_baned, gmt_create)
-        VALUES ($id, $name, $exp, $time, $baned, $time)
+        VALUES ($id, $name, $exp, $gmt_modified, $baned, $gmt_modified)
         ON CONFLICT(id) DO UPDATE SET name=$name, exp=$exp, gmt_modified=$gmt_modified, is_baned=$baned;`);
 				for (const member of this.memberMap.values()) {
 					if (!member.is_modified) {
