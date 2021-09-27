@@ -1,10 +1,15 @@
 import {CQ, CQWebSocket} from "go-cqwebsocket";
 import {PartialSocketHandle} from "go-cqwebsocket/out/Interfaces";
 import {Plug} from "../Plug.js";
-import {sendAdminQQ, sendGroup, sendPrivate} from "../utils/Util.js";
+import {canCallGroup, canCallPrivate} from "../utils/Annotation.js";
+import {Member} from "../utils/Models.js";
+import {DataCache} from "../utils/repeat.js";
+import {CQMessage, sendAdminQQ, sendGroup, sendPrivate} from "../utils/Util.js";
+import CQData from "./CQData.js";
 
 class CQBotEvent extends Plug {
 	private header?: PartialSocketHandle;
+	private cache: DataCache<boolean>;
 
 	constructor() {
 		super(module);
@@ -13,6 +18,7 @@ class CQBotEvent extends Plug {
 		this.version = 0.1;
 
 		this.header = undefined;
+		this.cache = new DataCache();
 	}
 
 	async install() {
@@ -81,6 +87,22 @@ class CQBotEvent extends Plug {
 	async uninstall() {
 		require("./CQBot.js").default.bot.unbind(this.header);
 	}
+
+	@canCallGroup()
+	@canCallPrivate()
+	protected async getState(event: CQMessage) {
+		const qq: number = event.context.user_id;
+		if (event.contextType === "message.group") {
+			if (this.cache.has(qq)) {
+				return [];
+			}
+			this.cache.set(qq, true);
+		}
+		event.stopPropagation();
+		const {exp, is_baned}: Member = CQData.getMember(qq);
+		return [CQ.at(qq), CQ.text(`ban?:${"否是"[is_baned]} 活跃:${exp}`)];
+	}
+
 }
 
 export default new CQBotEvent();

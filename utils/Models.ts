@@ -132,3 +132,119 @@ export type YHType = {
 	"width": string,
 	"height": string
 };
+
+export type IMember = { readonly id: number, name: string, exp: number, gmt_modified: number, is_baned: 0 | 1, };
+
+export class Member implements IMember, JSONAble {
+	public is_modified: boolean = false;
+	private readonly _id: number;
+	private _is_baned: 0 | 1 = 0;
+	private _gmt_modified: number = 0;
+	private _name: string = "";
+	private _exp: number = 0;
+
+	constructor(obj: IMember | number) {
+		if (typeof obj === "number") {
+			this._id = obj;
+			return;
+		} else {
+			this._id = obj.id;
+			this._name = obj.name;
+			this._exp = obj.exp;
+			this._is_baned = obj?.is_baned;
+			this._gmt_modified = obj.gmt_modified;
+		}
+	}
+
+	public addExp(exp: number): boolean {
+		exp += this._exp;
+		if (exp < 0) {
+			return false;
+		} else {
+			this.exp = exp;
+			return true;
+		}
+	}
+
+	public toJSON(): IMember {
+		return {id: this._id, exp: this._exp, name: this._name, gmt_modified: this._gmt_modified, is_baned: this._is_baned};
+	}
+
+	private modified() {
+		this._gmt_modified = Date.now();
+		this.is_modified = true;
+	}
+
+	public get exp() {
+		return this._exp;
+	}
+
+	public set exp(v) {
+		this._exp = v;
+		this.modified();
+	}
+
+	public get gmt_modified(): number {
+		return this._gmt_modified;
+	}
+
+	public get id(): number {
+		return this._id;
+	}
+
+	public get is_baned(): 0 | 1 {
+		return this._is_baned;
+	}
+
+	public set is_baned(value: 0 | 1) {
+		this._is_baned = value;
+		this.modified();
+	}
+
+	public get name(): string {
+		return this._name;
+	}
+
+	public set name(value: string) {
+		this._name = value;
+		this.modified();
+	}
+
+	public get baned(): boolean {
+		return this._is_baned !== 0;
+	}
+}
+
+export type Corpus = {
+	name: string, regexp: RegExp, reply: string, forward: boolean,
+	needAdmin: boolean, isOpen: boolean, delMSG: number, canGroup: boolean,
+	canPrivate: boolean, help: string | undefined, minLength: number, maxLength: number
+};
+export type IPage = { page: number, size: number }
+
+export class Page implements IPage, JSONAble {
+	public size: number;
+	public page: number;
+
+	constructor(size: number, page: number = 0) {
+		this.page = page;
+		this.size = size;
+	}
+
+	public toJSON(): IPage {
+		return {page: this.page, size: this.size};
+	}
+
+	public nextPage(num: number = 1) {
+		this.page += num;
+	}
+
+	public get range(): [number, number] {
+		const n: number = this.size * this.page;
+		return [n, n + this.size];
+	}
+}
+
+interface JSONAble<T = unknown> {
+	toJSON(): T;
+}

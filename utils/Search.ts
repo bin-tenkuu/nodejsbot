@@ -2,7 +2,7 @@ import _axios from "axios";
 import {SauceNAOkey} from "../config/config.json";
 import {
 	DMXKType, loliconDate, loliconPost, paulzzhTouHouType, pixivCatType, sauceNAOResult, toubiecType, YHType,
-} from "./SearchType";
+} from "./Models.js";
 
 export const axios = _axios.create({
 	timeout: 20000,

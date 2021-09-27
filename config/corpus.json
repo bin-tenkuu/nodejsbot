@@ -137,7 +137,7 @@
 		}, {
 			"name": ".state",
 			"regexp": "^\\.state$",
-			"reply": "[FN:CQData.getState]",
+			"reply": "[FN:CQBotEvent.getState]",
 			"help": "查看自己的信息"
 		}, {
 			"name": "(复读)",

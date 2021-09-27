@@ -27,13 +27,14 @@ class CQBotPicture extends Plug {
 			keyword: exec.groups?.keyword,
 			r18: exec.groups?.r18 !== undefined,
 		};
+		groups.keyword ??= "";
 		const userId: number = event.context.user_id;
 		const member = CQData.getMember(userId);
 		if (!member.addExp(-5)) {
 			return [CQ.text("不够活跃")];
 		}
-		if (this.setuSet.has(groups.keyword ?? "")) {
-			return [];
+		if (this.setuSet.has(groups.keyword)) {
+			return [CQ.text("没有，爬")];
 		}
 		this.logger.info("开始色图", groups);
 		try {
@@ -41,12 +42,13 @@ class CQBotPicture extends Plug {
 				size1200: true,
 				keyword: groups.keyword,
 				r18: +groups.r18,
+				num: 1,
 			});
 			if (data.code !== 0) {
 				const message = CQBotPicture.code(data.code);
 				this.logger.warn(`开始色图异常：异常返回码(${data.code})：${message}`);
 				if (data.code === 404) {
-					this.setuSet.add(groups.keyword ?? "");
+					this.setuSet.add(groups.keyword);
 				}
 				member.addExp(4);
 				return [CQ.text(message)];
@@ -69,7 +71,7 @@ class CQBotPicture extends Plug {
 					CQ.node(nickname, userId, CQ.escape(first.tags.join("\n"))),
 				]).catch(NOP);
 			}
-			return [CQ.image(getPRegular(first.url))];
+			return [CQ.image(first.url)];
 		} catch (reason) {
 			sendAdminQQ(event, "色图坏了");
 			this.logger.error(reason);

@@ -1,42 +1,48 @@
 import Cache from "node-cache";
 
-export class Equatable {
-	equal(obj: any): boolean {
-		return obj != null && this === obj;
-	}
-}
+export type IEqual<T> = (l: T, r: T) => boolean;
 
-export class DataCache<T extends Equatable> {
+export class DataCache<T> {
+	public _equatable: IEqual<T>;
 	private cache: Cache;
 
 	/**
 	 *
 	 * @param options 未明确指定时,不克隆,过期时间1h,过期后删除
+	 * @param equatable 比较器,默认使用强比较
 	 */
-	constructor(options?: Cache.Options) {
+	constructor(options?: Cache.Options | undefined | null, equatable: IEqual<T> = (l, r) => l === r) {
 		this.cache = new Cache(options ?? {useClones: false, stdTTL: 600, deleteOnExpire: true});
+		this._equatable = equatable;
 	}
 
-	get(group: number, data?: undefined): T | undefined;
-	get(group: number, data: T): T;
-	get(group: number, data: T | undefined): T | undefined {
-		let node = this.cache.get<T>(group);
+	get(key: number, data?: undefined): T | undefined;
+
+	get(key: number, data: T): T;
+
+	get(key: number, data: T | undefined): T | undefined {
+		let node = this.cache.get<T>(key);
 		if (data == null) {
 			return node;
 		}
-		if (node == null || node !== data || !node.equal(data)) {
-			this.cache.set(group, data, 600);
+		if (node == null || !this._equatable(node, data)) {
+			this.cache.set(key, data, 600);
 			node = data;
 		}
 		return node;
 	}
 
-	set(group: number, data?: T | undefined): void {
-		if (data === undefined) {
-			this.cache.del(group);
-			return;
-		}
-		this.cache.set(group, data);
+	set(key: number, data: T): void {
+		this.cache.set(key, data);
 	}
+
+	del(key: number): void {
+		this.cache.del(key);
+	}
+
+	has(key: number): boolean {
+		return this.cache.has(key);
+	}
+
 }
 

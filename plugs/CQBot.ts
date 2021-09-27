@@ -4,11 +4,12 @@ import {adminGroup, CQWS} from "../config/config.json";
 import {Plug} from "../Plug.js";
 import {canCallGroup, canCallPrivate} from "../utils/Annotation.js";
 import {Where} from "../utils/Generators.js";
+import {Corpus} from "../utils/Models.js";
 import {
 	CQMessage, deleteMsg, isAdminQQ, isAtMe, onlyText, parseMessage, sendAdminQQ, sendForward, sendForwardQuick,
 	sendGroup, sendPrivate,
 } from "../utils/Util";
-import {Corpus, default as CQDate} from "./CQData.js";
+import {default as CQDate} from "./CQData.js";
 
 class CQBot extends Plug {
 	public bot: CQWebSocket;

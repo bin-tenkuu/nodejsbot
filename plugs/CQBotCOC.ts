@@ -3,7 +3,7 @@ import {Plug} from "../Plug.js";
 import {canCallGroup, canCallPrivate} from "../utils/Annotation.js";
 import {dice, DiceResult, distribution} from "../utils/COCUtils.js";
 import {db} from "../utils/database.js";
-import {DataCache, Equatable} from "../utils/repeat.js";
+import {DataCache} from "../utils/repeat.js";
 import {CQMessage} from "../utils/Util.js";
 
 class CQBotCOC extends Plug {
@@ -18,7 +18,7 @@ class CQBotCOC extends Plug {
 		this.description = "一些跑团常用功能";
 		this.version = 1;
 		this.cheater = false;
-		this.cache = new DataCache<DiceCache>({useClones: false, stdTTL: 60 * 5, deleteOnExpire: true});
+		this.cache = new DataCache<DiceCache>(undefined, (l, r) => l.max === r.max);
 		this.specialEffects = "bug";
 		this.readShortKey();
 	}
@@ -46,8 +46,8 @@ class CQBotCOC extends Plug {
 			return [CQ.text("key格式错误或长度大于5")];
 		}
 		if (value === undefined) {
-			db.start(async db => {
-				await db.run("DELETE FROM COCShortKey WHERE key=?", key);
+			db.sync(db => {
+				db.prepare<string>("DELETE FROM COCShortKey WHERE key=?").run(key);
 			});
 			this.shortKey.delete(key);
 			return [CQ.text(`删除key:${key}`)];
@@ -56,8 +56,8 @@ class CQBotCOC extends Plug {
 			return [CQ.text("value长度不大于10")];
 		}
 		this.shortKey.set(key, value);
-		db.start(async db => {
-			await db.run("INSERT INTO COCShortKey(key, value) VALUES (?, ?);", key, value);
+		db.sync(db => {
+			db.prepare<[string, string]>("INSERT INTO COCShortKey(key, value) VALUES (?, ?);").run(key, value);
 		});
 		return [CQ.text(`添加key:${key}=${value}`)];
 	}
@@ -133,11 +133,11 @@ class CQBotCOC extends Plug {
 		if (num === 0) {
 			return [];
 		}
-		const cache = this.cache.get(event.context.user_id);
+		const cache: DiceCache | undefined = this.cache.get(event.context.user_id);
 		if (cache === undefined || cache.max <= 0) {
 			return [CQ.text("5分钟之内没有投任何骰子")];
 		}
-		const calc = CQBotCOC.castString(`+${num}d${cache.max}`, this.cheater);
+		const calc: Calc = CQBotCOC.castString(`+${num}d${cache.max}`, this.cheater);
 		cache.list.push(...calc.list ?? []);
 		return [CQ.text(`${calc.origin}：[${calc.list}]=${calc.num}\n[${cache.list}]`)];
 	}
@@ -202,8 +202,8 @@ class CQBotCOC extends Plug {
 	}
 
 	private readShortKey() {
-		db.start(async db => {
-			const all = await db.all<{ key: string, value: string }[]>("SELECT key, value FROM COCShortKey;");
+		db.sync(db => {
+			const all: { key: string, value: string }[] = db.prepare<[]>("SELECT key, value FROM COCShortKey;").all();
 			all.forEach(({key, value}) => this.shortKey.set(key, value));
 		});
 	}
@@ -234,20 +234,14 @@ class CQBotCOC extends Plug {
 type EffectFunc = (data: Calc) => void;
 type Calc = { op: "+" | "-" | "*", num: number, list: Uint32Array | null, origin: string, max: number, state?: string };
 
-class DiceCache extends Equatable {
+class DiceCache {
 	public max: number;
 	public list: number[];
 
 	constructor(max: number, list: Iterable<number>) {
-		super();
 		this.max = max;
 		this.list = [...list];
 	}
-
-	public equal(obj: any): boolean {
-		return obj instanceof DiceCache && obj.max === this.max;
-	}
-
 }
 
 class SpecialEffects {

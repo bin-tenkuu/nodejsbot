@@ -3,10 +3,10 @@ import {CQImage} from "go-cqwebsocket/out/tags";
 import {CQText} from "go-cqwebsocket/out/tags.js";
 import {Plug} from "../Plug.js";
 import {canCallGroup} from "../utils/Annotation.js";
-import {Equatable, DataCache} from "../utils/repeat.js";
+import {DataCache} from "../utils/repeat.js";
 
 class CQBotRepeat extends Plug {
-	private repeatCache = new DataCache<RepeatCache>();
+	private repeatCache = new DataCache<RepeatCache>(undefined, (l, r) => l.msg === r.msg);
 
 	constructor() {
 		super(module);
@@ -57,12 +57,11 @@ class CQBotRepeat extends Plug {
 	}
 }
 
-class RepeatCache extends Equatable {
+class RepeatCache {
 	public msg: string;
 	public user: Set<number>;
 
 	constructor(msg: string) {
-		super();
 		this.msg = msg;
 		this.user = new Set();
 	}
@@ -76,13 +75,6 @@ class RepeatCache extends Equatable {
 		const b: boolean = this.user.has(user);
 		b || this.user.add(user);
 		return !b;
-	}
-
-	public equal(obj: any): boolean {
-		if (obj instanceof RepeatCache) {
-			return this.msg === obj.msg;
-		}
-		return false;
 	}
 
 	public get times(): number {

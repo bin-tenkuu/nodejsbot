@@ -1,92 +1,54 @@
+import BDb3, {Database} from "better-sqlite3";
 import {existsSync, openSync} from "fs";
-import {Logger} from "log4js";
-import {Database} from "sqlite";
-import {Database as Db3} from "sqlite3";
 import {Logable} from "./logger.js";
 
-type DatabaseHandle = (this: void, db: SQLite) => Promise<void>;
-
 class SQLControl extends Logable {
-	private readonly db: SQLite;
-	private breakTime: NodeJS.Timeout | undefined;
+	private readonly filename: string;
+	private _db: Database;
 
 	constructor(filename = "./db.db") {
 		super();
+		this.filename = filename;
 		if (!existsSync(filename)) {
 			openSync(filename, "w");
 		}
-		this.breakTime = undefined;
-		this.db = new SQLite(filename, this);
+		this._db = new BDb3(filename);
 		process.on("beforeExit", _ => {
-			this.close().catch(NOP);
+			this.close();
 		});
 	}
 
-	/**
-	 * 不要关闭数据库
-	 * @param fun 数据库回调函数
-	 */
-	public start(fun: DatabaseHandle): void | Promise<void> {
-		return this.open().then(fun).catch(this.close);
+	public async<T>(func: (db: Database) => Promise<T>): void | Promise<T> {
+		return Promise.resolve(this.db).then(func);
 	}
 
-	private open(): Promise<SQLite> {
-		return this.isOpen ? Promise.resolve(this.db) : this.db.open().then(() => {
-			return this.db;
-		});
+	public sync<T>(func: (db: Database) => T): T {
+		return func(this.db);
 	}
 
-	/**
-	 * 关闭数据库
-	 * @private
-	 */
-	public get close(): (e?: any) => Promise<void> {
+	/**关闭数据库*/
+	public get close(): (e?: any) => void {
 		return (e?: any) => {
 			e != null && this.logger.error(e);
-			return this.isClose ? Promise.resolve() : this.db.close().catch(NOP);
+			if (this._db.open) {
+				this._db.close();
+			}
 		};
 	}
 
 	public get isOpen(): boolean {
-		return this.db.isOpen;
+		return this._db.open;
 	}
 
 	public get isClose(): boolean {
-		return this.db.isClose;
-	}
-}
-
-class SQLite extends Database {
-	private readonly logger: Logger;
-
-	constructor(filename: string, logger: Logable) {
-		super({
-			filename: filename,
-			driver: Db3,
-		});
-		this.logger = logger.logger;
+		return !this._db.open;
 	}
 
-	public open(): Promise<void> {
-		return super.open().then(() => {
-			this.db.on("close", () => {
-				this._isClose = true;
-				this.logger.debug("DB Close");
-			}).on("error", err => {
-				this._isClose = true;
-				this.logger.error(err);
-			});
-		});
-	}
-
-	public _isClose: boolean = false;
-
-	public get isClose(): boolean {
-		return this.db === null || !this._isClose;
-	}
-
-	public get isOpen(): boolean {
-		return !this.isClose;
+	private get db() {
+		if (!this._db.open) {
+			this._db = new BDb3(this.filename);
+		}
+		return this._db;
 	}
 }
 
