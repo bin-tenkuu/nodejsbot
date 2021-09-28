@@ -4,7 +4,7 @@ import {Plug} from "../Plug.js";
 import {canCallGroup, canCallPrivate} from "../utils/Annotation.js";
 import {DataCache} from "../utils/repeat.js";
 import {CQMessage, sendAdminQQ, sendGroup, sendPrivate} from "../utils/Util.js";
-import CQData from "./CQData.js";
+import {default as CQData} from "./CQData.js";
 
 class CQBotEvent extends Plug {
 	private header: PartialSocketHandle | undefined = undefined;

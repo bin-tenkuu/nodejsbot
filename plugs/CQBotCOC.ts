@@ -134,7 +134,7 @@ class CQBotCOC extends Plug {
 		}
 		const cache: DiceCache | undefined = this.cache.get(event.context.user_id);
 		if (cache === undefined || cache.max <= 0) {
-			return [CQ.text("5分钟之内没有投任何骰子")];
+			return [CQ.text("10分钟之内没有投任何骰子")];
 		}
 		const calc: Calc = CQBotCOC.castString(`+${num}d${cache.max}`, this.cheater);
 		cache.list.push(...calc.list ?? []);

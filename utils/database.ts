@@ -36,15 +36,7 @@ class SQLControl extends Logable {
 		};
 	}
 
-	public get isOpen(): boolean {
-		return this._db.open;
-	}
-
-	public get isClose(): boolean {
-		return !this._db.open;
-	}
-
-	private get db() {
+	private get db(): Database {
 		if (!this._db.open) {
 			this._db = new BDb3(this.filename);
 		}

@@ -8,7 +8,7 @@ export class DataCache<TKey extends Cache.Key, TValue> {
 
 	/**
 	 *
-	 * @param options 未明确指定时,不克隆,过期时间1h,过期后删除
+	 * @param options 未明确指定时,不克隆,过期时间10min,过期后删除
 	 * @param equatable 比较器,默认使用强比较
 	 */
 	constructor(options?: Cache.Options | undefined | null, equatable: IEqual<TValue> = (l, r) => l === r) {
@@ -34,10 +34,6 @@ export class DataCache<TKey extends Cache.Key, TValue> {
 
 	set(key: TKey, data: TValue): void {
 		this.cache.set(key, data);
-	}
-
-	del(key: TKey): void {
-		this.cache.del(key);
 	}
 
 	has(key: TKey): boolean {

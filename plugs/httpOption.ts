@@ -1,7 +1,5 @@
 import http, {IncomingMessage, ServerResponse} from "http";
-// import images from "images";
 import {Plug} from "../Plug.js";
-// import {axios} from "../utils/Search.js";
 
 type ServerHandle = (req: IncomingMessage, res: ServerResponse) => void;
 

@@ -11,7 +11,7 @@
 			"name": ".dp<num>",
 			"regexp": "^\\.dp ?(?<num>\\d+)?",
 			"reply": "[FN:CQBotCOC.getAddedRandom]",
-			"help": "5分钟之内加投骰",
+			"help": "10分钟之内加投骰",
 			"minLength": 5
 		}, {
 			"name": ".[Dd] <表达式> <...>",

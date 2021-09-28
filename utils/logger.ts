@@ -63,14 +63,14 @@ export function getLogger(name?: string) {
 	return getter(name + "\t");
 }
 
-function LoggerGetter(this: { _logger: Logger }): Logger {
-	return this._logger;
-}
-
 export class Logable {
 	private static _logger: Logger = logger;
 
 	public static get logger(): Logger {
+		function LoggerGetter(this: typeof Logable): Logger {
+			return this._logger;
+		}
+
 		if (this !== Logable) {
 			Object.defineProperty(this, "_logger", <TypedPropertyDescriptor<Logger>>{
 				configurable: true,

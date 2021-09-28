@@ -151,7 +151,7 @@ export class Member implements IMember, JSONAble {
 			this._id = obj.id;
 			this._name = obj.name;
 			this._exp = obj.exp;
-			this._is_baned = obj?.is_baned;
+			this._is_baned = obj.is_baned;
 			this._gmt_modified = obj.gmt_modified;
 		}
 	}
@@ -175,11 +175,11 @@ export class Member implements IMember, JSONAble {
 		this.is_modified = true;
 	}
 
-	public get exp() {
+	public get exp(): number {
 		return this._exp;
 	}
 
-	public set exp(v) {
+	public set exp(v: number) {
 		this._exp = v;
 		this.modified();
 	}

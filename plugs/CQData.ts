@@ -47,7 +47,7 @@ class CQData extends Plug {
 	public getMember(id: number): Member {
 		let member: Member | undefined = this.memberMap.get(id);
 		if (member === undefined) {
-			member = new Member(id);
+			member = CQData.loadMember(id);
 			this.memberMap.set(id, member);
 		}
 		return member;
@@ -61,31 +61,41 @@ class CQData extends Plug {
 		this.getMember(id).is_baned = is_baned ? 1 : 0;
 	}
 
+	private static loadMember(id: number): Member {
+		return new Member(db.sync(db => {
+			return db.prepare(`SELECT id, name, exp, gmt_modified, is_baned FROM Members WHERE id=$id`).get({id});
+		}) ?? id);
+	}
+
+	private static saveMember(map: Map<number, Member>): void {
+		db.sync(db => {
+			this.logger.info("保存开始(Members)");
+			let change = 0, noChange = 0;
+			const stmt = db.prepare<IMember>(`INSERT INTO Members(id, name, exp, gmt_modified, is_baned, gmt_create)
+      VALUES ($id, $name, $exp, $gmt_modified, $baned, $gmt_modified)
+      ON CONFLICT(id) DO UPDATE SET name=$name, exp=$exp, gmt_modified=$gmt_modified, is_baned=$baned;`);
+			for (const member of map.values()) {
+				if (member.is_modified) {
+					stmt.run(member.toJSON());
+					member.is_modified = false;
+					++change;
+				} else {
+					map.delete(member.id);
+					++noChange;
+				}
+			}
+			change > 0 && this.logger.info("保存结束(Members):" + change);
+			noChange > 0 && this.logger.info("释放内存(Members):" + noChange);
+		});
+	}
+
 	private async save(): Promise<void> {
 		if (this.saving) {
 			return;
 		}
 		this.saving = true;
-		db.sync(db => {
-			// this.memberMap
-			{
-				this.logger.info("保存开始(Members)");
-				let n = 0;
-				const stmt = db.prepare<IMember>(`INSERT INTO Members(id, name, exp, gmt_modified, is_baned, gmt_create)
-        VALUES ($id, $name, $exp, $gmt_modified, $baned, $gmt_modified)
-        ON CONFLICT(id) DO UPDATE SET name=$name, exp=$exp, gmt_modified=$gmt_modified, is_baned=$baned;`);
-				for (const member of this.memberMap.values()) {
-					if (!member.is_modified) {
-						continue;
-					}
-					stmt.run(member.toJSON());
-					member.is_modified = false;
-					++n;
-				}
-				this.logger.info("保存结束(Members):" + n);
-			}
-			this.saving = false;
-		});
+		CQData.saveMember(this.memberMap);
+		this.saving = false;
 	}
 
 	private autoSave(): void {
@@ -99,7 +109,7 @@ class CQData extends Plug {
 			}).finally(() => {
 				this.autoSave();
 			});
-		}, 1000 * 60 * 60);
+		}, 1000 * 60 * 60 * 6);
 	}
 }
 

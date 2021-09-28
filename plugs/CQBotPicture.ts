@@ -18,7 +18,7 @@ class CQBotPicture extends Plug {
 	}
 
 	public async uninstall(): Promise<void> {
-		this.logger.info(`${[...this.setuSet].join(" | ")}`);
+		this.logger.info([...this.setuSet].join(" | "));
 		return super.uninstall();
 	}
 
