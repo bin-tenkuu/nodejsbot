@@ -1,7 +1,7 @@
 import {corpora} from "../config/corpus.json";
 import {Plug} from "../Plug.js";
 import {db} from "../utils/database.js";
-import {Corpus, IMember, IPage, Member, Page} from "../utils/Models.js";
+import {Corpus, IMember, Member} from "../utils/Models.js";
 
 class CQData extends Plug {
 	public corpora: Corpus[] = [];
@@ -18,23 +18,7 @@ class CQData extends Plug {
 
 	public async install() {
 		this.corpora = corpora.map(msg => new Corpus(msg));
-		db.async(async db => {
-			// this.memberMap
-			{
-				const stmt = await db.prepare<IPage>(`SELECT id, name, exp, gmt_modified, is_baned FROM Members LIMIT $size*$page,$size;`);
-				const page = new Page(100);
-				let result: IMember[];
-				do {
-					this.logger.debug(`select Members range:[${page.range}]`);
-					result = await stmt.all(page.toJSON());
-					page.nextPage();
-					for (const iMember of result) {
-						this.memberMap.set(iMember.id, new Member(iMember));
-					}
-				} while (result.length === page.size);
-			}
-			this.autoSave();
-		});
+		this.autoSave();
 	}
 
 	public async uninstall() {
@@ -84,8 +68,7 @@ class CQData extends Plug {
 					++noChange;
 				}
 			}
-			change > 0 && this.logger.info("保存结束(Members):" + change);
-			noChange > 0 && this.logger.info("释放内存(Members):" + noChange);
+			this.logger.info(`保存结束(Members):${change},释放内存:${noChange},剩余数量:${map.size}`);
 		});
 	}
 
