@@ -1,16 +1,16 @@
-import {readFileSync, createWriteStream} from "fs";
+import {createWriteStream, readFileSync} from "fs";
 
-let s = readFileSync("D:\\Download\\accessASF.log").toString();
-const stream = createWriteStream("D:\\Download\\accessFormat.ini", "utf-8");
-let map = new Map<string, string[]>();
+const s = readFileSync("D:\\Download\\access81.log").toString();
+const stream = createWriteStream("./logs/accessFormat.ini", "utf-8");
+const map = new Map<string, string[]>();
 {
-	let split = s.split("\n");
+	const split = s.split("\n");
 	console.log(split.length);
 	split.forEach(str => {
-		let number = str.indexOf(" ");
-		let ip = str.substring(0, number);
-		let text = str.substring(number);
-		let strings = map.get(ip);
+		const number = str.indexOf(" ");
+		const ip = str.substring(0, number);
+		const text = str.substring(number + 1);
+		const strings = map.get(ip);
 		if (strings === undefined) {
 			map.set(ip, [text]);
 		} else {
@@ -27,9 +27,9 @@ let map = new Map<string, string[]>();
 
 	for (const [ip, texts] of map) {
 		write(`[${ip}]\n`);
-		for (const text of texts) {
-			write(`${text}\n`);
-		}
+		texts.forEach((text, i) => {
+			write(`${i}=${text}\n`);
+		});
 		write("\n");
 	}
 }

@@ -18,7 +18,8 @@
 		"build": "tsc",
 		"test": "node --inspect",
 		"stop": "curl http://127.0.0.1:40000/exit",
-		"start": "node index.js"
+		"start": "node index.js",
+		"ipsort": "node ipsort.js"
 	},
 	"keywords": [
 		"demo"
