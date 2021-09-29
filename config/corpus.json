@@ -129,7 +129,7 @@
 			"reply": "[FN:CQBotSearch.getSauceNAO]",
 			"help": "带上图片发送"
 		}, {
-			"name": ".state",
+			"name": ".state[<qq>]",
 			"regexp": "^\\.state(?<qq> ?\\d{1,12})?$",
 			"reply": "[FN:CQBotEvent.getState]",
 			"help": "查看自己的信息"
