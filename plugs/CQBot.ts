@@ -20,6 +20,7 @@ class CQBot extends Plug {
 		super(module);
 		this.name = "QQ机器人";
 		this.description = "用于连接go-cqhttp服务的bot";
+		this.#init();
 	}
 
 	async install() {
@@ -27,7 +28,7 @@ class CQBot extends Plug {
 			this.bot.bind("onceAll", {
 				"socket.open": (event) => {
 					this.logger.info("连接");
-					event.bot.send_private_msg(2938137849, "已上线").catch(NOP);
+					sendAdminQQ({bot: event.bot}, "已上线");
 					resolve();
 					this.sendStateInterval = setInterval(() => {
 						this.sendState(this.bot.state.stat);
@@ -59,8 +60,72 @@ class CQBot extends Plug {
 		});
 	}
 
-	protected override init() {
-		super.init();
+	@canCallGroup()
+	protected async MemeAI(event: CQEvent<"message.group">, execArray: RegExpExecArray) {
+		if (!isAtMe(event)) {
+			return [];
+		}
+		event.stopPropagation();
+		const {message_id, user_id} = event.context;
+		const cqTags = execArray.input.replace(/吗/g, "")
+				.replace(/(?<!\\)不/g, "\\很")
+				.replace(/(?<!\\)你/g, "\\我")
+				.replace(/(?<!\\)我/g, "\\你")
+				.replace(/(?<![没\\])有/g, "\\没有")
+				.replace(/(?<!\\)没有/g, "\\有")
+				.replace(/[？?]/g, "!")
+				.replace(/\\/g, "");
+		return [
+			CQ.reply(message_id),
+			CQ.at(user_id),
+			CQ.text(cqTags),
+		];
+	}
+
+	@canCallGroup()
+	@canCallPrivate()
+	protected async getHelp() {
+		const s: string = CQDate.corpora.filter(c => c.isOpen && !c.needAdmin &&
+				c.help !== undefined).map<string>((c) => `${c.name}:${c.help}`).join("\n");
+		return [CQ.text(s)];
+	}
+
+	private static async sendCorpusTags(event: CQMessage,
+			callback: (this: void, tags: CQTag[], element: Corpus) => void | Promise<any>) {
+		const text = onlyText(event);
+		let corpus = this.filterCorpus(event, text.length);
+		for (const element of corpus) {
+			const exec = element.regexp.exec(text);
+			if (exec === null) {
+				continue;
+			}
+			const msg = await parseMessage(element.reply, event, exec).catch(e => {
+				this.logger.error("语料库转换失败:" + element.name);
+				this.logger.error(e);
+				return [CQ.text("error:" + element.name + "\n")];
+			});
+			if (msg.length > 0) {
+				await callback(msg, element);
+			}
+		}
+	}
+
+	private static filterCorpus(event: CQMessage, length: number): Generator<Corpus, void, void> {
+		let gen: Generator<Corpus, void, void> = Where(CQDate.corpora, _ => !event.isCanceled);
+		if (event.contextType === "message.private") {
+			gen = Where(gen, (c) => c.canPrivate);
+		} else {
+			gen = Where(gen, (c) => c.canGroup);
+		}
+		gen = Where(gen, (c) => length >= c.minLength && length <= c.maxLength);
+		if (isAdminQQ(event)) {
+			return gen;
+		} else {
+			return Where(gen, (c) => c.isOpen && !c.needAdmin);
+		}
+	}
+
+	#init() {
 		this.bot.bind("on", {
 			"socket.error": ({context}) => {
 				this.logger.warn(`连接错误[${context.code}]: ${context.reason}`);
@@ -117,71 +182,6 @@ class CQBot extends Plug {
 				}).catch(NOP);
 			},
 		});
-	}
-
-	@canCallGroup()
-	protected async MemeAI(event: CQEvent<"message.group">, execArray: RegExpExecArray) {
-		if (!isAtMe(event)) {
-			return [];
-		}
-		event.stopPropagation();
-		const {message_id, user_id} = event.context;
-		const cqTags = execArray[0].replace(/吗/g, "")
-				.replace(/(?<!\\)不/g, "\\很")
-				.replace(/(?<!\\)你/g, "\\我")
-				.replace(/(?<!\\)我/g, "\\你")
-				.replace(/(?<![没\\])有/g, "\\没有")
-				.replace(/(?<!\\)没有/g, "\\有")
-				.replace(/[？?]/g, "!")
-				.replace(/\\/g, "");
-		return [
-			CQ.reply(message_id),
-			CQ.at(user_id),
-			CQ.text(cqTags),
-		];
-	}
-
-	@canCallGroup()
-	@canCallPrivate()
-	protected async getHelp() {
-		const s: string = CQDate.corpora.filter(c => c.isOpen && !c.needAdmin &&
-				c.help !== undefined).map<string>((c) => `${c.name}:${c.help}`).join("\n");
-		return [CQ.text(s)];
-	}
-
-	private static async sendCorpusTags(event: CQMessage,
-			callback: (this: void, tags: CQTag[], element: Corpus) => void | Promise<any>) {
-		const text = onlyText(event);
-		let corpus = this.filterCorpus(event, text.length);
-		for (const element of corpus) {
-			const exec = element.regexp.exec(text);
-			if (exec === null) {
-				continue;
-			}
-			const msg = await parseMessage(element.reply, event, exec).catch(e => {
-				this.logger.error("语料库转换失败:" + element.name);
-				this.logger.error(e);
-				return [CQ.text("error:" + element.name + "\n")];
-			});
-			if (msg.length > 0) {
-				await callback(msg, element);
-			}
-		}
-	}
-
-	private static filterCorpus(event: CQMessage, length: number): Generator<Corpus, void, void> {
-		let gen: Generator<Corpus, void, void> = Where(CQDate.corpora, _ => !event.isCanceled);
-		if (event.contextType === "message.private") {
-			gen = Where(gen, (c) => c.canPrivate);
-		} else {
-			gen = Where(gen, (c) => c.canGroup);
-		}
-		gen = Where(gen, (c) => length >= c.minLength && length <= c.maxLength);
-		if (isAdminQQ(event)) {
-			return gen;
-		} else {
-			return Where(gen, (c) => c.isOpen && !c.needAdmin);
-		}
 	}
 
 	/**发送bot信息*/

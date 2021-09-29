@@ -108,7 +108,7 @@
 			"name": "看_p站<pid>[-<p>]",
 			"regexp": "^看{1,2}p站(?<pid>\\d+)(?:-(?<p>\\d+))?$",
 			"reply": "[FN:CQBotPicture.getPixiv]",
-			"delMSG": 60,
+			"delMSG": 90,
 			"help": "看看p站带上pid发送",
 			"minLength": 5
 		}, {
@@ -121,12 +121,6 @@
 			"name": "有病吧",
 			"regexp": "^有病吧$",
 			"reply": "你治得好么?",
-			"canPrivate": false,
-			"isOpen": false
-		}, {
-			"name": "太强了",
-			"regexp": "^(?:tql|太强了)$",
-			"reply": "[FN:CQBotPlugin.getTQL]",
 			"canPrivate": false,
 			"isOpen": false
 		}, {

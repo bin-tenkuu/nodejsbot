@@ -34,7 +34,6 @@
 		"axios": "^0.21.4",
 		"better-sqlite3": "^7.4.3",
 		"go-cqwebsocket": "^6.0.2",
-		"images": "^3.2.3",
 		"log4js": "^6.3.0",
 		"node-cache": "^5.1.2",
 		"reflect-metadata": "^0.1.13"

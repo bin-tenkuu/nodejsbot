@@ -32,8 +32,8 @@ export class DataCache<TKey extends Cache.Key, TValue> {
 		return node;
 	}
 
-	set(key: TKey, data: TValue): void {
-		this.cache.set(key, data);
+	set(key: TKey, data: TValue, ttl?: number): void {
+		this.cache.set(key, data, <number>ttl);
 	}
 
 	has(key: TKey): boolean {

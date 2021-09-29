@@ -21,7 +21,7 @@ export abstract class Plug extends Logable {
 		super();
 		this.module = module;
 		this.canAutoCall ??= new Set();
-		this.init();
+		this.#init();
 	}
 
 	public static hrtime(time: [number, number], msg: string = "本次请求"): void {
@@ -41,7 +41,7 @@ export abstract class Plug extends Logable {
 	}
 
 	public toString() {
-		return `${this.constructor.name} {name: ${this.name}, State: ${this.#state}`;
+		return `${this.constructor.name} {name: ${this.name}, State: ${this.#state}}`;
 	}
 
 	public toJSON() {
@@ -52,7 +52,7 @@ export abstract class Plug extends Logable {
 		return this.constructor.name;
 	}
 
-	protected init(): void {
+	#init(): void {
 		this.logger.debug("init:\t" + module.filename);
 		Plug.plugs.set(this.constructor.name, this);
 		this.install = async function () {

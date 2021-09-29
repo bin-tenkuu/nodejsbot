@@ -164,18 +164,6 @@ class CQBotPlugin extends Plug {
 		return [CQ.text(str)];
 	}
 
-	@canCallPrivate()
-	@canCallGroup()
-	protected async getTQL(): Promise<CQTag[]> {
-		if (Math.random() < 0.8) {
-			return [];
-		}
-		return [
-			CQ.text("也不看看我是谁呀"),
-			CQ.image("https://c2cpicdw.qpic.cn/offpic_new/0//2938137849-553222350-B9DC48A4E06FCA24C40C44D8F1B835F1/0?term=2"),
-		];
-	}
-
 	private static getCorpusList(type?: "私聊" | "群聊"): Corpus[] {
 		if (type === "私聊") {
 			return CQData.corpora.filter(c => c.canPrivate);

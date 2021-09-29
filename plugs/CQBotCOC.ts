@@ -18,6 +18,7 @@ class CQBotCOC extends Plug {
 		super(module);
 		this.name = "QQ群聊-COC跑团相关";
 		this.description = "一些跑团常用功能";
+		this.#init();
 	}
 
 	@canCallGroup()
@@ -139,11 +140,6 @@ class CQBotCOC extends Plug {
 		return [CQ.text(`${calc.origin}：[${calc.list}]=${calc.num}\n[${cache.list}]`)];
 	}
 
-	protected override init(): void {
-		super.init();
-		this.readShortKey();
-	}
-
 	private static castString(value: string, cheater: boolean): Calc {
 		const groups = /^(?<op>[+\-*])?(?<num>\d+)?(?:[dD](?<max>\d+))?$/.exec(value)?.groups as {
 			op?: "+" | "-" | "*"
@@ -203,7 +199,7 @@ class CQBotCOC extends Plug {
 		}, [0, 1])[0];
 	}
 
-	private readShortKey() {
+	#init(): void {
 		db.sync(db => {
 			const all: { key: string, value: string }[] = db.prepare<[]>("SELECT key, value FROM COCShortKey;").all();
 			all.forEach(({key, value}) => this.shortKey.set(key, value));

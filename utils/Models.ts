@@ -170,7 +170,7 @@ export class Member implements IMember, JSONAble {
 		return {id: this._id, exp: this._exp, name: this._name, gmt_modified: this._gmt_modified, is_baned: this._is_baned};
 	}
 
-	private modified() {
+	public modified() {
 		this._gmt_modified = Date.now();
 		this.is_modified = true;
 	}
@@ -252,31 +252,6 @@ export class Corpus {
 		this.minLength = msg.minLength ?? 0;
 		this.maxLength = msg.maxLength ?? 100;
 		// this.limitTime = msg.limitTime ?? 0;
-	}
-}
-
-export type IPage = { page: number, size: number }
-
-export class Page implements IPage, JSONAble {
-	public size: number;
-	public page: number;
-
-	constructor(size: number, page: number = 0) {
-		this.page = page;
-		this.size = size;
-	}
-
-	public toJSON(): IPage {
-		return {page: this.page, size: this.size};
-	}
-
-	public nextPage(num: number = 1) {
-		this.page += num;
-	}
-
-	public get range(): [number, number] {
-		const n: number = this.size * this.page;
-		return [n, n + this.size];
 	}
 }
 

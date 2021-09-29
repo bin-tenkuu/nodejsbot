@@ -45,18 +45,27 @@ class CQData extends Plug {
 	}
 
 	private static loadMember(id: number): Member {
-		return new Member(db.sync(db => {
-			return db.prepare(`SELECT id, name, exp, gmt_modified, is_baned FROM Members WHERE id=$id`).get({id});
-		}) ?? id);
+		return db.sync<Member>(db => {
+			const im: IMember | undefined = db.prepare(
+					`SELECT id, name, exp, gmt_modified, is_baned FROM Members WHERE id = ?`).get(id);
+			if (im !== undefined) {
+				return new Member(im);
+			}
+			const member = new Member(id);
+			member.modified();
+			db.prepare<IMember>(`INSERT INTO Members(id, name, exp, gmt_modified, is_baned, gmt_create)
+      VALUES ($id, $name, $exp, $gmt_modified, $is_baned, $gmt_modified)`).run(member.toJSON());
+			return member;
+		});
 	}
 
 	private static saveMember(map: Map<number, Member>): void {
 		db.sync(db => {
 			this.logger.info("保存开始(Members)");
 			let change = 0, noChange = 0;
-			const stmt = db.prepare<IMember>(`INSERT INTO Members(id, name, exp, gmt_modified, is_baned, gmt_create)
-      VALUES ($id, $name, $exp, $gmt_modified, $is_baned, $gmt_modified)
-      ON CONFLICT(id) DO UPDATE SET name=$name, exp=$exp, gmt_modified=$gmt_modified, is_baned=$is_baned;`);
+			const stmt = db.prepare<IMember>(`UPDATE Members
+      SET name = $name, exp = $exp, gmt_modified = $gmt_modified, is_baned = $is_baned
+      WHERE id = $id;`);
 			for (const member of map.values()) {
 				if (member.is_modified) {
 					stmt.run(member.toJSON());
