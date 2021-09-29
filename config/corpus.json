@@ -134,6 +134,12 @@
 			"reply": "[FN:CQBotEvent.getState]",
 			"help": "查看自己的信息"
 		}, {
+			"name": ".report <...>",
+			"regexp": "^\\.report(?<txt>.+)$",
+			"reply": "[FN:CQBotEvent.getState]",
+			"help": "给开发者的消息",
+			"delMSG": 10
+		}, {
 			"name": "(复读)",
 			"regexp": "^",
 			"reply": "[FN:CQBotRepeat.getRepeat]",

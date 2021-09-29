@@ -98,6 +98,16 @@ class CQBotEvent extends Plug {
 		return [CQ.at(qq), CQ.text(`${exp}`)];
 	}
 
+	@canCallGroup()
+	@canCallPrivate()
+	protected async sendReport(event: CQMessage, execArray: RegExpExecArray): Promise<CQTag[]> {
+		const {txt}: { txt?: string } = execArray.groups as { txt?: string } ?? {};
+		event.stopPropagation();
+		const {nickname, user_id} = event.context.sender;
+		sendAdminQQ(event, `来自 ${nickname} (${user_id}):\n${txt}`);
+		return [CQ.text("收到")];
+	}
+
 }
 
 export default new CQBotEvent();
