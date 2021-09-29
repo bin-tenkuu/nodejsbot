@@ -11,20 +11,50 @@ export abstract class Plug extends Logable {
 	public static readonly plugs: Map<string, Plug> = new Map<string, Plug>();
 	public readonly module: NodeModule;
 	public canAutoCall: Set<string>;
-	public name: string;
-	public description: string;
-	public version: number;
+	public name: string = this.constructor.name;
+	public description: string = "这个插件没有描述";
 	public declare readonly __proto__: Readonly<this>;
-	#state: typeof State[keyof typeof State];
+	public _error: any = null;
+	#state: typeof State[keyof typeof State] = State.create;
 
 	protected constructor(module: NodeModule) {
 		super();
-		this.#state = State.create;
-		this.name = this.constructor.name;
 		this.module = module;
-		Plug.plugs.set(this.name, this);
-		this.description = "这个插件没有描述";
-		this.version = -1;
+		this.canAutoCall ??= new Set();
+		this.init();
+	}
+
+	public static hrtime(time: [number, number], msg: string = "本次请求"): void {
+		let [s, ns] = process.hrtime(time);
+		ns /= 1e3;
+		if (ns < 1e3) {
+			return this.logger.info(`耗时:${s}秒${ns}微秒:\t${msg}`);
+		}
+		ns = (ns | 0) / 1e3;
+		return this.logger.info(`耗时:${s}秒${ns}毫秒:\t${msg}`);
+	}
+
+	public async install(): Promise<void> {
+	}
+
+	public async uninstall(): Promise<void> {
+	}
+
+	public toString() {
+		return `${this.constructor.name} {name: ${this.name}, State: ${this.#state}`;
+	}
+
+	public toJSON() {
+		return {"name": this.name, "State": this.state};
+	}
+
+	[Symbol.toStringTag](): string {
+		return this.constructor.name;
+	}
+
+	protected init(): void {
+		this.logger.debug("init:\t" + module.filename);
+		Plug.plugs.set(this.constructor.name, this);
 		this.install = async function () {
 			try {
 				if (this.#state === State.error) {
@@ -60,40 +90,7 @@ export abstract class Plug extends Logable {
 			}
 		};
 		this.#state = State.uninstalled;
-		this._error = undefined;
-		this.canAutoCall ??= new Set();
-		this.logger.debug("fix:\t" + module.filename);
 	}
-
-	public static hrtime(time: [number, number], msg: string = "本次请求"): void {
-		let [s, ns] = process.hrtime(time);
-		ns /= 1e3;
-		if (ns < 1e3) {
-			return this.logger.info(`耗时:${s}秒${ns}微秒:\t${msg}`);
-		}
-		ns = (ns | 0) / 1e3;
-		return this.logger.info(`耗时:${s}秒${ns}毫秒:\t${msg}`);
-	}
-
-	public async install(): Promise<void> {
-	}
-
-	public async uninstall(): Promise<void> {
-	}
-
-	public toString() {
-		return `${this.constructor.name} {name: ${this.name}, version: ${this.version}, State: ${this.#state}`;
-	}
-
-	public toJSON() {
-		return {"name": this.name, "version": this.version, "State": this.state};
-	}
-
-	[Symbol.toStringTag](): string {
-		return this.constructor.name;
-	}
-
-	public _error: any;
 
 	public get error() {
 		return this._error;

@@ -12,7 +12,6 @@ class CQBotPlugin extends Plug {
 		super(module);
 		this.name = "QQBot插件系统";
 		this.description = "QQBot插件系统,QQ管理员命令启用或停用对应插件";
-		this.version = 0.8;
 	}
 
 	@canCallPrivate()

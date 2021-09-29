@@ -11,7 +11,6 @@ class CQBotSearch extends Plug {
 		super(module);
 		this.name = "QQ群聊-搜图";
 		this.description = "QQ群聊SauceNAO搜图";
-		this.version = 0.1;
 	}
 
 	@canCallGroup()

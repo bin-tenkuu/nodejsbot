@@ -14,7 +14,6 @@ class CQBotEvent extends Plug {
 		super(module);
 		this.name = "QQ其他-事件";
 		this.description = "QQ的各种事件，非群聊";
-		this.version = 0.1;
 	}
 
 	async install() {

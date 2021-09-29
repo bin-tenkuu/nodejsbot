@@ -1,6 +1,6 @@
 import {
-	BaseLayout, ColoredLayout, Configuration, configure, ConsoleAppender, DateFileAppender, getLogger as getter, Logger, LogLevelFilterAppender,
-	SyncfileAppender,
+	BaseLayout, ColoredLayout, Configuration, configure, ConsoleAppender, DateFileAppender, getLogger as getter, Logger,
+	LogLevelFilterAppender, SyncfileAppender,
 } from "log4js";
 
 configure(<Configuration>{

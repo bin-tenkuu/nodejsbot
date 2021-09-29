@@ -6,7 +6,8 @@ import {canCallGroup, canCallPrivate} from "../utils/Annotation.js";
 import {Where} from "../utils/Generators.js";
 import {Corpus} from "../utils/Models.js";
 import {
-	CQMessage, deleteMsg, isAdminQQ, isAtMe, onlyText, parseMessage, sendAdminQQ, sendForward, sendForwardQuick, sendGroup, sendPrivate,
+	CQMessage, deleteMsg, isAdminQQ, isAtMe, onlyText, parseMessage, sendAdminQQ, sendForward, sendForwardQuick,
+	sendGroup, sendPrivate,
 } from "../utils/Util";
 import {default as CQDate} from "./CQData.js";
 
@@ -19,8 +20,6 @@ class CQBot extends Plug {
 		super(module);
 		this.name = "QQ机器人";
 		this.description = "用于连接go-cqhttp服务的bot";
-		this.version = 0;
-		this.init();
 	}
 
 	async install() {
@@ -57,6 +56,66 @@ class CQBot extends Plug {
 				},
 			});
 			this.bot.disconnect();
+		});
+	}
+
+	protected override init() {
+		super.init();
+		this.bot.bind("on", {
+			"socket.error": ({context}) => {
+				this.logger.warn(`连接错误[${context.code}]: ${context.reason}`);
+			},
+			"socket.open": () => {
+				this.logger.info(`连接开启`);
+			},
+			"socket.close": ({context}) => {
+				this.logger.info(`已关闭 [${context.code}]: ${context.reason}`);
+				require("child_process").exec("npm stop");
+			},
+		});
+		this.bot.messageSuccess = (ret, message) => {
+			this.logger.debug(`${message.action}成功：${JSON.stringify(ret.data)}`);
+		};
+		this.bot.messageFail = (reason, message) => {
+			this.logger.error(`${message.action}失败[${reason.retcode}]:${reason.wording}`);
+		};
+		this.bot.bind("on", {
+			"message.group": (event) => {
+				const time = process.hrtime();
+				const userId = event.context.user_id;
+				const member = CQDate.getMember(userId);
+				member.addExp(1);
+				if (member.baned) {
+					return;
+				}
+				CQBot.sendCorpusTags(event, async (tags, corpus) => {
+					let pro: PromiseRes<MessageId>;
+					if (!corpus.forward) {
+						pro = sendGroup(event, tags);
+					} else {
+						if (tags[0].tagName === "node") {
+							pro = sendForward(event, tags as messageNode);
+						} else {
+							pro = sendForwardQuick(event, tags);
+						}
+					}
+					if (corpus.delMSG > 0) {
+						await pro.then(value => {
+							deleteMsg(event, value.message_id, corpus.delMSG);
+						}, NOP);
+					} else {
+						await pro.catch(NOP);
+					}
+					Plug.hrtime(time, corpus.name);
+				}).catch(NOP);
+			},
+			"message.private": (event) => {
+				const time = process.hrtime();
+				CQBot.sendCorpusTags(event, async (tags, corpus) => {
+					await sendPrivate(event, tags).catch(NOP);
+					Plug.hrtime(time, corpus.name);
+				}).catch(NOP);
+			},
 		});
 	}
 
@@ -136,65 +195,6 @@ class CQBot extends Plug {
 			if (this.sendStateInterval !== undefined) {
 				clearInterval(this.sendStateInterval);
 			}
-		});
-	}
-
-	private init() {
-		this.bot.bind("on", {
-			"socket.error": ({context}) => {
-				this.logger.warn(`连接错误[${context.code}]: ${context.reason}`);
-			},
-			"socket.open": () => {
-				this.logger.info(`连接开启`);
-			},
-			"socket.close": ({context}) => {
-				this.logger.info(`已关闭 [${context.code}]: ${context.reason}`);
-				require("child_process").exec("npm stop");
-			},
-		});
-		this.bot.messageSuccess = (ret, message) => {
-			this.logger.debug(`${message.action}成功：${JSON.stringify(ret.data)}`);
-		};
-		this.bot.messageFail = (reason, message) => {
-			this.logger.error(`${message.action}失败[${reason.retcode}]:${reason.wording}`);
-		};
-		this.bot.bind("on", {
-			"message.group": (event) => {
-				const time = process.hrtime();
-				const userId = event.context.user_id;
-				const member = CQDate.getMember(userId);
-				member.addExp(1);
-				if (member.baned) {
-					return;
-				}
-				CQBot.sendCorpusTags(event, async (tags, corpus) => {
-					let pro: PromiseRes<MessageId>;
-					if (!corpus.forward) {
-						pro = sendGroup(event, tags);
-					} else {
-						if (tags[0].tagName === "node") {
-							pro = sendForward(event, tags as messageNode);
-						} else {
-							pro = sendForwardQuick(event, tags);
-						}
-					}
-					if (corpus.delMSG > 0) {
-						await pro.then(value => {
-							deleteMsg(event, value.message_id, corpus.delMSG);
-						}, NOP);
-					} else {
-						await pro.catch(NOP);
-					}
-					Plug.hrtime(time, corpus.name);
-				}).catch(NOP);
-			},
-			"message.private": (event) => {
-				const time = process.hrtime();
-				CQBot.sendCorpusTags(event, async (tags, corpus) => {
-					await sendPrivate(event, tags).catch(NOP);
-					Plug.hrtime(time, corpus.name);
-				}).catch(NOP);
-			},
 		});
 	}
 }

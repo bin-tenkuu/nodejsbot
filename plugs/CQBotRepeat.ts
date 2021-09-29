@@ -14,7 +14,6 @@ class CQBotRepeat extends Plug {
 		super(module);
 		this.name = "QQ群聊-复读";
 		this.description = "测试用";
-		this.version = 0.1;
 	}
 
 	@canCallGroup()

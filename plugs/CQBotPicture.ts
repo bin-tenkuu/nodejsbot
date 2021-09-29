@@ -14,7 +14,6 @@ class CQBotPicture extends Plug {
 		super(module);
 		this.name = "QQ群聊-图片相关";
 		this.description = "QQ群聊发送各种图片";
-		this.version = 0;
 	}
 
 	public async uninstall(): Promise<void> {

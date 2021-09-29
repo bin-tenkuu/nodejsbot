@@ -5,7 +5,6 @@ class test extends Plug {
 		super(module);
 		this.name = "测试";
 		this.description = "测试用";
-		this.version = 0;
 	}
 
 	async install() {

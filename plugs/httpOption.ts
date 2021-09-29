@@ -37,7 +37,6 @@ class HttpOption extends Plug {
 		super(module);
 		this.name = "网页指令";
 		this.description = "通过网页链接达到控制效果";
-		this.version = 0.6;
 		this.server = server;
 		// const jpgUrls = Array.from<undefined, string>({length: 3}, (_, k) => `/${k}.jpg`);
 		// this.generator = endlessGen(jpgUrls);

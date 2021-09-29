@@ -13,7 +13,6 @@ class CQData extends Plug {
 		super(module);
 		this.name = "QQ机器人";
 		this.description = "用于连接go-cqhttp服务的bot";
-		this.version = 0;
 	}
 
 	public async install() {
