@@ -40,9 +40,11 @@ class CQBotPicture extends Plug {
 		const userId: number = event.context.user_id;
 		const member = CQData.getMember(userId);
 		if (!member.addExp(-5)) {
+			this.usingSeTu = false;
 			return [CQ.text("不够活跃")];
 		}
 		if (this.setuSet.has(groups.keyword)) {
+			this.usingSeTu = false;
 			return [CQ.text("没有，爬")];
 		}
 		this.logger.info("开始色图", groups);
@@ -101,11 +103,13 @@ class CQBotPicture extends Plug {
 		const {pid, p} = (exec.groups as { pid?: string, p?: string }) ?? {};
 		this.logger.debug(`p站图片请求：pid:${pid},p:${p}`);
 		if (pid === undefined) {
+			this.usingSearching = false;
 			return [CQ.text("pid获取失败")];
 		}
 		const userId: number = event.context.user_id;
 		const member = CQData.getMember(userId);
 		if (!member.addExp(-5)) {
+			this.usingSearching = false;
 			return [CQ.text("不够活跃")];
 		}
 		try {
