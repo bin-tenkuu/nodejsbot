@@ -59,7 +59,7 @@ class CQBotEvent extends Plug {
 				event.stopPropagation();
 				const {flag, sub_type, group_id} = event.context;
 				sendAdminQQ(event, `${group_id}请求入群`);
-				event.bot.set_group_add_request(flag, sub_type, true);
+				event.bot.set_group_add_request(flag, sub_type, true).catch(NOP);
 			},
 			"notice.offline_file": (event) => {
 				event.stopPropagation();
@@ -104,7 +104,7 @@ class CQBotEvent extends Plug {
 		const {txt}: { txt?: string } = execArray.groups as { txt?: string } ?? {};
 		event.stopPropagation();
 		const {nickname, user_id} = event.context.sender;
-		sendAdminQQ(event, `来自 ${nickname} (${user_id}):\n${txt}`);
+		sendAdminQQ(event, `来自 ${nickname} (${user_id}):\n${txt}`).catch(NOP);
 		return [CQ.text("收到")];
 	}
 

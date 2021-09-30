@@ -3,7 +3,7 @@
 	"version": "1.0.0",
 	"description": "demo",
 	"engines": {
-		"node": ">=12"
+		"node": ">=16"
 	},
 	"main": "index.js",
 	"files": [
@@ -28,12 +28,12 @@
 	"license": "MIT",
 	"devDependencies": {
 		"@types/better-sqlite3": "^7.4.0",
-		"@types/node": "^16.10.1"
+		"@types/node": "^16.10.2"
 	},
 	"dependencies": {
 		"axios": "^0.21.4",
 		"better-sqlite3": "^7.4.3",
-		"go-cqwebsocket": "^6.0.2",
+		"go-cqwebsocket": "^6.0.3",
 		"log4js": "^6.3.0",
 		"node-cache": "^5.1.2",
 		"reflect-metadata": "^0.1.13"

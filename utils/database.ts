@@ -18,10 +18,6 @@ class SQLControl extends Logable {
 		});
 	}
 
-	public async<T>(func: (db: Database) => Promise<T>): void | Promise<T> {
-		return Promise.resolve(this.db).then(func);
-	}
-
 	public sync<T>(func: (db: Database) => T): T {
 		return func(this.db);
 	}

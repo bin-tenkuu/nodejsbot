@@ -1,5 +1,6 @@
 import http, {IncomingMessage, ServerResponse} from "http";
 import {Plug} from "../Plug.js";
+import {setTimeout} from "timers/promises";
 
 type ServerHandle = (req: IncomingMessage, res: ServerResponse) => void;
 
@@ -13,10 +14,10 @@ function create(): Map<string, ServerHandle> {
 				if (IsDebug()) {
 					return;
 				}
-				setTimeout(() => {
+				setTimeout(500).then(() => {
 					HttpOption.logger.log("退出");
 					process.exit(0);
-				}, 500);
+				})
 			});
 		},
 		"404": (req, res) => {

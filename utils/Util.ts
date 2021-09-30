@@ -39,7 +39,7 @@ export function isAdminGroup<T>({context: {group_id}}: hasGroup<T>): boolean {
 	return group_id === adminGroup;
 }
 
-export function sendAdminQQ<T>({bot}: hasBot<T>, message: CQTag[] | string): Promise<void> | void {
+export function sendAdminQQ<T>({bot}: hasBot<T>, message: CQTag[] | string): Promise<void> {
 	if (typeof message === "string") {
 		message = CQ.parse(message);
 	}
@@ -48,7 +48,7 @@ export function sendAdminQQ<T>({bot}: hasBot<T>, message: CQTag[] | string): Pro
 	});
 }
 
-export function sendAdminGroup<T>({bot}: hasBot<T>, message: CQTag[] | string): Promise<void> | void {
+export function sendAdminGroup<T>({bot}: hasBot<T>, message: CQTag[] | string): Promise<void> {
 	if (typeof message === "string") {
 		message = CQ.parse(message);
 	}

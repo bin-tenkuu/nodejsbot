@@ -1,3 +1,4 @@
+import {setTimeout} from "timers/promises";
 import {corpora} from "../config/corpus.json";
 import {Plug} from "../Plug.js";
 import {db} from "../utils/database.js";
@@ -6,7 +7,7 @@ import {Corpus, IMember, Member} from "../utils/Models.js";
 class CQData extends Plug {
 	public corpora: Corpus[] = [];
 	private readonly memberMap = new Map<number, Member>();
-	private autoSaveTimeout: NodeJS.Timeout | undefined = undefined;
+	private autoSaving: boolean = false;
 	private saving: boolean = false;
 
 	public constructor() {
@@ -21,9 +22,6 @@ class CQData extends Plug {
 	}
 
 	public async uninstall() {
-		if (this.autoSaveTimeout !== undefined) {
-			clearTimeout(this.autoSaveTimeout);
-		}
 		return this.save();
 	}
 
@@ -85,22 +83,27 @@ class CQData extends Plug {
 			return;
 		}
 		this.saving = true;
+
 		CQData.saveMember(this.memberMap);
+
 		this.saving = false;
 	}
 
 	private autoSave(): void {
-		this.autoSaveTimeout = setTimeout(() => {
-			if (!this.installed) {
-				return;
-			}
-			this.save().catch(e => {
-				this.logger.error(`自动保存出错:`);
-				this.logger.error(e);
-			}).finally(() => {
-				this.autoSave();
-			});
-		}, 1000 * 60 * 60 * 6);
+		if (this.autoSaving) {
+			return;
+		}
+		this.autoSaving = true;
+		setTimeout(1000 * 60 * 60 * 6).then(() => {
+			return this.save();
+		}).finally(() => {
+			this.autoSaving = false;
+		}).catch(e => {
+			this.logger.error(`自动保存出错:`);
+			this.logger.error(e);
+		}).finally(() => {
+			this.autoSave();
+		});
 	}
 }
 

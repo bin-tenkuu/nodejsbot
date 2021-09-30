@@ -90,6 +90,13 @@ class CQBot extends Plug {
 		return [CQ.text(s)];
 	}
 
+	@canCallGroup()
+	protected async addEXP(event: CQEvent<"message.group">) {
+		event.stopPropagation();
+		CQDate.getMember(event.context.user_id).addExp(1);
+		return [];
+	}
+
 	private static async sendCorpusTags(event: CQMessage,
 			callback: (this: void, tags: CQTag[], element: Corpus) => void | Promise<any>) {
 		const text = onlyText(event);
@@ -106,6 +113,7 @@ class CQBot extends Plug {
 			});
 			if (msg.length > 0) {
 				await callback(msg, element);
+				break;
 			}
 		}
 	}
@@ -147,10 +155,7 @@ class CQBot extends Plug {
 		this.bot.bind("on", {
 			"message.group": (event) => {
 				const time = process.hrtime();
-				const userId = event.context.user_id;
-				const member = CQDate.getMember(userId);
-				member.addExp(1);
-				if (member.baned) {
+				if (CQDate.getMember(event.context.user_id).baned) {
 					return;
 				}
 				CQBot.sendCorpusTags(event, async (tags, corpus) => {
