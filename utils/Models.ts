@@ -133,17 +133,79 @@ export type YHType = {
 	"height": string
 };
 
-export type IMember = { readonly id: number, name: string, exp: number, gmt_modified: number, is_baned: 0 | 1, };
-
-export class Member implements IMember, JSONAble {
+class Modified {
 	public is_modified: boolean = false;
+	protected _gmt_modified: number = 0;
+
+	public modified() {
+		this._gmt_modified = Date.now();
+		this.is_modified = true;
+	}
+
+	public get gmt_modified(): number {
+		return this._gmt_modified;
+	}
+}
+
+export type IGroup = { readonly id: number, exp: number, gmt_modified: number, is_baned: 0 | 1 }
+
+export class Group extends Modified implements IGroup, JSONAble {
+	private _exp: number = 0;
 	private readonly _id: number;
 	private _is_baned: 0 | 1 = 0;
-	private _gmt_modified: number = 0;
+
+	constructor(obj: IGroup | number) {
+		super();
+		if (typeof obj === "number") {
+			this._id = obj;
+			return;
+		} else {
+			this._id = obj.id;
+			this._exp = obj.exp;
+		}
+	}
+
+	public toJSON(): IGroup {
+		return {id: this._id, exp: this._exp, gmt_modified: this._gmt_modified, is_baned: this._is_baned};
+	}
+
+	public get exp(): number {
+		return this._exp;
+	}
+
+	public set exp(value: number) {
+		this._exp = value;
+		this.modified();
+	}
+
+	public get id() {
+		return this._id;
+	}
+
+	public get is_baned(): 0 | 1 {
+		return this._is_baned;
+	}
+
+	public set is_baned(value: 0 | 1) {
+		this._is_baned = value;
+		this.modified();
+	}
+
+	public get baned(): boolean {
+		return this._is_baned !== 0;
+	}
+}
+
+export type IMember = { readonly id: number, name: string, exp: number, gmt_modified: number, is_baned: 0 | 1 };
+
+export class Member extends Modified implements IMember, JSONAble {
+	private readonly _id: number;
+	private _is_baned: 0 | 1 = 0;
 	private _name: string = "";
 	private _exp: number = 0;
 
 	constructor(obj: IMember | number) {
+		super();
 		if (typeof obj === "number") {
 			this._id = obj;
 			return;
@@ -170,11 +232,6 @@ export class Member implements IMember, JSONAble {
 		return {id: this._id, exp: this._exp, name: this._name, gmt_modified: this._gmt_modified, is_baned: this._is_baned};
 	}
 
-	public modified() {
-		this._gmt_modified = Date.now();
-		this.is_modified = true;
-	}
-
 	public get exp(): number {
 		return this._exp;
 	}
@@ -182,10 +239,6 @@ export class Member implements IMember, JSONAble {
 	public set exp(v: number) {
 		this._exp = v;
 		this.modified();
-	}
-
-	public get gmt_modified(): number {
-		return this._gmt_modified;
 	}
 
 	public get id(): number {

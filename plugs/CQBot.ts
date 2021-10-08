@@ -4,7 +4,7 @@ import {adminGroup, CQWS} from "../config/config.json";
 import {Plug} from "../Plug.js";
 import {canCallGroup, canCallPrivate} from "../utils/Annotation.js";
 import {Where} from "../utils/Generators.js";
-import {Corpus} from "../utils/Models.js";
+import {Corpus, Group} from "../utils/Models.js";
 import {
 	CQMessage, deleteMsg, isAdminQQ, isAtMe, onlyText, parseMessage, sendAdminQQ, sendForward, sendForwardQuick,
 	sendGroup, sendPrivate,
@@ -155,7 +155,13 @@ class CQBot extends Plug {
 		this.bot.bind("on", {
 			"message.group": (event) => {
 				const time = process.hrtime();
-				if (CQDate.getMember(event.context.user_id).baned) {
+				let {group_id, user_id} = event.context;
+				let group: Group = CQDate.getGroup(group_id);
+				group.exp++;
+				if (group.baned) {
+					return;
+				}
+				if (CQDate.getMember(user_id).baned) {
 					return;
 				}
 				CQBot.sendCorpusTags(event, async (tags, corpus) => {

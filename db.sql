@@ -16,6 +16,18 @@ CREATE TABLE main.Members (
 	CONSTRAINT id
 		PRIMARY KEY (id)
 );
+-- auto-generated definition
+CREATE TABLE tb_group (
+	id INTEGER(11) NOT NULL
+		CONSTRAINT pk_id
+			PRIMARY KEY,
+	exp INTEGER DEFAULT 0 NOT NULL,
+	gmt_modified UNSIGNED INTEGER(14) DEFAULT 0 NOT NULL,
+	gmt_create UNSIGNED INTEGER(14) DEFAULT 0 NOT NULL,
+	is_baned UNSIGNED INTEGER(1) DEFAULT 0 NOT NULL
+);
+CREATE UNIQUE INDEX uk_id
+	ON tb_group (id);
 -- pokeGroup
 CREATE TABLE main.pokeGroup (
 	id INTEGER,
