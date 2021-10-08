@@ -1,6 +1,6 @@
 import {createWriteStream, readFileSync} from "fs";
 
-const s = readFileSync("D:\\Download\\access81.log").toString();
+const s = readFileSync("./logs/access81.log").toString();
 const stream = createWriteStream("./logs/accessFormat.ini", "utf-8");
 const map = new Map<string, string[]>();
 {
