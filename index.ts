@@ -1,4 +1,13 @@
 import {Plug} from "./Plug.js";
+import CQBot from "./plugs/CQBot.js";
+import CQBotCOC from "./plugs/CQBotCOC.js";
+import CQBotEvent from "./plugs/CQBotEvent.js";
+import CQBotPicture from "./plugs/CQBotPicture.js";
+import CQBotPlugin from "./plugs/CQBotPlugin.js";
+import CQBotRepeat from "./plugs/CQBotRepeat.js";
+import CQBotSearch from "./plugs/CQBotSearch.js";
+import CQData from "./plugs/CQData.js";
+import httpOption from "./plugs/httpOption.js";
 import {logger} from "./utils/logger.js";
 
 declare global {
@@ -12,16 +21,16 @@ global.IsDebug = process.execArgv.includes("--inspect") ? () => true : () => fal
 //*
 Promise.resolve().then(async () => {
 	let time = process.hrtime();
-	await require("./plugs/CQData").default.install();
-	await require("./plugs/httpOption").default.install();
-	await require("./plugs/CQBot").default.install();
+	await CQData.install();
+	await httpOption.install();
+	await CQBot.install();
 
-	await require("./plugs/CQBotCOC").default.install();
-	await require("./plugs/CQBotEvent").default.install();
-	await require("./plugs/CQBotPlugin").default.install();
-	await require("./plugs/CQBotRepeat").default.install();
-	await require("./plugs/CQBotSearch").default.install();
-	await require("./plugs/CQBotPicture").default.install();
+	await CQBotCOC.install();
+	await CQBotEvent.install();
+	await CQBotPlugin.install();
+	await CQBotRepeat.install();
+	await CQBotSearch.install();
+	await CQBotPicture.install();
 	// await require("./plugs/test").default;
 	Plug.hrtime(time, "初始化");
 }).then(() => {

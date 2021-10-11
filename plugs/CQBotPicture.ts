@@ -40,7 +40,7 @@ class CQBotPicture extends Plug {
 		const userId: number = event.context.user_id;
 		const member = CQData.getMember(userId);
 		if (!member.addExp(-5)) {
-			this.usingSeTu = false;
+			// this.usingSeTu = false;
 			// return [CQ.text("不够活跃")];
 		}
 		if (this.setuSet.has(groups.keyword)) {
@@ -109,7 +109,7 @@ class CQBotPicture extends Plug {
 		const userId: number = event.context.user_id;
 		const member = CQData.getMember(userId);
 		if (!member.addExp(-5)) {
-			this.usingSearching = false;
+			// this.usingSearching = false;
 			// return [CQ.text("不够活跃")];
 		}
 		try {

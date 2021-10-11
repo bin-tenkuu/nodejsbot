@@ -8,12 +8,7 @@ class test extends Plug {
 	}
 
 	async install() {
-		this.logger.info(this.toString());
 		throw "但是我拒绝";
-	}
-
-	async uninstall() {
-		this.logger.info(this.toString());
 	}
 }
 

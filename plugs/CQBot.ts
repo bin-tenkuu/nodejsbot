@@ -6,8 +6,8 @@ import {canCallGroup, canCallPrivate} from "../utils/Annotation.js";
 import {Where} from "../utils/Generators.js";
 import {Corpus, Group} from "../utils/Models.js";
 import {
-	CQMessage, deleteMsg, isAdminQQ, isAtMe, onlyText, parseMessage, sendAdminQQ, sendForward, sendForwardQuick,
-	sendGroup, sendPrivate,
+	CQMessage, deleteMsg, isAdminGroup, isAdminQQ, isAtMe, onlyText, parseMessage, sendAdminQQ, sendForward,
+	sendForwardQuick, sendGroup, sendPrivate,
 } from "../utils/Util";
 import {default as CQDate} from "./CQData.js";
 
@@ -126,11 +126,13 @@ class CQBot extends Plug {
 			gen = Where(gen, (c) => c.canGroup);
 		}
 		gen = Where(gen, (c) => length >= c.minLength && length <= c.maxLength);
+		if (event.contextType === "message.group" && isAdminGroup(event)) {
+			return gen;
+		}
 		if (isAdminQQ(event)) {
 			return gen;
-		} else {
-			return Where(gen, (c) => c.isOpen && !c.needAdmin);
 		}
+		return Where(gen, (c) => c.isOpen && !c.needAdmin);
 	}
 
 	#init() {
