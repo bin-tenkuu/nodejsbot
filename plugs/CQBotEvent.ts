@@ -1,14 +1,11 @@
 import {CQ, CQTag, CQWebSocket} from "go-cqwebsocket";
-import {PartialSocketHandle} from "go-cqwebsocket/out/Interfaces";
+import {PartialSocketHandle, Status} from "go-cqwebsocket/out/Interfaces";
 import {Plug} from "../Plug.js";
-import {canCallGroup, canCallPrivate} from "../utils/Annotation.js";
-import {DataCache} from "../utils/repeat.js";
-import {CQMessage, sendAdminQQ, sendGroup, sendPrivate} from "../utils/Util.js";
-import {default as CQData} from "./CQData.js";
+import {canCall} from "../utils/Annotation.js";
+import {CQMessage, deleteMsg, sendAdminQQ, sendGroup, sendPrivate} from "../utils/Util.js";
 
 class CQBotEvent extends Plug {
 	private header: PartialSocketHandle | undefined = undefined;
-	private readonly cache = new DataCache<number, boolean>();
 
 	constructor() {
 		super(module);
@@ -33,7 +30,7 @@ class CQBotEvent extends Plug {
 				event.stopPropagation();
 				const {sub_type, group_id, user_id, operator_id} = event.context;
 				if (sub_type === "kick_me") {
-					sendAdminQQ(event, `群 ${group_id} 被踢出`);
+					sendAdminQQ(event.bot, `群 ${group_id} 被踢出`);
 					return;
 				}
 				let str: string;
@@ -46,19 +43,19 @@ class CQBotEvent extends Plug {
 					str = `@${info.nickname}(${info.user_id})${str}`;
 					return sendGroup(event, [CQ.text(str)]);
 				}).catch(() => {
-					sendAdminQQ(event, str);
+					sendAdminQQ(event.bot, str);
 				});
 			},
 			"request.friend": (event) => {
 				event.stopPropagation();
 				const {user_id, flag} = event.context;
-				sendAdminQQ(event, `${user_id}请求加好友`);
+				sendAdminQQ(event.bot, `${user_id}请求加好友`);
 				event.bot.set_friend_add_request(flag, true).catch(NOP);
 			},
 			"request.group": (event) => {
 				event.stopPropagation();
 				const {flag, sub_type, group_id} = event.context;
-				sendAdminQQ(event, `${group_id}请求入群`);
+				sendAdminQQ(event.bot, `${group_id}请求入群`);
 				event.bot.set_group_add_request(flag, sub_type, true).catch(NOP);
 			},
 			"notice.offline_file": (event) => {
@@ -73,7 +70,7 @@ class CQBotEvent extends Plug {
 			},
 			"notice.client_status": (event) => {
 				const {client: {device_name, device_kind}, online} = event.context;
-				sendAdminQQ(event, `其他客户端(${online ? "上线" : "下线"}):\n设备名称:${device_name
+				sendAdminQQ(event.bot, `其他客户端(${online ? "上线" : "下线"}):\n设备名称:${device_name
 				}\n设备类型:${device_kind}`);
 			},
 		});
@@ -83,29 +80,52 @@ class CQBotEvent extends Plug {
 		require("./CQBot.js").default.bot.unbind(this.header);
 	}
 
-	@canCallGroup()
-	@canCallPrivate()
-	protected async getState(event: CQMessage, execArray: RegExpExecArray): Promise<CQTag[]> {
-		const qq: number = event.context.user_id;
-		if (event.contextType === "message.group") {
-			if (this.cache.has(qq)) {
-				return [];
-			}
-			this.cache.set(qq, true);
-		}
-		event.stopPropagation();
-		const exp = CQData.getMember(+(execArray.groups?.qq ?? qq)).exp;
-		return [CQ.at(qq), CQ.text(`${exp}`)];
-	}
-
-	@canCallGroup()
-	@canCallPrivate()
-	protected async sendReport(event: CQMessage, execArray: RegExpExecArray): Promise<CQTag[]> {
+	@canCall({
+		name: ".report <...>",
+		regexp: /^\.report(?<txt>.+)$/,
+		help: "附上消息发送给开发者",
+		weight: 6,
+		then(v, event) {
+			deleteMsg(event.bot, v.message_id, 10);
+		},
+	})
+	protected sendReport(event: CQMessage, execArray: RegExpExecArray): CQTag[] {
 		const {txt}: { txt?: string } = execArray.groups as { txt?: string } ?? {};
 		event.stopPropagation();
 		const {nickname, user_id} = event.context.sender;
-		sendAdminQQ(event, `来自 ${nickname} (${user_id}):\n${txt}`).catch(NOP);
+		sendAdminQQ(event.bot, `来自 ${nickname} (${user_id}):\n${txt}`).catch(NOP);
 		return [CQ.text("收到")];
+	}
+
+	@canCall({
+		name: ".状态",
+		regexp: /^\.状态$/,
+		needAdmin: true,
+		weight: 2,
+	})
+	protected getBotState(event: CQMessage): CQTag[] {
+		const state: Status["stat"] = event.bot.state.stat;
+		event.stopPropagation();
+		return [
+			CQ.text(`数据包丢失总数:${state.packet_lost
+			}\n接受信息总数:${state.message_received
+			}\n发送信息总数:${state.message_sent
+			}\n账号掉线次数:${state.lost_times}`),
+		];
+	}
+
+	@canCall({
+		name: ".help|帮助",
+		regexp: /^\.(?:help|帮助)$/,
+		forward: true,
+		weight: 2,
+		minLength: 3,
+		maxLength: 10,
+	})
+	protected getHelp(): CQTag[] {
+		const s: string = Plug.plugCorpus.filter(c => c.isOpen && !c.needAdmin &&
+				c.help !== undefined).map<string>((c) => `${c.name}:${c.help}`).join("\n");
+		return [CQ.text(s)];
 	}
 
 }

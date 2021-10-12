@@ -18,7 +18,7 @@ configure(<Configuration>{
 			encoding: "utf-8",
 			compress: false,
 			alwaysIncludePattern: true,
-			daysToKeep: 6,
+			daysToKeep: 4,
 			keepFileExt: true,
 			layout: <BaseLayout>{
 				type: "basic",
@@ -28,7 +28,7 @@ configure(<Configuration>{
 			type: "fileSync",
 			filename: "./logs/Warn.log",
 			backups: 5,
-			maxLogSize: 1024 * 1024,
+			maxLogSize: 1024 * 100,
 			layout: <BaseLayout>{
 				type: "basic",
 			},
@@ -72,12 +72,12 @@ export class Logable {
 		}
 
 		if (this !== Logable) {
-			Object.defineProperty(this, "_logger", <TypedPropertyDescriptor<Logger>>{
+			Reflect.defineProperty(this, "_logger", <TypedPropertyDescriptor<Logger>>{
 				configurable: true,
 				enumerable: false,
 				value: getLogger(this.name),
 			});
-			Object.defineProperty(this, "logger", <TypedPropertyDescriptor<Logger>>{
+			Reflect.defineProperty(this, "logger", <TypedPropertyDescriptor<Logger>>{
 				configurable: true,
 				enumerable: false,
 				get: LoggerGetter,

@@ -23,6 +23,7 @@ function create(): Map<string, ServerHandle> {
 		"404": (req, res) => {
 			res.writeHead(404);
 			HttpOption.logger.warn(`${req.url} 404`);
+			// noinspection HtmlUnknownTarget
 			return res.end("<a href='/exit'>http://127.0.0.1:40000/exit</a>");
 		},
 	}));
@@ -31,8 +32,6 @@ function create(): Map<string, ServerHandle> {
 class HttpOption extends Plug {
 	public server: Map<string, ServerHandle>;
 	private header?: http.Server;
-
-	// private generator: Generator<string, never, never>;
 
 	constructor(server: Map<string, ServerHandle>) {
 		super(module);
@@ -55,23 +54,6 @@ class HttpOption extends Plug {
 		this.header?.close();
 	}
 
-	/*
-	async setJPG(url: string) {
-		return axios.get(url).then((data) => {
-			const img = images(data.data);
-			const width = Math.min(img.size().width >> 1, 1000);
-			const buffer = img.resize(width).encode("jpg");
-			const value: string = this.generator.next().value;
-			this.server.set(value, (req, res) => {
-				res.setHeader("Content-type", "image/jpeg");
-				res.setHeader("Content-Length", buffer.length);
-				res.write(buffer, "binary");
-				res.end();
-			});
-			return `http://127.0.0.1:40000${value}`;
-		});
-	}
-	//*/
 	private handle(req: IncomingMessage, res: ServerResponse) {
 		this.logger.info(`网页 '${req.url}' 收到请求`);
 		this.logger.info(`代理:\t${req.headers["x-forwarded-for"]}`);

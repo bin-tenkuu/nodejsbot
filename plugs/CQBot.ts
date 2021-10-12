@@ -1,13 +1,12 @@
-import {CQ, CQEvent, CQTag, CQWebSocket, messageNode} from "go-cqwebsocket";
+import {CQ, CQTag, CQWebSocket, messageNode} from "go-cqwebsocket";
 import {MessageId, PromiseRes, Status} from "go-cqwebsocket/out/Interfaces";
-import {adminGroup, CQWS} from "../config/config.json";
+import {CQWS} from "../config/config.json";
 import {Plug} from "../Plug.js";
-import {canCallGroup, canCallPrivate} from "../utils/Annotation.js";
 import {Where} from "../utils/Generators.js";
 import {Corpus, Group} from "../utils/Models.js";
 import {
-	CQMessage, deleteMsg, isAdminGroup, isAdminQQ, isAtMe, onlyText, parseMessage, sendAdminQQ, sendForward,
-	sendForwardQuick, sendGroup, sendPrivate,
+	CQMessage, isAdminGroup, isAdminQQ, onlyText, sendAdminGroup, sendAdminQQ, sendForward, sendForwardQuick, sendGroup,
+	sendPrivate,
 } from "../utils/Util";
 import {default as CQDate} from "./CQData.js";
 
@@ -15,6 +14,9 @@ class CQBot extends Plug {
 	public bot: CQWebSocket = new CQWebSocket(CQWS);
 
 	private sendStateInterval?: NodeJS.Timeout;
+	private stateCache = {
+		packet_lost: 0, message_sent: 0, message_received: 0,
+	};
 
 	constructor() {
 		super(module);
@@ -28,7 +30,7 @@ class CQBot extends Plug {
 			this.bot.bind("onceAll", {
 				"socket.open": (event) => {
 					this.logger.info("连接");
-					sendAdminQQ({bot: event.bot}, "已上线");
+					sendAdminQQ(event.bot, "已上线");
 					resolve();
 					this.sendStateInterval = setInterval(() => {
 						this.sendState(this.bot.state.stat);
@@ -44,7 +46,7 @@ class CQBot extends Plug {
 	}
 
 	async uninstall() {
-		await sendAdminQQ({bot: this.bot}, "即将下线");
+		await sendAdminQQ(this.bot, "即将下线");
 		return new Promise<void>((resolve, reject) => {
 			this.bot.bind("on", {
 				"socket.close": () => {
@@ -60,53 +62,16 @@ class CQBot extends Plug {
 		});
 	}
 
-	@canCallGroup()
-	protected async MemeAI(event: CQEvent<"message.group">, execArray: RegExpExecArray) {
-		if (!isAtMe(event)) {
-			return [];
-		}
-		event.stopPropagation();
-		const {message_id, user_id} = event.context;
-		const cqTags = execArray.input.replace(/吗/g, "")
-				.replace(/(?<!\\)不/g, "\\很")
-				.replace(/(?<!\\)你/g, "\\我")
-				.replace(/(?<!\\)我/g, "\\你")
-				.replace(/(?<![没\\])有/g, "\\没有")
-				.replace(/(?<!\\)没有/g, "\\有")
-				.replace(/[？?]/g, "!")
-				.replace(/\\/g, "");
-		return [
-			CQ.reply(message_id),
-			CQ.at(user_id),
-			CQ.text(cqTags),
-		];
-	}
-
-	@canCallGroup()
-	@canCallPrivate()
-	protected async getHelp() {
-		const s: string = CQDate.corpora.filter(c => c.isOpen && !c.needAdmin &&
-				c.help !== undefined).map<string>((c) => `${c.name}:${c.help}`).join("\n");
-		return [CQ.text(s)];
-	}
-
-	@canCallGroup()
-	protected async addEXP(event: CQEvent<"message.group">) {
-		event.stopPropagation();
-		CQDate.getMember(event.context.user_id).addExp(1);
-		return [];
-	}
-
 	private static async sendCorpusTags(event: CQMessage,
 			callback: (this: void, tags: CQTag[], element: Corpus) => void | Promise<any>) {
 		const text = onlyText(event);
-		let corpus = this.filterCorpus(event, text.length);
+		const corpus = this.filterCorpus(event, text.length);
 		for (const element of corpus) {
 			const exec = element.regexp.exec(text);
 			if (exec === null) {
 				continue;
 			}
-			const msg = await parseMessage(element.reply, event, exec).catch(e => {
+			const msg = await element.run(event, exec).catch(e => {
 				this.logger.error("语料库转换失败:" + element.name);
 				this.logger.error(e);
 				return [CQ.text("error:" + element.name + "\n")];
@@ -119,7 +84,7 @@ class CQBot extends Plug {
 	}
 
 	private static filterCorpus(event: CQMessage, length: number): Generator<Corpus, void, void> {
-		let gen: Generator<Corpus, void, void> = Where(CQDate.corpora, _ => !event.isCanceled);
+		let gen: Generator<Corpus, void, void> = Where(Plug.plugCorpus, _ => !event.isCanceled);
 		if (event.contextType === "message.private") {
 			gen = Where(gen, (c) => c.canPrivate);
 		} else {
@@ -177,13 +142,11 @@ class CQBot extends Plug {
 							pro = sendForwardQuick(event, tags);
 						}
 					}
-					if (corpus.delMSG > 0) {
-						await pro.then(value => {
-							deleteMsg(event, value.message_id, corpus.delMSG);
-						}, NOP);
-					} else {
-						await pro.catch(NOP);
-					}
+					await pro.then(value => {
+						corpus.then(value, event);
+					}, reason => {
+						corpus.catch(reason, event);
+					}).catch(NOP);
 					Plug.hrtime(time, corpus.name);
 				}).catch(NOP);
 			},
@@ -199,12 +162,22 @@ class CQBot extends Plug {
 
 	/**发送bot信息*/
 	private sendState(state: Status["stat"]) {
-		let msg = [
-			CQ.text(`数据包丢失总数:${state.packet_lost
-			}\n接受信息总数:${state.message_received
-			}\n发送信息总数:${state.message_sent}`),
-		];
-		this.bot.send_group_msg(adminGroup, msg).catch(() => {
+		let str = "";
+		if (state.message_sent <= this.stateCache.message_sent) {
+			return;
+		}
+		if (state.packet_lost > this.stateCache.packet_lost) {
+			str += `\n数据包丢失总数变化:+${state.packet_lost - this.stateCache.packet_lost}`;
+		}
+		this.stateCache.packet_lost = state.packet_lost;
+		if (state.message_received > this.stateCache.message_received) {
+			str += `\n接受信息总数变化:+${state.message_received - this.stateCache.message_received}`;
+		}
+		this.stateCache.message_received = state.message_received;
+		str += `\n发送信息总数变化:+${state.message_sent - this.stateCache.message_sent}`;
+		this.stateCache.message_sent = state.message_sent + 1;
+
+		sendAdminGroup(this.bot, [CQ.text(str)]).catch(() => {
 			if (this.sendStateInterval !== undefined) {
 				clearInterval(this.sendStateInterval);
 			}

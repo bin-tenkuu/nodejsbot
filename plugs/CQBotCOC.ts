@@ -1,6 +1,6 @@
 import {CQ, CQTag} from "go-cqwebsocket";
 import {Plug} from "../Plug.js";
-import {canCallGroup, canCallPrivate} from "../utils/Annotation.js";
+import {canCall} from "../utils/Annotation.js";
 import {dice, DiceResult, distribution} from "../utils/COCUtils.js";
 import {db} from "../utils/database.js";
 import {DataCache} from "../utils/repeat.js";
@@ -21,9 +21,15 @@ class CQBotCOC extends Plug {
 		this.#init();
 	}
 
-	@canCallGroup()
-	@canCallPrivate()
-	protected async getDiceStat(event: CQMessage): Promise<CQTag[]> {
+	@canCall({
+		name: ".dstat",
+		regexp: /^\.dstat$/,
+		help: "查看全部简写",
+		minLength: 5,
+		maxLength: 7,
+		weight: 1,
+	})
+	protected getDiceStat(event: CQMessage): CQTag[] {
 		event.stopPropagation();
 		let str = "";
 		this.shortKey.forEach((value, key) => {
@@ -35,9 +41,15 @@ class CQBotCOC extends Plug {
 		return [CQ.text(str)];
 	}
 
-	@canCallGroup()
-	@canCallPrivate()
-	protected async getDiceSet(event: CQMessage, execArray: RegExpExecArray): Promise<CQTag[]> {
+	@canCall({
+		name: ".dset <key>[=<value>]",
+		regexp: /^\.dset +(?<key>\w[\w\d]+)(?:=(?<value>[+\-*d0-9#]+))?/,
+		help: "设置/删除简写",
+		minLength: 5,
+		maxLength: 100,
+		weight: 1,
+	})
+	protected getDiceSet(event: CQMessage, execArray: RegExpExecArray): CQTag[] {
 		event.stopPropagation();
 		const {key, value} = execArray.groups as { key?: string, value?: string } ?? {};
 		if (key === undefined || key.length > 5) {
@@ -60,9 +72,15 @@ class CQBotCOC extends Plug {
 		return [CQ.text(`添加key:${key}=${value}`)];
 	}
 
-	@canCallGroup()
-	@canCallPrivate()
-	protected async getDice(event: CQMessage, execArray: RegExpExecArray): Promise<CQTag[]> {
+	@canCall({
+		name: ".[Dd] <表达式> <...>",
+		regexp: /^\.d +(?:(?<times>\d)#)?(?<dice>[^ ]+)/i,
+		weight: 1,
+		help: "骰子及简单表达式计算",
+		minLength: 5,
+		maxLength: 500,
+	})
+	protected getDice(event: CQMessage, execArray: RegExpExecArray): CQTag[] {
 		event.stopPropagation();
 		let {times = "1", dice} = execArray.groups as { times: string, dice: string } ?? {};
 		if (dice === undefined) {
@@ -71,16 +89,19 @@ class CQBotCOC extends Plug {
 		this.shortKey.forEach((value, key) => {
 			dice = dice.replace(new RegExp(key, "g"), value);
 		});
-		if (/[^+\-*dD0-9#]/.test(dice)) {
+		if (/[^+\-*d0-9#]/i.test(dice)) {
 			return [CQ.text(".d错误参数")];
 		}
 		const result = Array.from({length: +times}, () => this.dice(dice, event.context.user_id)).join("\n");
 		return [CQ.text(result)];
 	}
 
-	@canCallGroup()
-	@canCallPrivate()
-	protected async getRandom(event: CQMessage, execArray: RegExpExecArray): Promise<CQTag[]> {
+	@canCall({
+		name: "多重随机数",
+		isOpen: false,
+		weight: 10,
+	})
+	protected getRandom(event: CQMessage, execArray: RegExpExecArray): CQTag[] {
 		event.stopPropagation();
 		const {num, times = 2} = execArray.groups as { num?: string, times?: string } ?? {};
 		if (num === undefined) {
@@ -90,17 +111,26 @@ class CQBotCOC extends Plug {
 		return [CQ.text(`${times}重随机数:${number}`)];
 	}
 
-	@canCallGroup()
-	@canCallPrivate()
-	protected async setCheater(event: CQMessage): Promise<CQTag[]> {
+	@canCall({
+		name: ".dall1:打开全1模式",
+		regexp: /^\.dall1$/,
+		weight: 1,
+		minLength: 5,
+	})
+	protected setCheater(event: CQMessage): CQTag[] {
 		event.stopPropagation();
 		this.cheater = !this.cheater;
 		return [CQ.text("全1" + (this.cheater ? "开" : "关"))];
 	}
 
-	@canCallGroup()
-	@canCallPrivate()
-	protected async setDiceType(event: CQMessage, execArray: RegExpExecArray): Promise<CQTag[]> {
+	@canCall({
+		name: ".d[bug|(wr|cb|aj)f?]:打开/关闭特殊模式",
+		regexp: /^\.d(?<operator>\w{2,3})$/i,
+		weight: 1,
+		minLength: 2,
+		maxLength: 10,
+	})
+	protected setDiceType(event: CQMessage, execArray: RegExpExecArray): CQTag[] {
 		event.stopPropagation();
 		const {operator} = execArray.groups as { operator: string } ?? {};
 		if (operator == null) {
@@ -117,9 +147,15 @@ class CQBotCOC extends Plug {
 		return [CQ.text("未知状态")];
 	}
 
-	@canCallGroup()
-	@canCallPrivate()
-	protected async getAddedRandom(event: CQMessage, execArray: RegExpExecArray): Promise<CQTag[]> {
+	@canCall({
+		name: ".dp<num>",
+		regexp: /^\.dp ?(?<num>\d+)?/i,
+		help: "10分钟之内加投骰",
+		minLength: 5,
+		maxLength: 500,
+		weight: 1,
+	})
+	protected getAddedRandom(event: CQMessage, execArray: RegExpExecArray): CQTag[] {
 		event.stopPropagation();
 		const {num: numStr} = execArray.groups as {
 			num?: string

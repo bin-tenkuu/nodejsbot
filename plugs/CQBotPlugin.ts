@@ -1,6 +1,6 @@
 import {CQ, CQTag} from "go-cqwebsocket";
 import {Plug} from "../Plug.js";
-import {canCallGroup, canCallPrivate} from "../utils/Annotation.js";
+import {canCall, canCallRet} from "../utils/Annotation.js";
 import {Corpus} from "../utils/Models.js";
 import {CQMessage} from "../utils/Util.js";
 import {default as CQData} from "./CQData.js";
@@ -14,9 +14,14 @@ class CQBotPlugin extends Plug {
 		this.description = "QQBot插件系统,QQ管理员命令启用或停用对应插件";
 	}
 
-	@canCallPrivate()
-	@canCallGroup()
-	protected async getter(event: CQMessage, execArray: RegExpExecArray): Promise<CQTag[]> {
+	@canCall({
+		name: ".获取<type>列表<other>",
+		regexp: /^\.获取(?<type>[^ ]+)列表(?<other>.*)$/,
+		needAdmin: true,
+		forward: true,
+		weight: 4,
+	})
+	protected getter(event: CQMessage, execArray: RegExpExecArray): canCallRet {
 		event.stopPropagation();
 		const {type} = execArray.groups as { type?: string } ?? {};
 		if (type === undefined) {
@@ -50,9 +55,13 @@ class CQBotPlugin extends Plug {
 		}
 	}
 
-	@canCallPrivate()
-	@canCallGroup()
-	protected async setter(event: CQMessage, execArray: RegExpExecArray): Promise<CQTag[]> {
+	@canCall({
+		name: ".设置<type> <other>",
+		regexp: /^\.设置(?<type>[^ ]+) (?<other>.+)$/,
+		needAdmin: true,
+		weight: 4,
+	})
+	protected setter(event: CQMessage, execArray: RegExpExecArray): CQTag[] {
 		event.stopPropagation();
 		const {type, other = ""} = execArray.groups as { type?: string, other?: string } ?? {};
 		switch (type) {
@@ -65,12 +74,14 @@ class CQBotPlugin extends Plug {
 		}
 	}
 
-	/**
-	 * { open?: "开" | "关" }
-	 */
-	@canCallPrivate()
-	@canCallGroup()
-	protected async corpusList(event: CQMessage, execArray: RegExpExecArray): Promise<CQTag[]> {
+	@canCall({
+		name: ".语料库<type><open>",
+		regexp: /^\.语料库(?<type>[私群]聊)?(?<open>[开关])$/,
+		needAdmin: true,
+		forward: true,
+		weight: 4,
+	})
+	protected corpusList(event: CQMessage, execArray: RegExpExecArray): CQTag[] {
 		event.stopPropagation();
 		const {type, open} = execArray.groups as { type?: "私聊" | "群聊", open?: "开" | "关" } ?? {};
 		let isOpen: boolean;
@@ -81,19 +92,20 @@ class CQBotPlugin extends Plug {
 		} else {
 			return [];
 		}
-		return CQBotPlugin.getCorpusList(type).map((msg, index) =>
-				({name: msg.name, isOpen: msg.isOpen, index}),
-		).filter(msg => msg.isOpen === isOpen,
-		).map(({name, index}) => CQ.text(`${index} :${name}\n`),
-		);
+		return CQBotPlugin.getCorpusList(type).map((msg, index) => {
+			return {name: msg.name, isOpen: msg.isOpen, index};
+		}).filter(msg => msg.isOpen === isOpen).map(({name, index}) => {
+			return CQ.text(`${index} :${name}\n`);
+		});
 	}
 
-	/**
-	 * { open?: "开" | "关", nums?: string }
-	 */
-	@canCallPrivate()
-	@canCallGroup()
-	protected async corpusStat(event: CQMessage, execArray: RegExpExecArray): Promise<CQTag[]> {
+	@canCall({
+		name: ".语料库<type><open><nums>",
+		regexp: /^\.语料库(?<type>[私群]聊)?(?<open>[开关])(?<nums>\s?\d+)$/,
+		needAdmin: true,
+		weight: 4,
+	})
+	protected corpusStat(event: CQMessage, execArray: RegExpExecArray): CQTag[] {
 		event.stopPropagation();
 		const {
 			type, open, nums,
@@ -118,9 +130,13 @@ class CQBotPlugin extends Plug {
 		return [CQ.text("回复变动id:" + number)];
 	}
 
-	@canCallPrivate()
-	@canCallGroup()
-	protected async corpusInfo(event: CQMessage, execArray: RegExpExecArray): Promise<CQTag[]> {
+	@canCall({
+		name: ".语料库<type><nums>",
+		regexp: /^\.语料库(?<type>[私群]聊)?(?<nums>\s?\d+)$/,
+		needAdmin: true,
+		weight: 4,
+	})
+	protected corpusInfo(event: CQMessage, execArray: RegExpExecArray): CQTag[] {
 		event.stopPropagation();
 		const {
 			type, nums,
@@ -141,9 +157,14 @@ class CQBotPlugin extends Plug {
 		return [CQ.text(stringify)];
 	}
 
-	@canCallPrivate()
-	@canCallGroup()
-	protected async pluginInfo(event: CQMessage, execArray: RegExpExecArray): Promise<CQTag[]> {
+	@canCall({
+		name: ".插件<other>",
+		regexp: /^\.插件(?<other>.*)$/,
+		needAdmin: true,
+		forward: true,
+		weight: 4,
+	})
+	protected pluginInfo(event: CQMessage, execArray: RegExpExecArray): CQTag[] {
 		event.stopPropagation();
 		const {other} = execArray.groups as { other?: string } ?? {};
 		if (other === undefined) {
@@ -166,11 +187,11 @@ class CQBotPlugin extends Plug {
 
 	private static getCorpusList(type?: "私聊" | "群聊"): Corpus[] {
 		if (type === "私聊") {
-			return CQData.corpora.filter(c => c.canPrivate);
+			return Plug.plugCorpus.filter(c => c.canPrivate);
 		} else if (type === "群聊") {
-			return CQData.corpora.filter(c => c.canPrivate);
+			return Plug.plugCorpus.filter(c => c.canGroup);
 		} else {
-			return CQData.corpora;
+			return Plug.plugCorpus;
 		}
 	}
 

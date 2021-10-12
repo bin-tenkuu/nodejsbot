@@ -1,4 +1,5 @@
 import {Logable} from "./utils/logger.js";
+import {Corpus} from "./utils/Models.js";
 
 const State = {
 	create: 0,
@@ -9,6 +10,7 @@ const State = {
 
 export abstract class Plug extends Logable {
 	public static readonly plugs: Map<string, Plug> = new Map<string, Plug>();
+	public static readonly plugCorpus: Corpus[] = [];
 	public readonly module: NodeModule;
 	public canAutoCall: Set<string>;
 	public name: string = this.constructor.name;
@@ -110,3 +112,7 @@ export abstract class Plug extends Logable {
 		return this.#state;
 	}
 }
+
+// class CorpusArray extends Array<Corpus> {
+//
+// }

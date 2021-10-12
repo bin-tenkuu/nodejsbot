@@ -35,8 +35,7 @@
 		"better-sqlite3": "^7.4.3",
 		"go-cqwebsocket": "^6.0.3",
 		"log4js": "^6.3.0",
-		"node-cache": "^5.1.2",
-		"reflect-metadata": "^0.1.13"
+		"node-cache": "^5.1.2"
 	},
 	"private": true
 }

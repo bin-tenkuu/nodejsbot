@@ -1,8 +1,8 @@
 import {CQ, CQTag} from "go-cqwebsocket";
 import {Plug} from "../Plug.js";
-import {canCallGroup, canCallPrivate} from "../utils/Annotation.js";
+import {canCall} from "../utils/Annotation.js";
 import {lolicon, pixivCat} from "../utils/Search.js";
-import {CQMessage, getPRegular, sendAdminQQ, sendForward} from "../utils/Util.js";
+import {CQMessage, deleteMsg, getPRegular, sendAdminQQ, sendForward} from "../utils/Util.js";
 import {default as CQData} from "./CQData.js";
 
 
@@ -24,8 +24,16 @@ class CQBotPicture extends Plug {
 	}
 
 	/**获取随机色图*/
-	@canCallGroup()
-	@canCallPrivate()
+	@canCall({
+		name: "来点[<r18>][<key>]色图",
+		regexp: /^[来來发發给給][张張个個幅点點份](?<r18>[Rr]18的?)?(?<keyword>.*)?[涩色瑟铯s][图圖t]$/,
+		help: "来点色图,可选参数:r18,关键字",
+		minLength: 4,
+		weight: 5,
+		then(m, e) {
+			deleteMsg(e.bot, m.message_id, 20);
+		},
+	})
 	protected async getSeTu(event: CQMessage, exec: RegExpExecArray): Promise<CQTag[]> {
 		event.stopPropagation();
 		if (this.usingSeTu) {
@@ -83,7 +91,7 @@ class CQBotPicture extends Plug {
 			}
 			return [CQ.image(first.url)];
 		} catch (reason) {
-			sendAdminQQ(event, "色图坏了").catch(NOP);
+			sendAdminQQ(event.bot, "色图坏了").catch(NOP);
 			this.logger.error(reason);
 			return [CQ.text("未知错误,或网络错误")];
 		} finally {
@@ -92,8 +100,16 @@ class CQBotPicture extends Plug {
 	}
 
 	/**获取pid对应的p站图片*/
-	@canCallGroup()
-	@canCallPrivate()
+	@canCall({
+		name: "看看p站<pid>[-<p>]",
+		regexp: /^看{1,2}p站(?<pid>\d+)(?:-(?<p>\d+))?$/,
+		help: "看看p站带上pid发送",
+		minLength: 5,
+		weight: 5,
+		then(m, e) {
+			deleteMsg(e.bot, m.message_id, 90);
+		},
+	})
 	protected async getPixiv(event: CQMessage, exec: RegExpExecArray): Promise<CQTag[]> {
 		event.stopPropagation();
 		if (this.usingSearching) {
@@ -134,7 +150,7 @@ class CQBotPicture extends Plug {
 			}
 		} catch (e) {
 			member.addExp(5);
-			sendAdminQQ(event, "p站图片加载出错").catch(NOP);
+			sendAdminQQ(event.bot, "p站图片加载出错").catch(NOP);
 			this.logger.error(e);
 			return [CQ.text("网络请求错误或内部错误")];
 		} finally {
@@ -142,9 +158,14 @@ class CQBotPicture extends Plug {
 		}
 	}
 
-	@canCallGroup()
-	@canCallPrivate()
-	protected async getSetuSet(): Promise<CQTag[]> {
+	@canCall({
+		name: ".色图失败列表",
+		regexp: /^\.色图失败列表$/,
+		forward: true,
+		needAdmin: true,
+		weight: 3,
+	})
+	protected getSetuSet(): CQTag[] {
 		return [CQ.text(["", ...this.setuSet].join("\n"))];
 	}
 

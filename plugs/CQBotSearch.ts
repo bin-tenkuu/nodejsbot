@@ -1,7 +1,7 @@
 import {CQ, CQEvent} from "go-cqwebsocket";
 import {CQImage, CQTag} from "go-cqwebsocket/out/tags";
 import {Plug} from "../Plug.js";
-import {canCallGroup} from "../utils/Annotation.js";
+import {canCall} from "../utils/Annotation.js";
 import {sauceNAO} from "../utils/Search.js";
 import {sendAuto, sendForward} from "../utils/Util.js";
 
@@ -13,7 +13,13 @@ class CQBotSearch extends Plug {
 		this.description = "QQ群聊SauceNAO搜图";
 	}
 
-	@canCallGroup()
+	@canCall({
+		name: ".搜图",
+		regexp: /^\.搜图$/,
+		help: "同时发送图片",
+		canPrivate: false,
+		weight: 5,
+	})
 	protected async getSauceNAO(event: CQEvent<"message.group">): Promise<CQTag[]> {
 		const tag: CQTag | undefined = event.cqTags.find(tag => tag instanceof CQImage);
 		if (tag === undefined) {

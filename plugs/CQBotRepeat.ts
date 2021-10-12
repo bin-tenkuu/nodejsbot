@@ -1,9 +1,10 @@
-import {CQ, CQEvent} from "go-cqwebsocket";
+import {CQ, CQEvent, CQTag} from "go-cqwebsocket";
 import {CQImage} from "go-cqwebsocket/out/tags";
 import {CQText} from "go-cqwebsocket/out/tags.js";
 import {Plug} from "../Plug.js";
-import {canCallGroup} from "../utils/Annotation.js";
+import {canCall} from "../utils/Annotation.js";
 import {DataCache} from "../utils/repeat.js";
+import {isAtMe} from "../utils/Util.js";
 
 class CQBotRepeat extends Plug {
 	private repeatCache = new DataCache<number, RepeatCache>(undefined,
@@ -16,8 +17,13 @@ class CQBotRepeat extends Plug {
 		this.description = "测试用";
 	}
 
-	@canCallGroup()
-	protected async getRepeat(event: CQEvent<"message.group">) {
+	@canCall({
+		name: "(复读)",
+		regexp: /^/,
+		canPrivate: false,
+		weight: 90,
+	})
+	protected getRepeat(event: CQEvent<"message.group">): CQTag[] {
 		const {group_id, user_id, raw_message} = event.context;
 		const node = this.repeatCache.get(group_id, new RepeatCache(raw_message));
 		if (node.addUser(user_id)) {
@@ -47,6 +53,33 @@ class CQBotRepeat extends Plug {
 			return [CQ.text(msg)];
 		}
 		return [CQ.text(CQBotRepeat.Random(...msg).join(""))];
+	}
+
+	@canCall({
+		name: "(@复读AI)",
+		regexp: /^/,
+		canPrivate: false,
+		weight: 91,
+	})
+	protected MemeAI(event: CQEvent<"message.group">, execArray: RegExpExecArray): CQTag[] {
+		if (!isAtMe(event)) {
+			return [];
+		}
+		event.stopPropagation();
+		const {message_id, user_id} = event.context;
+		const cqTags = execArray.input.replace(/吗/g, "")
+				.replace(/(?<!\\)不/g, "\\很")
+				.replace(/(?<!\\)你/g, "\\我")
+				.replace(/(?<!\\)我/g, "\\你")
+				.replace(/(?<![没\\])有/g, "\\没有")
+				.replace(/(?<!\\)没有/g, "\\有")
+				.replace(/[？?]/g, "!")
+				.replace(/\\/g, "");
+		return [
+			CQ.reply(message_id),
+			CQ.at(user_id),
+			CQ.text(cqTags),
+		];
 	}
 
 	private static Random(...arr: string[]): string[] {

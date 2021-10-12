@@ -1,15 +1,18 @@
+import {CQ, CQEvent, CQTag} from "go-cqwebsocket";
 import {setTimeout} from "timers/promises";
-import {corpora} from "../config/corpus.json";
 import {Plug} from "../Plug.js";
+import {canCall} from "../utils/Annotation.js";
 import {db} from "../utils/database.js";
-import {Corpus, Group, IGroup, IMember, Member} from "../utils/Models.js";
+import {Group, IGroup, IMember, Member} from "../utils/Models.js";
+import {DataCache} from "../utils/repeat.js";
+import {CQMessage} from "../utils/Util.js";
 
 class CQData extends Plug {
-	public corpora: Corpus[] = [];
 	private readonly memberMap = new Map<number, Member>();
 	private readonly groupMap = new Map<number, Group>();
 	private autoSaving: boolean = false;
 	private saving: boolean = false;
+	private readonly cache = new DataCache<number, boolean>();
 
 	public constructor() {
 		super(module);
@@ -18,7 +21,6 @@ class CQData extends Plug {
 	}
 
 	public async install() {
-		this.corpora = corpora.map(msg => new Corpus(msg));
 		this.autoSave();
 	}
 
@@ -54,6 +56,39 @@ class CQData extends Plug {
 
 	public setGroupBaned(id: number, is_baned: 0 | 1 | boolean): void {
 		this.getGroup(id).is_baned = is_baned ? 1 : 0;
+	}
+
+	@canCall({
+		name: ".state[<qq>]",
+		regexp: /^\.state(?<qq> ?\d{3,12})?$/,
+		help: "查看自己/<qq>的信息",
+		weight: 6,
+	})
+	protected getState(event: CQMessage, execArray: RegExpExecArray): CQTag[] {
+		const qq: number = event.context.user_id;
+		if (event.contextType === "message.group") {
+			if (this.cache.has(qq)) {
+				return [];
+			}
+			this.cache.set(qq, true);
+		}
+		event.stopPropagation();
+		const exp = this.getMember(+(execArray.groups?.qq ?? qq)).exp;
+		return [CQ.at(qq), CQ.text(`${exp}`)];
+	}
+
+	@canCall({
+		name: "(活跃增长)",
+		regexp: /^/,
+		canPrivate: false,
+		maxLength: Infinity,
+		minLength: 0,
+		weight: Infinity,
+	})
+	protected addEXP(event: CQEvent<"message.group">): CQTag[] {
+		event.stopPropagation();
+		this.getMember(event.context.user_id).addExp(1);
+		return [];
 	}
 
 	private static loadMember(id: number): Member {

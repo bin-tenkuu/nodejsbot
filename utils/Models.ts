@@ -1,3 +1,10 @@
+import {CQ, CQTag} from "go-cqwebsocket";
+import {ErrorAPIResponse, MessageId} from "go-cqwebsocket/out/Interfaces.js";
+import {Plug} from "../Plug.js";
+import {canCallGroupType, canCallPrivateType, canCallType} from "./Annotation.js";
+import {Logable} from "./logger.js";
+import {CQMessage} from "./Util.js";
+
 type sauceNAOResultsHeader = {
 	/** 库id */
 	index_id: number,
@@ -142,6 +149,7 @@ class Modified {
 		this.is_modified = true;
 	}
 
+// noinspection JSUnusedGlobalSymbols
 	public get gmt_modified(): number {
 		return this._gmt_modified;
 	}
@@ -268,45 +276,140 @@ export class Member extends Modified implements IMember, JSONAble {
 	}
 }
 
-type ICorpus = {
-	name: string, regexp: string, reply?: string, forward?: boolean,
-	needAdmin?: boolean, isOpen?: boolean, delMSG?: number, canGroup?: boolean,
-	canPrivate?: boolean, help?: string | undefined, minLength?: number, maxLength?: number
-	limitTime?: number
+export type ICorpus = {
+	/**
+	 * 正则匹配
+	 * @default /$^/
+	 */
+	regexp?: RegExp,
+	/**
+	 * 名称
+	 * @default 类名.方法名
+	 */
+	name: string,
+	/**
+	 * 私聊可用
+	 * @default true
+	 */
+	canGroup?: boolean,
+	/**
+	 * 群聊可用
+	 * @default true
+	 */
+	canPrivate?: boolean,
+	/**
+	 * 是否为合并转发消息
+	 * @default false
+	 */
+	forward?: boolean,
+	/**
+	 * 是否需要管理员
+	 * @default false
+	 */
+	needAdmin?: boolean,
+	/**
+	 * 是否启用
+	 * @default true
+	 */
+	isOpen?: boolean,
+	/**消息回调*/
+	then?: CorpusCB<MessageId>,
+	/**消息错误回调*/
+	catch?: CorpusCB<ErrorAPIResponse>,
+	/**帮助文本*/
+	help?: string | undefined,
+	/**
+	 * 目标文本的最小长度, 不够时跳过 regexp 匹配
+	 * @default 0
+	 */
+	minLength?: number,
+	/**
+	 * 目标文本的最大长度, 超出时跳过 regexp 匹配
+	 * @default 100
+	 */
+	maxLength?: number,
+	/**
+	 * 权重
+	 * @default 10
+	 */
+	weight: number,
 };
 
-export class Corpus {
+export class Corpus extends Logable implements ICorpus {
+	public plugName: string;
+	public funcName: string;
+	public func: Function | undefined = undefined;
+	public name: string;
+	public regexp: RegExp;
 	public canGroup: boolean;
 	public canPrivate: boolean;
-	public delMSG: number;
 	public forward: boolean;
 	public help: string | undefined;
 	public isOpen: boolean;
 	public maxLength: number;
 	public minLength: number;
-	public name: string;
 	public needAdmin: boolean;
-	public reply: string;
-	public regexp: RegExp;
+	public weight: number;
+	public then: CorpusCB<MessageId>;
+	public catch: CorpusCB<ErrorAPIResponse>;
 
-	// public limitTime: number;
-
-	constructor(msg: ICorpus) {
-		this.name = msg.name ?? "";
-		this.regexp = new RegExp(msg.regexp ?? "$^");
-		this.reply = msg.reply ?? "";
-		this.forward = msg.forward === true;
-		this.needAdmin = msg.needAdmin === true;
-		this.isOpen = msg.isOpen !== false;
-		this.delMSG = msg.delMSG ?? 0;
-		this.canGroup = msg.canGroup !== false;
-		this.canPrivate = msg.canPrivate !== false;
-		this.help = msg.help;
-		this.minLength = msg.minLength ?? 0;
-		this.maxLength = msg.maxLength ?? 100;
-		// this.limitTime = msg.limitTime ?? 0;
+	constructor(plugName: string, funcName: string, iCorpus: ICorpus) {
+		super();
+		this.plugName = plugName;
+		this.funcName = funcName;
+		this.name = iCorpus.name ?? this.toString();
+		// noinspection RegExpUnexpectedAnchor
+		this.regexp = iCorpus.regexp ?? /$^/;
+		this.canGroup = iCorpus.canGroup ?? true;
+		this.canPrivate = iCorpus.canPrivate ?? true;
+		this.forward = iCorpus.forward ?? false;
+		this.isOpen = iCorpus.isOpen ?? true;
+		this.maxLength = iCorpus.maxLength ?? 100;
+		this.minLength = iCorpus.minLength ?? 0;
+		this.help = iCorpus.help;
+		this.needAdmin = iCorpus.needAdmin ?? false;
+		this.weight = iCorpus.weight ?? 10;
+		this.then = iCorpus.then ?? (() => undefined);
+		this.catch = iCorpus.catch ?? (() => this.logger.error(this.toString()));
 	}
+
+	public toString(): string {
+		return `${this.plugName}.${this.funcName}`;
+	}
+
+	public async run(event: CQMessage, exec: RegExpExecArray): Promise<CQTag[]> {
+		const plug: Plug | undefined = Plug.plugs.get(this.plugName);
+		if (plug === undefined) {
+			return [CQ.text(`插件${this.plugName}不存在`)];
+		}
+		if (this.func === undefined) {
+			const func: canCallType = Reflect.get(plug, this.funcName);
+			if (typeof func !== "function") {
+				this.isOpen = false;
+				let text = `插件${this.toString()}不是方法`;
+				this.logger.error(text);
+				return [CQ.text(text)];
+			}
+			this.func = func;
+		}
+		try {
+			if (event.contextType === "message.private" && this.canPrivate) {
+				return await (this.func as canCallPrivateType).call(plug, event, exec);
+			} else if (event.contextType === "message.group" && this.canGroup) {
+				return await (this.func as canCallGroupType).call(plug, event, exec);
+			} else {
+				this.logger.info(`不可调用[${this.toString()}]`);
+				return [CQ.text(`插件${this.plugName}的${this.func}方法不可在${event.contextType}环境下调用`)];
+			}
+		} catch (e) {
+			this.logger.error("调用出错", e);
+			return [CQ.text(`调用出错:` + this.toString())];
+		}
+	}
+
 }
+
+export type CorpusCB<T> = (this: Corpus, value: T, event: CQMessage) => void | PromiseLike<void>
 
 interface JSONAble<T = unknown> {
 	toJSON(): T;

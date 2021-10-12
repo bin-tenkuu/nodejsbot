@@ -7,6 +7,7 @@ import CQBotPlugin from "./plugs/CQBotPlugin.js";
 import CQBotRepeat from "./plugs/CQBotRepeat.js";
 import CQBotSearch from "./plugs/CQBotSearch.js";
 import CQData from "./plugs/CQData.js";
+import DefaultMsg from "./plugs/DefaultMsg.js";
 import httpOption from "./plugs/httpOption.js";
 import {logger} from "./utils/logger.js";
 
@@ -31,7 +32,7 @@ Promise.resolve().then(async () => {
 	await CQBotRepeat.install();
 	await CQBotSearch.install();
 	await CQBotPicture.install();
-	// await require("./plugs/test").default;
+	await DefaultMsg.install();
 	Plug.hrtime(time, "初始化");
 }).then(() => {
 	logger.info("启动完成");
