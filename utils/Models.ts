@@ -370,7 +370,7 @@ export class Corpus extends Logable implements ICorpus {
 		this.needAdmin = iCorpus.needAdmin ?? false;
 		this.weight = iCorpus.weight ?? 10;
 		this.then = iCorpus.then ?? (() => undefined);
-		this.catch = iCorpus.catch ?? (() => this.logger.error(this.toString()));
+		this.catch = iCorpus.catch ?? (() => Corpus.logger.error(this.toString()));
 	}
 
 	public toString(): string {
@@ -406,7 +406,6 @@ export class Corpus extends Logable implements ICorpus {
 			return [CQ.text(`调用出错:` + this.toString())];
 		}
 	}
-
 }
 
 export type CorpusCB<T> = (this: Corpus, value: T, event: CQMessage) => void | PromiseLike<void>

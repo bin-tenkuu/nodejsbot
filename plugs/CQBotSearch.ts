@@ -16,14 +16,14 @@ class CQBotSearch extends Plug {
 	@canCall({
 		name: ".搜图",
 		regexp: /^\.搜图$/,
-		help: "同时发送图片",
+		help: "同时发送图片可以搜图",
 		canPrivate: false,
 		weight: 5,
 	})
 	protected async getSauceNAO(event: CQEvent<"message.group">): Promise<CQTag[]> {
 		const tag: CQTag | undefined = event.cqTags.find(tag => tag instanceof CQImage);
 		if (tag === undefined) {
-			return [CQ.text("请带上图片")];
+			return [CQ.text("请同时发送图片")];
 		}
 		const url = tag.get("url");
 		if (url === undefined) {

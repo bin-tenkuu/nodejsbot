@@ -85,7 +85,7 @@ export function sendGroup<T>({bot, context: {group_id = adminGroup}}: hasGroup<T
 
 export function sendForward<T>({bot, context: {group_id = adminGroup}}: hasGroup<T>,
 		message: messageNode): PromiseRes<MessageId> {
-	return bot.send_group_forward_msg(group_id, message).catch(() => {
+	return bot.send_group_forward_msg(group_id, message as messageNode).catch(() => {
 		return bot.send_group_msg(group_id, "合并转发消息发送失败");
 	});
 }

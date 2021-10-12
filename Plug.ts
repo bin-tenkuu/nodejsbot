@@ -10,7 +10,7 @@ const State = {
 
 export abstract class Plug extends Logable {
 	public static readonly plugs: Map<string, Plug> = new Map<string, Plug>();
-	public static readonly plugCorpus: Corpus[] = [];
+	public static readonly corpus: Corpus[] = [];
 	public readonly module: NodeModule;
 	public canAutoCall: Set<string>;
 	public name: string = this.constructor.name;

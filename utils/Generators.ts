@@ -1089,4 +1089,4 @@ export function* LoopGen<T>(source: Iterable<T>): Generator<T, never, never> {
 	}
 }
 
-type ForEach<T, TReturn> = (item: T, index: number) => TReturn;
+export type ForEach<T, TReturn> = (item: T, index: number) => TReturn;

@@ -1,5 +1,5 @@
 import {CQ, CQTag, CQWebSocket} from "go-cqwebsocket";
-import {PartialSocketHandle, Status} from "go-cqwebsocket/out/Interfaces";
+import {PartialSocketHandle} from "go-cqwebsocket/out/Interfaces";
 import {Plug} from "../Plug.js";
 import {canCall} from "../utils/Annotation.js";
 import {CQMessage, deleteMsg, sendAdminQQ, sendGroup, sendPrivate} from "../utils/Util.js";
@@ -98,23 +98,6 @@ class CQBotEvent extends Plug {
 	}
 
 	@canCall({
-		name: ".状态",
-		regexp: /^\.状态$/,
-		needAdmin: true,
-		weight: 2,
-	})
-	protected getBotState(event: CQMessage): CQTag[] {
-		const state: Status["stat"] = event.bot.state.stat;
-		event.stopPropagation();
-		return [
-			CQ.text(`数据包丢失总数:${state.packet_lost
-			}\n接受信息总数:${state.message_received
-			}\n发送信息总数:${state.message_sent
-			}\n账号掉线次数:${state.lost_times}`),
-		];
-	}
-
-	@canCall({
 		name: ".help|帮助",
 		regexp: /^\.(?:help|帮助)$/,
 		forward: true,
@@ -123,7 +106,7 @@ class CQBotEvent extends Plug {
 		maxLength: 10,
 	})
 	protected getHelp(): CQTag[] {
-		const s: string = Plug.plugCorpus.filter(c => c.isOpen && !c.needAdmin &&
+		const s: string = Plug.corpus.filter(c => c.isOpen && !c.needAdmin &&
 				c.help !== undefined).map<string>((c) => `${c.name}:${c.help}`).join("\n");
 		return [CQ.text(s)];
 	}

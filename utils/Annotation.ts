@@ -16,11 +16,11 @@ export type canCallRet<R extends CQTag[] = CQTag[]> = R | Promise<R>;
 export function canCall(corpus: ICorpus): FunctionDecorator<canCallType, Plug, string> {
 	return (target, propertyKey) => {
 		const plugCorpus: Corpus = new Corpus(target.constructor.name, propertyKey, corpus);
-		const index: number = Plug.plugCorpus.findIndex(value => value.weight > plugCorpus.weight);
+		const index: number = Plug.corpus.findIndex(value => value.weight > plugCorpus.weight);
 		if (index === -1) {
-			Plug.plugCorpus.push(plugCorpus);
+			Plug.corpus.push(plugCorpus);
 		} else {
-			Plug.plugCorpus.splice(index, 0, plugCorpus);
+			Plug.corpus.splice(index, 0, plugCorpus);
 		}
 	};
 }

@@ -187,11 +187,11 @@ class CQBotPlugin extends Plug {
 
 	private static getCorpusList(type?: "私聊" | "群聊"): Corpus[] {
 		if (type === "私聊") {
-			return Plug.plugCorpus.filter(c => c.canPrivate);
+			return Plug.corpus.filter(c => c.canPrivate);
 		} else if (type === "群聊") {
-			return Plug.plugCorpus.filter(c => c.canGroup);
+			return Plug.corpus.filter(c => c.canGroup);
 		} else {
-			return Plug.plugCorpus;
+			return Plug.corpus;
 		}
 	}
 
