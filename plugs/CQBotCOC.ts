@@ -7,6 +7,65 @@ import {DataCache} from "../utils/repeat.js";
 import {CQMessage} from "../utils/Util.js";
 
 class CQBotCOC extends Plug {
+	private static castString(value: string, cheater: boolean): Calc {
+		const groups = /^(?<op>[+\-*])?(?<num>\d+)?(?:[dD](?<max>\d+))?$/.exec(value)?.groups as {
+			op?: "+" | "-" | "*"
+			num?: string
+			max?: string
+		} ?? {};
+		const num: number = +(groups.num ?? 1);
+		const op = groups.op ?? "+";
+		const max = groups.max;
+		if (max === undefined || max === "") {
+			return {
+				op: op,
+				num: num,
+				list: null,
+				origin: num.toString(),
+				max: num,
+			};
+		}
+		let dices: DiceResult = cheater ? {
+			list: new Uint32Array(num).fill(1),
+			num: num,
+			max: +max,
+		} : dice(num, +max);
+		return {
+			origin: `${dices.list.length}d${dices.max}`,
+			op,
+			...dices,
+		};
+	}
+
+	private static calculate(handles: Calc[]): number {
+		const map = {
+			"*": (sum: [number, number], num: number) => {
+				sum[1] *= num;
+				return sum;
+			},
+			"+": (sum: [number, number], num: number) => {
+				const number = num * sum[1];
+				sum[1] = 1;
+				sum[0] += number;
+				return sum;
+			},
+			"-": (sum: [number, number], num: number) => {
+				const number = num * sum[1];
+				sum[1] = 1;
+				sum[0] -= number;
+				return sum;
+			},
+		} as const;
+		return handles.reduceRight<[number, number]>((sum, v) => {
+			const arr: [number, number] | undefined = map[v.op]?.(sum, v.num);
+			if (arr === undefined) {
+				this.logger.warn("未知的运算符:" + v.op);
+				return sum;
+			}
+			return arr;
+		}, [0, 1])[0];
+	}
+
 	private shortKey = new Map<string, string>();
 	private cheater: boolean = false;
 	private readonly cache = new DataCache<number, DiceCache>(undefined,
@@ -174,65 +233,6 @@ class CQBotCOC extends Plug {
 		const calc: Calc = CQBotCOC.castString(`+${num}d${cache.max}`, this.cheater);
 		cache.list.push(...calc.list ?? []);
 		return [CQ.text(`${calc.origin}：[${calc.list}]=${calc.num}\n[${cache.list}]`)];
-	}
-
-	private static castString(value: string, cheater: boolean): Calc {
-		const groups = /^(?<op>[+\-*])?(?<num>\d+)?(?:[dD](?<max>\d+))?$/.exec(value)?.groups as {
-			op?: "+" | "-" | "*"
-			num?: string
-			max?: string
-		} ?? {};
-		const num: number = +(groups.num ?? 1);
-		const op = groups.op ?? "+";
-		const max = groups.max;
-		if (max === undefined || max === "") {
-			return {
-				op: op,
-				num: num,
-				list: null,
-				origin: num.toString(),
-				max: num,
-			};
-		}
-		let dices: DiceResult = cheater ? {
-			list: new Uint32Array(num).fill(1),
-			num: num,
-			max: +max,
-		} : dice(num, +max);
-		return {
-			origin: `${dices.list.length}d${dices.max}`,
-			op,
-			...dices,
-		};
-	}
-
-	private static calculate(handles: Calc[]): number {
-		const map = {
-			"*": (sum: [number, number], num: number) => {
-				sum[1] *= num;
-				return sum;
-			},
-			"+": (sum: [number, number], num: number) => {
-				const number = num * sum[1];
-				sum[1] = 1;
-				sum[0] += number;
-				return sum;
-			},
-			"-": (sum: [number, number], num: number) => {
-				const number = num * sum[1];
-				sum[1] = 1;
-				sum[0] -= number;
-				return sum;
-			},
-		} as const;
-		return handles.reduceRight<[number, number]>((sum, v) => {
-			const arr: [number, number] | undefined = map[v.op]?.(sum, v.num);
-			if (arr === undefined) {
-				this.logger.warn("未知的运算符:" + v.op);
-				return sum;
-			}
-			return arr;
-		}, [0, 1])[0];
 	}
 
 	#init(): void {

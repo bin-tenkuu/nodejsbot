@@ -29,12 +29,16 @@ export function onlyText({context: {raw_message}}: CQMessage): string {
 	return "";
 }
 
-export function isAdminQQ<T>({context: {user_id}}: hasUser<T>): boolean {
-	return user_id === adminId;
+export function isAdmin({context}: CQEvent<any>): boolean {
+	return context["user_id"] === adminId || context["group_id"] === adminGroup;
 }
 
-export function isAdminGroup<T>({context: {group_id}}: hasGroup<T>): boolean {
-	return group_id === adminGroup;
+export function isAdminQQ({context}: CQEvent<any>): boolean {
+	return context["user_id"] === adminId;
+}
+
+export function isAdminGroup({context}: CQEvent<any>): boolean {
+	return context["group_id"] === adminGroup;
 }
 
 export function sendAdminQQ<T>(bot: CQWebSocket, message: CQTag[] | string): Promise<void> {

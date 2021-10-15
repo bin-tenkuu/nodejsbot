@@ -7,10 +7,22 @@ import {default as CQData} from "./CQData.js";
 
 
 class CQBotPicture extends Plug {
+	private static code(code: number) {
+		switch (code) {
+		case -1  :
+			return "内部错误";// 请向 i@loli.best 反馈
+		case 0   :
+			return "成功";
+		case 404 :
+			return "找不到符合关键字的色图";
+		default:
+			return "未知的返回码";
+		}
+	}
+
 	public setuSet = new Set<string>();
 	private usingSeTu: boolean = false;
 	private usingSearching: boolean = false;
-
 
 	constructor() {
 		super(module);
@@ -167,19 +179,6 @@ class CQBotPicture extends Plug {
 	})
 	protected getSetuSet(): CQTag[] {
 		return [CQ.text(["", ...this.setuSet].join("\n"))];
-	}
-
-	private static code(code: number) {
-		switch (code) {
-		case -1  :
-			return "内部错误";// 请向 i@loli.best 反馈
-		case 0   :
-			return "成功";
-		case 404 :
-			return "找不到符合关键字的色图";
-		default:
-			return "未知的返回码";
-		}
 	}
 }
 

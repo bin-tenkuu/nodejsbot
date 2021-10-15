@@ -7,6 +7,14 @@ import {DataCache} from "../utils/repeat.js";
 import {isAtMe} from "../utils/Util.js";
 
 class CQBotRepeat extends Plug {
+	private static Random(...arr: string[]): string[] {
+		for (let i = arr.length - 1; i > 0; i--) {
+			const j = (Math.random() * i) | 0;
+			[arr[i], arr[j]] = [arr[j], arr[i]];
+		}
+		return arr;
+	}
+
 	private repeatCache = new DataCache<number, RepeatCache>(undefined,
 			(l, r) => l.msg === r.msg,
 	);
@@ -80,14 +88,6 @@ class CQBotRepeat extends Plug {
 			CQ.at(user_id),
 			CQ.text(cqTags),
 		];
-	}
-
-	private static Random(...arr: string[]): string[] {
-		for (let i = arr.length - 1; i > 0; i--) {
-			const j = (Math.random() * i) | 0;
-			[arr[i], arr[j]] = [arr[j], arr[i]];
-		}
-		return arr;
 	}
 }
 

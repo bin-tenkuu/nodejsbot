@@ -8,6 +8,24 @@ import {default as CQData} from "./CQData.js";
 
 class CQBotPlugin extends Plug {
 
+	private static getCorpusList(type?: "私聊" | "群聊"): Corpus[] {
+		if (type === "私聊") {
+			return Plug.corpus.filter(c => c.canPrivate);
+		} else if (type === "群聊") {
+			return Plug.corpus.filter(c => c.canGroup);
+		} else {
+			return Plug.corpus;
+		}
+	}
+
+	private static setBanQQ(text: string, ban: 0 | 1) {
+		const matches = text.match(/\d+/g) ?? [];
+		for (const value of matches) {
+			CQData.setBaned(+value, ban);
+		}
+		return matches.join("\n");
+	}
+
 	constructor() {
 		super(module);
 		this.name = "QQBot插件系统";
@@ -183,24 +201,6 @@ class CQBotPlugin extends Plug {
 			canAutoCall: [...plugin.canAutoCall],
 		}, undefined, 1);
 		return [CQ.text(str)];
-	}
-
-	private static getCorpusList(type?: "私聊" | "群聊"): Corpus[] {
-		if (type === "私聊") {
-			return Plug.corpus.filter(c => c.canPrivate);
-		} else if (type === "群聊") {
-			return Plug.corpus.filter(c => c.canGroup);
-		} else {
-			return Plug.corpus;
-		}
-	}
-
-	private static setBanQQ(text: string, ban: 0 | 1) {
-		const matches = text.match(/\d+/g) ?? [];
-		for (const value of matches) {
-			CQData.setBaned(+value, ban);
-		}
-		return matches.join("\n");
 	}
 }
 

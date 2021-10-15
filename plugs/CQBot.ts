@@ -5,13 +5,64 @@ import {Plug} from "../Plug.js";
 import {canCall} from "../utils/Annotation.js";
 import {Corpus, Group} from "../utils/Models.js";
 import {
-	CQMessage, isAdminGroup, isAdminQQ, onlyText, sendAdminGroup, sendForward, sendForwardQuick, sendGroup, sendPrivate,
+	CQMessage, isAdmin, onlyText, sendAdminGroup, sendForward, sendForwardQuick, sendGroup, sendPrivate,
 } from "../utils/Util";
 import {default as CQDate} from "./CQData.js";
 
 class CQBot extends Plug {
-	public bot: CQWebSocket = new CQWebSocket(CQWS);
+	private static async sendCorpusTags(event: CQMessage, hrtime: [number, number],
+			callback: (this: void, tags: CQTag[], element: Corpus) => Promise<MessageId>) {
+		const text = onlyText(event);
+		const corpus: string[] = [];
+		for (const element of this.filterCorpus(event, text.length)) {
+			const exec = element.regexp.exec(text);
+			if (exec === null) {
+				continue;
+			}
+			const msg = await element.run(event, exec).catch<CQTag[]>(e => {
+				this.logger.error("语料库转换失败:" + element.name);
+				this.logger.error(e);
+				return [CQ.text("error:" + element.name + "\n")];
+			});
+			if (msg.length < 1) {
+				continue;
+			}
+			await callback(msg, element).then(value => {
+				element.then(value, event);
+			}, reason => {
+				element.catch(reason, event);
+			}).finally(() => {
+				corpus.push(element.name);
+			}).catch(NOP);
+		}
+		if (corpus.length > 0) {
+			Plug.hrtime(hrtime, corpus.join(","));
+		}
+	}
 
+	private static* filterCorpus(event: CQMessage, length: number): Generator<Corpus, void, void> {
+		const admin: boolean = isAdmin(event);
+		let canRun: (item: Corpus) => boolean;
+		const can: "canPrivate" | "canGroup" = event.contextType === "message.private" ? "canPrivate" : "canGroup";
+		if (admin) {
+			canRun = c => c[can];
+		} else {
+			canRun = c => c[can] && c.isOpen && !c.needAdmin;
+		}
+		for (const corpus of Plug.corpus) {
+			if (event.isCanceled) {
+				return;
+			}
+			if (length < corpus.minLength || length > corpus.maxLength) {
+				continue;
+			}
+			if (canRun(corpus)) {
+				yield corpus;
+			}
+		}
+	}
+
+	public bot: CQWebSocket = new CQWebSocket(CQWS);
 	private stateCache = {
 		packet_lost: 0, message_sent: 0, message_received: 0,
 	};
@@ -30,9 +81,8 @@ class CQBot extends Plug {
 					this.logger.info("连接");
 					sendAdminGroup(event.bot, "已上线");
 					resolve();
-					this.getBotState();
 					const sendStateInterval = setInterval(() => {
-						const message: CQTag[] = this.sendState(this.bot.state.stat);
+						const message: CQTag[] = this.sendState();
 						if (message.length > 0) {
 							sendAdminGroup(this.bot, message).catch(() => {
 								clearInterval(sendStateInterval);
@@ -42,6 +92,7 @@ class CQBot extends Plug {
 				},
 				"socket.close": () => reject(),
 			});
+			this.bot.once("meta_event.heartbeat", _ => this.getBotState());
 			this.bot.connect();
 			process.on("beforeExit", () => {
 				this.bot.disconnect();
@@ -83,55 +134,6 @@ class CQBot extends Plug {
 			}\n发送信息总数:${state.message_sent
 			}\n账号掉线次数:${state.lost_times}`),
 		];
-	}
-
-	private static async sendCorpusTags(event: CQMessage, hrtime: [number, number],
-			callback: (this: void, tags: CQTag[], element: Corpus) => Promise<MessageId>) {
-		const text = onlyText(event);
-		const corpus: string[] = [];
-		for (const element of this.filterCorpus(event, text.length)) {
-			const exec = element.regexp.exec(text);
-			if (exec === null) {
-				continue;
-			}
-			const msg = await element.run(event, exec).catch<CQTag[]>(e => {
-				this.logger.error("语料库转换失败:" + element.name);
-				this.logger.error(e);
-				return [CQ.text("error:" + element.name + "\n")];
-			});
-			if (msg.length < 1) {
-				continue;
-			}
-			await callback(msg, element).then(value => {
-				element.then(value, event);
-			}, reason => {
-				element.catch(reason, event);
-			}).finally(() => {
-				corpus.push(element.name);
-			}).catch(NOP);
-		}
-		Plug.hrtime(hrtime, corpus.join(","));
-	}
-
-	private static* filterCorpus(event: CQMessage, length: number): Generator<Corpus, void, void> {
-		const funcs: ((item: Corpus) => boolean)[] = [_ => !event.isCanceled];
-		if (event.contextType === "message.private") {
-			funcs.push((c) => c.canPrivate);
-		} else {
-			funcs.push((c) => c.canGroup);
-		}
-		funcs.push((c) => length >= c.minLength && length <= c.maxLength);
-		if (isAdminQQ(event) || event.contextType === "message.group" && isAdminGroup(event)) {
-			// return Where(Plug.corpus, (item) => funcs.every(value => value(item)));
-		} else {
-			funcs.push((c) => c.isOpen && !c.needAdmin);
-		}
-		// return Where(Plug.corpus, (item) => funcs.every(value => value(item)));
-		for (const corpus of Plug.corpus) {
-			if (funcs.every(value => value(corpus))) {
-				yield corpus;
-			}
-		}
 	}
 
 	#init() {
@@ -185,8 +187,9 @@ class CQBot extends Plug {
 	}
 
 	/**发送bot信息*/
-	private sendState(state: Status["stat"]): CQTag[] {
-		const str: string[] = new Array<string>(2);
+	private sendState(): CQTag[] {
+		const state: Status["stat"] = this.bot.state.stat;
+		const str: string[] = [];
 		if (state.message_sent <= this.stateCache.message_sent) {
 			return [];
 		}
