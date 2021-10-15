@@ -186,21 +186,21 @@ class CQBot extends Plug {
 
 	/**发送bot信息*/
 	private sendState(state: Status["stat"]): CQTag[] {
-		let str = "";
+		const str: string[] = new Array<string>(2);
 		if (state.message_sent <= this.stateCache.message_sent) {
 			return [];
 		}
 		if (state.packet_lost > this.stateCache.packet_lost) {
-			str += `\n数据包丢失总数变化:+${state.packet_lost - this.stateCache.packet_lost}`;
+			str.push(`数据包丢失变化:+${state.packet_lost - this.stateCache.packet_lost}`);
 		}
 		this.stateCache.packet_lost = state.packet_lost;
 		if (state.message_received > this.stateCache.message_received) {
-			str += `\n接受信息总数变化:+${state.message_received - this.stateCache.message_received}`;
+			str.push(`接受信息变化:+${state.message_received - this.stateCache.message_received}`);
 		}
 		this.stateCache.message_received = state.message_received;
-		str += `\n发送信息总数变化:+${state.message_sent - this.stateCache.message_sent}`;
+		str.push(`发送信息变化:+${state.message_sent - this.stateCache.message_sent}`);
 		this.stateCache.message_sent = state.message_sent + 1;
-		return [CQ.text(str)];
+		return [CQ.text(str.join("\n"))];
 	}
 }
 
