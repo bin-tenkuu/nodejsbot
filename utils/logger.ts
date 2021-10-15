@@ -28,7 +28,7 @@ configure(<Configuration>{
 			type: "fileSync",
 			filename: "./logs/Warn.log",
 			backups: 5,
-			maxLogSize: 1024 * 100,
+			maxLogSize: 1024 * 10,
 			layout: <BaseLayout>{
 				type: "basic",
 			},

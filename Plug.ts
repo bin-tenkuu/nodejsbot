@@ -67,12 +67,11 @@ export abstract class Plug extends Logable {
 					return;
 				}
 				await this.__proto__.install.call(this);
-				this.logger.info("已启动\t" + this.toString());
 				this.#state = State.installed;
 			} catch (e) {
 				this.error = e;
 			} finally {
-				this.module.children = [];
+				this.logger.info("已启动\t" + this.toString());
 			}
 		};
 		this.uninstall = async function () {
@@ -81,7 +80,6 @@ export abstract class Plug extends Logable {
 					return;
 				}
 				await this.__proto__.uninstall.call(this);
-				this.logger.info("已停止\t" + this.toString());
 				if (this.#state === State.error) {
 					return;
 				}
@@ -89,7 +87,7 @@ export abstract class Plug extends Logable {
 			} catch (e) {
 				this.error = e;
 			} finally {
-				this.module.children = [];
+				this.logger.info("已停止\t" + this.toString());
 			}
 		};
 		this.#state = State.uninstalled;
