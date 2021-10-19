@@ -5,7 +5,6 @@ import {Corpus} from "../utils/Models.js";
 import {CQMessage} from "../utils/Util.js";
 import {default as CQData} from "./CQData.js";
 
-
 class CQBotPlugin extends Plug {
 
 	private static getCorpusList(type?: "私聊" | "群聊"): Corpus[] {
@@ -201,6 +200,27 @@ class CQBotPlugin extends Plug {
 			canAutoCall: [...plugin.canAutoCall],
 		}, undefined, 1);
 		return [CQ.text(str)];
+	}
+
+	@canCall({
+		name: ".模式",
+		regexp: /^\.模式(?<type>风控|普通)$/,
+		needAdmin: true,
+		canGroup: false,
+		canPrivate: true,
+		weight: 4,
+	})
+	protected setAllCorpusstate(event: CQMessage, execArray: RegExpExecArray): CQTag[] {
+		event.stopPropagation();
+		const {type} = execArray.groups as { type?: string } ?? {};
+		switch (type) {
+		case "风控":
+			Plug.corpus.forEach(c => {
+				c.canGroup = false;
+			});
+			return [CQ.text(type)];
+		}
+		return [];
 	}
 }
 

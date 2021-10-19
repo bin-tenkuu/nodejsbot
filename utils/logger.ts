@@ -11,22 +11,22 @@ configure(<Configuration>{
 				type: "coloured",
 			},
 		},
-		"trace": <DateFileAppender>{
+		"warn": <DateFileAppender>{
 			type: "dateFile",
-			filename: "./logs/date.log",
+			filename: "./logs/Warn.log",
 			pattern: "yyyy-MM-dd",
 			encoding: "utf-8",
 			compress: false,
 			alwaysIncludePattern: true,
-			daysToKeep: 4,
+			daysToKeep: 10,
 			keepFileExt: true,
 			layout: <BaseLayout>{
 				type: "basic",
 			},
 		},
-		"warn": <SyncfileAppender>{
+		"trace": <SyncfileAppender>{
 			type: "fileSync",
-			filename: "./logs/Warn.log",
+			filename: "./logs/Trace.log",
 			backups: 5,
 			maxLogSize: 1024 * 10,
 			layout: <BaseLayout>{

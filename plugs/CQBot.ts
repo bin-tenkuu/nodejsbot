@@ -63,6 +63,7 @@ class CQBot extends Plug {
 	}
 
 	public bot: CQWebSocket = new CQWebSocket(CQWS);
+	private needOpen: number = 0;
 	private stateCache = {
 		packet_lost: 0, message_sent: 0, message_received: 0,
 	};
@@ -139,14 +140,23 @@ class CQBot extends Plug {
 	#init() {
 		this.bot.bind("on", {
 			"socket.error": ({context}) => {
+				this.needOpen = -1;
 				this.logger.warn(`连接错误[${context.code}]: ${context.reason}`);
 			},
 			"socket.open": () => {
+				this.needOpen = 0;
 				this.logger.info(`连接开启`);
 			},
 			"socket.close": ({context}) => {
+				if (this.needOpen >= 0) {
+					setTimeout(() => {
+						this.bot.reconnect();
+					}, this.needOpen);
+					this.needOpen = (this.needOpen + 1000) << 1;
+				} else {
+					require("child_process").exec("npm stop");
+				}
 				this.logger.info(`已关闭 [${context.code}]: ${context.reason}`);
-				require("child_process").exec("npm stop");
 			},
 		});
 		this.bot.messageSuccess = (ret, message) => {

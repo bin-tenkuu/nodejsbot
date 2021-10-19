@@ -5,7 +5,7 @@ import {canCall} from "../utils/Annotation.js";
 import {CQMessage, deleteMsg, sendAdminQQ, sendGroup, sendPrivate} from "../utils/Util.js";
 
 class CQBotEvent extends Plug {
-	private header: PartialSocketHandle | undefined = undefined;
+	private header: PartialSocketHandle = {};
 
 	constructor() {
 		super(module);
