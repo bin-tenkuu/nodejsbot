@@ -2,7 +2,7 @@ import {CQ, CQTag} from "go-cqwebsocket";
 import {Plug} from "../Plug.js";
 import {canCall} from "../utils/Annotation.js";
 import {lolicon, pixivCat} from "../utils/Search.js";
-import {CQMessage, deleteMsg, getPRegular, sendAdminQQ, sendForward} from "../utils/Util.js";
+import {CQMessage, deleteMsg, getPRegular, sendAdminQQ} from "../utils/Util.js";
 import {default as CQData} from "./CQData.js";
 
 
@@ -89,18 +89,18 @@ class CQBotPicture extends Plug {
 				return [CQ.text("色图数量不足")];
 			}
 			const first = data.data[0];
-			if (event.contextType === "message.group") {
-				const {
-					message_id: messageId,
-					sender: {nickname: nickname},
-				} = event.context;
-				sendForward(event, [
-					CQ.nodeId(messageId),
-					CQ.node(nickname, userId, `标题：${first.title
-					}\n作者：${first.author}\n原图：www.pixiv.net/i/${first.pid}\np${first.p}`),
-					CQ.node(nickname, userId, CQ.escape(first.tags.join("\n"))),
-				]).catch(NOP);
-			}
+			// if (event.contextType === "message.group") {
+			// 	const {
+			// 		message_id: messageId,
+			// 		sender: {nickname: nickname},
+			// 	} = event.context;
+			// 	sendForward(event, [
+			// 		CQ.nodeId(messageId),
+			// 		CQ.node(nickname, userId, `标题：${first.title
+			// 		}\n作者：${first.author}\n原图：www.pixiv.net/i/${first.pid}\np${first.p}`),
+			// 		CQ.node(nickname, userId, CQ.escape(first.tags.join("\n"))),
+			// 	]).catch(NOP);
+			// }
 			return [CQ.image(first.url)];
 		} catch (reason) {
 			sendAdminQQ(event.bot, "色图坏了").catch(NOP);

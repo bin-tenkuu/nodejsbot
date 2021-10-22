@@ -1,11 +1,11 @@
-import {CQ, CQTag, CQWebSocket, messageNode} from "go-cqwebsocket";
+import {CQ, CQTag, CQWebSocket} from "go-cqwebsocket";
 import {MessageId, Status} from "go-cqwebsocket/out/Interfaces";
 import {CQWS} from "../config/config.json";
 import {Plug} from "../Plug.js";
 import {canCall} from "../utils/Annotation.js";
 import {Corpus, Group} from "../utils/Models.js";
 import {
-	CQMessage, isAdmin, onlyText, sendAdminGroup, sendForward, sendForwardQuick, sendGroup, sendPrivate,
+	CQMessage, isAdmin, onlyText, sendAdminGroup, sendGroup, sendPrivate,
 } from "../utils/Util";
 import {default as CQDate} from "./CQData.js";
 
@@ -144,7 +144,7 @@ class CQBot extends Plug {
 				this.logger.warn(`连接错误[${context.code}]: ${context.reason}`);
 			},
 			"socket.open": () => {
-				this.needOpen = 0;
+				this.needOpen = 500;
 				this.logger.info(`连接开启`);
 			},
 			"socket.close": ({context}) => {
@@ -177,14 +177,14 @@ class CQBot extends Plug {
 				if (CQDate.getMember(user_id).baned) {
 					return;
 				}
-				CQBot.sendCorpusTags(event, time, async (tags, corpus) => {
-					if (!corpus.forward) {
-						return sendGroup(event, tags);
-					} else if (tags[0].tagName === "node") {
-						return sendForward(event, tags as messageNode);
-					} else {
-						return sendForwardQuick(event, tags);
-					}
+				CQBot.sendCorpusTags(event, time, async (tags) => {
+					// if (!corpus.forward) {
+					return sendGroup(event, tags);
+					// } else if (tags[0].tagName === "node") {
+					// 	return sendForward(event, tags as messageNode);
+					// } else {
+					// 	return sendForwardQuick(event, tags);
+					// }
 				}).catch(NOP);
 			},
 			"message.private": (event) => {

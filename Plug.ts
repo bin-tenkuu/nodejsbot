@@ -28,7 +28,7 @@ export abstract class Plug extends Logable {
 	public description: string = "这个插件没有描述";
 	public declare readonly __proto__: Readonly<this>;
 	public _error: any = null;
-	#state: typeof State[keyof typeof State] = State.create;
+	#state: number = State.create;
 
 	protected constructor(module: NodeModule) {
 		super();
@@ -56,7 +56,6 @@ export abstract class Plug extends Logable {
 	}
 
 	#init(): void {
-		this.logger.debug("init:\t" + module.filename);
 		Plug.plugs.set(this.constructor.name, this);
 		this.install = async function () {
 			try {
@@ -91,6 +90,7 @@ export abstract class Plug extends Logable {
 			}
 		};
 		this.#state = State.uninstalled;
+		this.logger.debug("init:\t" + this.module.filename);
 	}
 
 	public get error() {
@@ -111,7 +111,3 @@ export abstract class Plug extends Logable {
 		return this.#state;
 	}
 }
-
-// class CorpusArray extends Array<Corpus> {
-//
-// }

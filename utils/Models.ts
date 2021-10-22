@@ -343,7 +343,7 @@ export class Corpus extends Logable implements ICorpus {
 	public regexp: RegExp;
 	public canGroup: boolean;
 	public canPrivate: boolean;
-	public forward: boolean;
+	// public forward: boolean;
 	public help: string | undefined;
 	public isOpen: boolean;
 	public maxLength: number;
@@ -362,7 +362,7 @@ export class Corpus extends Logable implements ICorpus {
 		this.regexp = iCorpus.regexp ?? /$^/;
 		this.canGroup = iCorpus.canGroup ?? true;
 		this.canPrivate = iCorpus.canPrivate ?? true;
-		this.forward = iCorpus.forward ?? false;
+		// this.forward = iCorpus.forward ?? false;
 		this.isOpen = iCorpus.isOpen ?? true;
 		this.maxLength = iCorpus.maxLength ?? 100;
 		this.minLength = iCorpus.minLength ?? 0;

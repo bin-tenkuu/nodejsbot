@@ -1,8 +1,9 @@
-import {CQ, CQTag, CQWebSocket} from "go-cqwebsocket";
+import {CQ, CQTag} from "go-cqwebsocket";
 import {PartialSocketHandle} from "go-cqwebsocket/out/Interfaces";
 import {Plug} from "../Plug.js";
 import {canCall} from "../utils/Annotation.js";
 import {CQMessage, deleteMsg, sendAdminQQ, sendGroup, sendPrivate} from "../utils/Util.js";
+import {default as CQBot} from "./CQBot.js";
 
 class CQBotEvent extends Plug {
 	private header: PartialSocketHandle = {};
@@ -14,7 +15,7 @@ class CQBotEvent extends Plug {
 	}
 
 	async install() {
-		this.header = (<CQWebSocket>require("./CQBot.js").default.bot).bind("on", {
+		this.header = CQBot.bot.bind("on", {
 			"notice.group_increase": (event) => {
 				event.stopPropagation();
 				const {operator_id, user_id, sub_type, group_id} = event.context;
@@ -77,7 +78,7 @@ class CQBotEvent extends Plug {
 	}
 
 	async uninstall() {
-		require("./CQBot.js").default.bot.unbind(this.header);
+		CQBot.bot.unbind(this.header);
 	}
 
 	@canCall({
