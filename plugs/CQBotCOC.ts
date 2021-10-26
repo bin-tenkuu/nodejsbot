@@ -184,17 +184,17 @@ class CQBotCOC extends Plug {
 
 	@canCall({
 		name: ".d[bug|(wr|cb|aj)f?]:打开/关闭特殊模式",
-		regexp: /^\.d(?<operator>\w{2,3})$/i,
+		regexp: /^\.d(?<operator>[a-z]{2,3})$/i,
 		weight: 1,
 		minLength: 2,
 		maxLength: 10,
 	})
 	protected setDiceType(event: CQMessage, execArray: RegExpExecArray): CQTag[] {
-		event.stopPropagation();
 		const {operator} = execArray.groups as { operator: string } ?? {};
 		if (operator == null) {
 			return [];
 		}
+		event.stopPropagation();
 		if (operator === "bug") {
 			this.specialEffects = "bug";
 			return [CQ.text("进入默认状态")];
@@ -208,7 +208,7 @@ class CQBotCOC extends Plug {
 
 	@canCall({
 		name: ".dp<num>",
-		regexp: /^\.dp ?(?<num>\d+)?/i,
+		regexp: /^\.dp(?<num> ?\d*)/i,
 		help: "10分钟之内加投骰",
 		minLength: 5,
 		maxLength: 500,
