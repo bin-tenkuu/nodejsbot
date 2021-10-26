@@ -136,7 +136,7 @@ class CQBotCOC extends Plug {
 		regexp: /^\.d +(?:(?<times>\d)#)?(?<dice>[^ ]+)/i,
 		weight: 1,
 		help: "骰子及简单表达式计算",
-		minLength: 5,
+		minLength: 4,
 		maxLength: 500,
 	})
 	protected getDice(event: CQMessage, execArray: RegExpExecArray): CQTag[] {
@@ -175,6 +175,7 @@ class CQBotCOC extends Plug {
 		regexp: /^\.dall1$/i,
 		weight: 1,
 		minLength: 5,
+		maxLength: 10,
 	})
 	protected setCheater(event: CQMessage): CQTag[] {
 		event.stopPropagation();
@@ -210,8 +211,8 @@ class CQBotCOC extends Plug {
 		name: ".dp<num>",
 		regexp: /^\.dp(?<num> ?\d*)$/i,
 		help: "10分钟之内加投骰",
-		minLength: 5,
-		maxLength: 500,
+		minLength: 4,
+		maxLength: 10,
 		weight: 1,
 	})
 	protected getAddedRandom(event: CQMessage, execArray: RegExpExecArray): CQTag[] {

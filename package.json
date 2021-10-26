@@ -3,7 +3,7 @@
 	"version": "1.0.0",
 	"description": "demo",
 	"engines": {
-		"node": ">=16"
+		"node": ">=14"
 	},
 	"main": "index.js",
 	"files": [
