@@ -82,7 +82,7 @@ class CQBotCOC extends Plug {
 
 	@canCall({
 		name: ".dstat",
-		regexp: /^\.dstat$/,
+		regexp: /^\.dstat$/i,
 		help: "查看全部简写",
 		minLength: 5,
 		maxLength: 7,
@@ -102,7 +102,7 @@ class CQBotCOC extends Plug {
 
 	@canCall({
 		name: ".dset <key>[=<value>]",
-		regexp: /^\.dset +(?<key>\w[\w\d]+)(?:=(?<value>[+\-*d0-9#]+))?/,
+		regexp: /^\.dset +(?<key>\w[\w\d]+)(?:=(?<value>[+\-*d0-9#]+))?/i,
 		help: "设置/删除简写",
 		minLength: 5,
 		maxLength: 100,
@@ -132,7 +132,7 @@ class CQBotCOC extends Plug {
 	}
 
 	@canCall({
-		name: ".[Dd] <表达式> <...>",
+		name: ".d <表达式> <...>",
 		regexp: /^\.d +(?:(?<times>\d)#)?(?<dice>[^ ]+)/i,
 		weight: 1,
 		help: "骰子及简单表达式计算",
@@ -172,7 +172,7 @@ class CQBotCOC extends Plug {
 
 	@canCall({
 		name: ".dall1:打开全1模式",
-		regexp: /^\.dall1$/,
+		regexp: /^\.dall1$/i,
 		weight: 1,
 		minLength: 5,
 	})
@@ -208,7 +208,7 @@ class CQBotCOC extends Plug {
 
 	@canCall({
 		name: ".dp<num>",
-		regexp: /^\.dp(?<num> ?\d*)/i,
+		regexp: /^\.dp(?<num> ?\d*)$/i,
 		help: "10分钟之内加投骰",
 		minLength: 5,
 		maxLength: 500,

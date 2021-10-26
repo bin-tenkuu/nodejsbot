@@ -64,7 +64,7 @@ export function getLogger(name?: string) {
 }
 
 export class Logable {
-	private static _logger: Logger = logger;
+	private static readonly _logger: Logger = logger;
 
 	public static get logger(): Logger {
 		function LoggerGetter(this: typeof Logable): Logger {

@@ -1,9 +1,9 @@
-import {CQ, CQTag} from "go-cqwebsocket";
+import {CQ, CQEvent, CQTag} from "go-cqwebsocket";
 import {ErrorAPIResponse, MessageId} from "go-cqwebsocket/out/Interfaces.js";
 import {Plug} from "../Plug.js";
 import {canCallGroupType, canCallPrivateType, canCallType} from "./Annotation.js";
 import {Logable} from "./logger.js";
-import {CQMessage} from "./Util.js";
+import {CQMessage, isAdmin} from "./Util.js";
 
 type sauceNAOResultsHeader = {
 	/** 库id */
@@ -377,7 +377,40 @@ export class Corpus extends Logable implements ICorpus {
 		return `${this.plugName}.${this.funcName}`;
 	}
 
-	public async run(event: CQMessage, exec: RegExpExecArray): Promise<CQTag[]> {
+	public execPrivate(event: CQEvent<"message.private">, text: string): RegExpExecArray | null {
+		switch (this.test(event, text.length)) {
+		case 0:
+			return null;
+		case 1:
+			if (this.canPrivate && this.isOpen && !this.needAdmin) {
+				break;
+			}
+			return null;
+		case 2:
+			break;
+		}
+		return this.regexp.exec(text);
+	}
+
+	public execGroup(event: CQEvent<"message.group">, text: string): RegExpExecArray | null {
+		switch (this.test(event, text.length)) {
+		case 0:
+			return null;
+		case 1:
+			if (this.canGroup && this.isOpen && !this.needAdmin) {
+				break;
+			}
+			return null;
+		case 2:
+			break;
+		}
+		return this.regexp.exec(text);
+	}
+
+	public async run(event: CQMessage, exec: RegExpExecArray | null): Promise<CQTag[]> {
+		if (exec == null) {
+			return [];
+		}
 		const plug: Plug | undefined = Plug.plugs.get(this.plugName);
 		if (plug === undefined) {
 			return [CQ.text(`插件${this.plugName}不存在`)];
@@ -405,6 +438,19 @@ export class Corpus extends Logable implements ICorpus {
 			this.logger.error("调用出错", e);
 			return [CQ.text(`调用出错:` + this.toString())];
 		}
+	}
+
+	private test(event: CQMessage, length: number): 0 | 1 | 2 {
+		if (event.isCanceled) {
+			return 0;
+		}
+		if (length < this.minLength || length > this.maxLength) {
+			return 0;
+		}
+		if (isAdmin(event)) {
+			return 2;
+		}
+		return 1;
 	}
 }
 

@@ -4,9 +4,7 @@ import {CQWS} from "../config/config.json";
 import {Plug} from "../Plug.js";
 import {canCall} from "../utils/Annotation.js";
 import {Corpus, Group} from "../utils/Models.js";
-import {
-	CQMessage, isAdmin, onlyText, sendAdminGroup, sendGroup, sendPrivate,
-} from "../utils/Util";
+import {CQMessage, onlyText, sendAdminGroup, sendGroup, sendPrivate} from "../utils/Util";
 import {default as CQDate} from "./CQData.js";
 
 class CQBot extends Plug {
@@ -14,8 +12,9 @@ class CQBot extends Plug {
 			callback: (this: void, tags: CQTag[], element: Corpus) => Promise<MessageId>) {
 		const text = onlyText(event);
 		const corpus: string[] = [];
-		for (const element of this.filterCorpus(event, text.length)) {
-			const exec = element.regexp.exec(text);
+		for (const element of Plug.corpus) {
+			const exec: RegExpExecArray | null = event.contextType === "message.private" ?
+					element.execPrivate(event, text) : element.execGroup(event, text);
 			if (exec === null) {
 				continue;
 			}
@@ -37,28 +36,6 @@ class CQBot extends Plug {
 		}
 		if (corpus.length > 0) {
 			Plug.hrtime(hrtime, corpus.join(","));
-		}
-	}
-
-	private static* filterCorpus(event: CQMessage, length: number): Generator<Corpus, void, void> {
-		const admin: boolean = isAdmin(event);
-		let canRun: (item: Corpus) => boolean;
-		const can: "canPrivate" | "canGroup" = event.contextType === "message.private" ? "canPrivate" : "canGroup";
-		if (admin) {
-			canRun = c => c[can];
-		} else {
-			canRun = c => c[can] && c.isOpen && !c.needAdmin;
-		}
-		for (const corpus of Plug.corpus) {
-			if (event.isCanceled) {
-				return;
-			}
-			if (length < corpus.minLength || length > corpus.maxLength) {
-				continue;
-			}
-			if (canRun(corpus)) {
-				yield corpus;
-			}
 		}
 	}
 
