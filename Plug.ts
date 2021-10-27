@@ -9,8 +9,18 @@ const State = {
 } as const;
 
 export abstract class Plug extends Logable {
-	public static readonly plugs: Map<string, Plug> = new Map<string, Plug>();
+	public static readonly plugs: Map<string, Plug> = new Map();
 	public static readonly corpus: Corpus[] = [];
+	public static readonly plugTypes: Map<{ new(): Plug }, Plug> = new Map();
+
+	public static get<T extends Plug>(type: { new(): T }): T {
+		let instance: Plug | undefined = this.plugTypes.get(type);
+		if (instance == null || !(instance instanceof type)) {
+			instance = new type();
+			this.plugTypes.set(type, instance);
+		}
+		return <T>instance;
+	}
 
 	public static hrtime(time: [number, number], msg: string = "本次请求"): void {
 		let [s, ns] = process.hrtime(time);
@@ -23,17 +33,15 @@ export abstract class Plug extends Logable {
 	}
 
 	public readonly module: NodeModule;
-	public canAutoCall: Set<string>;
-	public name: string = this.constructor.name;
 	public description: string = "这个插件没有描述";
 	public declare readonly __proto__: Readonly<this>;
 	public _error: any = null;
+	public name: string = this.constructor.name;
 	#state: number = State.create;
 
 	protected constructor(module: NodeModule) {
 		super();
 		this.module = module;
-		this.canAutoCall ??= new Set();
 		this.#init();
 	}
 
@@ -109,5 +117,9 @@ export abstract class Plug extends Logable {
 
 	public get state(): number {
 		return this.#state;
+	}
+
+	public get corpus(): Corpus[] {
+		return Plug.corpus.filter(value => value.plug === this.constructor);
 	}
 }

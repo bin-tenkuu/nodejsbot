@@ -2,7 +2,7 @@ import {CQ, CQTag} from "go-cqwebsocket";
 import {Plug} from "../Plug.js";
 import {canCall} from "../utils/Annotation.js";
 
-class DefaultMsg extends Plug {
+export class DefaultMsg extends Plug {
 	constructor() {
 		super(module);
 		this.name = "默认消息类";
@@ -21,8 +21,6 @@ class DefaultMsg extends Plug {
 		return [CQ.text(".pong!")];
 	}
 }
-
-export default new DefaultMsg();
 
 /*
  TODO:

@@ -11,7 +11,7 @@ const map = new Map<string, string[]>();
 		const ip = str.substring(0, number);
 		const text = str.substring(number + 1);
 		const strings = map.get(ip);
-		if (strings === undefined) {
+		if (strings == null) {
 			map.set(ip, [text]);
 		} else {
 			strings.push(text);

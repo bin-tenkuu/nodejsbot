@@ -1,5 +1,4 @@
 import {CQ, CQEvent, CQTag} from "go-cqwebsocket";
-import {setTimeout} from "timers/promises";
 import {Plug} from "../Plug.js";
 import {canCall} from "../utils/Annotation.js";
 import {db} from "../utils/database.js";
@@ -7,7 +6,7 @@ import {Group, IGroup, IMember, Member} from "../utils/Models.js";
 import {DataCache} from "../utils/repeat.js";
 import {CQMessage} from "../utils/Util.js";
 
-class CQData extends Plug {
+export class CQData extends Plug {
 	private static loadMember(id: number): Member {
 		return db.sync<Member>(db => {
 			const im: IMember | undefined = db.prepare(
@@ -100,7 +99,7 @@ class CQData extends Plug {
 
 	public getMember(id: number): Member {
 		let member: Member | undefined = this.memberMap.get(id);
-		if (member === undefined) {
+		if (member == null) {
 			member = CQData.loadMember(id);
 			this.memberMap.set(id, member);
 		}
@@ -109,7 +108,7 @@ class CQData extends Plug {
 
 	public getGroup(id: number): Group {
 		let group: Group | undefined = this.groupMap.get(id);
-		if (group === undefined) {
+		if (group == null) {
 			group = CQData.loadGroup(id);
 			this.groupMap.set(id, group);
 		}
@@ -178,17 +177,15 @@ class CQData extends Plug {
 			return;
 		}
 		this.autoSaving = true;
-		setTimeout(1000 * 60 * 60 * 6).then(() => {
-			return this.save();
-		}).finally(() => {
-			this.autoSaving = false;
-		}).catch(e => {
-			this.logger.error(`自动保存出错:`);
-			this.logger.error(e);
-		}).finally(() => {
-			this.autoSave();
-		});
+		setTimeout(() => {
+			this.save().finally(() => {
+				this.autoSaving = false;
+			}).catch((e) => {
+				this.logger.error(`自动保存出错:`);
+				this.logger.error(e);
+			}).finally(() => {
+				this.autoSave();
+			});
+		}, 1000 * 60 * 60 * 6);
 	}
 }
-
-export default new CQData();

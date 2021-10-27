@@ -3,10 +3,10 @@ import {Plug} from "../Plug.js";
 import {canCall} from "../utils/Annotation.js";
 import {lolicon, pixivCat} from "../utils/Search.js";
 import {CQMessage, deleteMsg, getPRegular, sendAdminQQ} from "../utils/Util.js";
-import {default as CQData} from "./CQData.js";
+import {CQData} from "./CQData.js";
 
 
-class CQBotPicture extends Plug {
+export class CQBotPicture extends Plug {
 	private static code(code: number) {
 		switch (code) {
 		case -1  :
@@ -58,7 +58,7 @@ class CQBotPicture extends Plug {
 		};
 		groups.keyword ??= "";
 		const userId: number = event.context.user_id;
-		const member = CQData.getMember(userId);
+		const member = CQData.get(CQData).getMember(userId);
 		if (!member.addExp(-5)) {
 			// this.usingSeTu = false;
 			// return [CQ.text("不够活跃")];
@@ -130,12 +130,12 @@ class CQBotPicture extends Plug {
 		this.usingSearching = true;
 		const {pid, p} = (exec.groups as { pid?: string, p?: string }) ?? {};
 		this.logger.debug(`p站图片请求：pid:${pid},p:${p}`);
-		if (pid === undefined) {
+		if (pid == null) {
 			this.usingSearching = false;
 			return [CQ.text("pid获取失败")];
 		}
 		const userId: number = event.context.user_id;
-		const member = CQData.getMember(userId);
+		const member = CQData.get(CQData).getMember(userId);
 		if (!member.addExp(-5)) {
 			// this.usingSearching = false;
 			// return [CQ.text("不够活跃")];
@@ -150,7 +150,7 @@ class CQBotPicture extends Plug {
 			if (data.multiple) {
 				const urlsProxy = data.original_urls_proxy;
 				const length = urlsProxy.length;
-				let ps: number = p === undefined ? 1 : +p;
+				let ps: number = p == null ? 1 : +p;
 				ps = ps >= length ? length - 1 : ps < 1 ? 1 : ps;
 				return [
 					CQ.text(`总共${length}张图片,这是第${ps},${ps + 1}张`),
@@ -181,5 +181,3 @@ class CQBotPicture extends Plug {
 		return [CQ.text(["", ...this.setuSet].join("\n"))];
 	}
 }
-
-export default new CQBotPicture();

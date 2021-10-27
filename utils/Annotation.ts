@@ -15,7 +15,7 @@ export type canCallRet<R extends CQTag[] = CQTag[]> = R | Promise<R>;
 
 export function canCall(corpus: ICorpus): FunctionDecorator<canCallType, Plug, string> {
 	return (target, propertyKey) => {
-		const plugCorpus: Corpus = new Corpus(target.constructor.name, propertyKey, corpus);
+		const plugCorpus: Corpus = new Corpus(<any>target.constructor, propertyKey, corpus);
 		const index: number = Plug.corpus.findIndex(value => value.weight > plugCorpus.weight);
 		if (index === -1) {
 			Plug.corpus.push(plugCorpus);

@@ -6,7 +6,7 @@ import {db} from "../utils/database.js";
 import {DataCache} from "../utils/repeat.js";
 import {CQMessage} from "../utils/Util.js";
 
-class CQBotCOC extends Plug {
+export class CQBotCOC extends Plug {
 	private static castString(value: string, cheater: boolean): Calc {
 		const groups = /^(?<op>[+\-*])?(?<num>\d+)?(?:[dD](?<max>\d+))?$/.exec(value)?.groups as {
 			op?: "+" | "-" | "*"
@@ -16,7 +16,7 @@ class CQBotCOC extends Plug {
 		const num: number = +(groups.num ?? 1);
 		const op = groups.op ?? "+";
 		const max = groups.max;
-		if (max === undefined || max === "") {
+		if (max == null || max === "") {
 			return {
 				op: op,
 				num: num,
@@ -58,7 +58,7 @@ class CQBotCOC extends Plug {
 		} as const;
 		return handles.reduceRight<[number, number]>((sum, v) => {
 			const arr: [number, number] | undefined = map[v.op]?.(sum, v.num);
-			if (arr === undefined) {
+			if (arr == null) {
 				this.logger.warn("未知的运算符:" + v.op);
 				return sum;
 			}
@@ -111,10 +111,10 @@ class CQBotCOC extends Plug {
 	protected getDiceSet(event: CQMessage, execArray: RegExpExecArray): CQTag[] {
 		event.stopPropagation();
 		const {key, value} = execArray.groups as { key?: string, value?: string } ?? {};
-		if (key === undefined || key.length > 5) {
+		if (key == null || key.length > 5) {
 			return [CQ.text("key格式错误或长度大于5")];
 		}
-		if (value === undefined) {
+		if (value == null) {
 			db.sync(db => {
 				db.prepare<string>("DELETE FROM COCShortKey WHERE key=?").run(key);
 			});
@@ -142,7 +142,7 @@ class CQBotCOC extends Plug {
 	protected getDice(event: CQMessage, execArray: RegExpExecArray): CQTag[] {
 		event.stopPropagation();
 		let {times = "1", dice} = execArray.groups as { times: string, dice: string } ?? {};
-		if (dice === undefined) {
+		if (dice == null) {
 			return [];
 		}
 		this.shortKey.forEach((value, key) => {
@@ -157,13 +157,13 @@ class CQBotCOC extends Plug {
 
 	@canCall({
 		name: "多重随机数",
-		isOpen: false,
+		isOpen: 0,
 		weight: 10,
 	})
 	protected getRandom(event: CQMessage, execArray: RegExpExecArray): CQTag[] {
 		event.stopPropagation();
 		const {num, times = 2} = execArray.groups as { num?: string, times?: string } ?? {};
-		if (num === undefined) {
+		if (num == null) {
 			return [];
 		}
 		const number = distribution(+times) * +num | 0;
@@ -228,7 +228,7 @@ class CQBotCOC extends Plug {
 			return [];
 		}
 		const cache: DiceCache | undefined = this.cache.get(event.context.user_id);
-		if (cache === undefined || cache.max <= 0) {
+		if (cache == null || cache.max <= 0) {
 			return [CQ.text("10分钟之内没有投任何骰子")];
 		}
 		const calc: Calc = CQBotCOC.castString(`+${num}d${cache.max}`, this.cheater);
@@ -355,7 +355,7 @@ class SpecialEffects {
 
 	public static getState(key: string): string {
 		const effect = this.Effects[key];
-		if (effect === undefined) {
+		if (effect == null) {
 			return "默认";
 		}
 		return effect[0];
@@ -369,5 +369,3 @@ class SpecialEffects {
 		return (this.Effects[key] ?? this.Effects["bug"])![1];
 	}
 }
-
-export default new CQBotCOC();

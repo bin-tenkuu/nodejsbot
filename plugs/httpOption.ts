@@ -28,15 +28,15 @@ function create(): Map<string, ServerHandle> {
 	}));
 }
 
-class HttpOption extends Plug {
+export class HttpOption extends Plug {
 	public server: Map<string, ServerHandle>;
 	private header?: http.Server;
 
-	constructor(server: Map<string, ServerHandle>) {
+	constructor() {
 		super(module);
 		this.name = "网页指令";
 		this.description = "通过网页链接达到控制效果";
-		this.server = server;
+		this.server = create();
 		// const jpgUrls = Array.from<undefined, string>({length: 3}, (_, k) => `/${k}.jpg`);
 		// this.generator = endlessGen(jpgUrls);
 	}
@@ -68,5 +68,3 @@ class HttpOption extends Plug {
 		});
 	}
 }
-
-export default new HttpOption(create());

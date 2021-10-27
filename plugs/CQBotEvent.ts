@@ -3,9 +3,9 @@ import {PartialSocketHandle} from "go-cqwebsocket/out/Interfaces";
 import {Plug} from "../Plug.js";
 import {canCall} from "../utils/Annotation.js";
 import {CQMessage, deleteMsg, sendAdminQQ, sendGroup, sendPrivate} from "../utils/Util.js";
-import {default as CQBot} from "./CQBot.js";
+import {CQBot} from "./CQBot.js";
 
-class CQBotEvent extends Plug {
+export class CQBotEvent extends Plug {
 	private header: PartialSocketHandle = {};
 
 	constructor() {
@@ -15,7 +15,7 @@ class CQBotEvent extends Plug {
 	}
 
 	async install() {
-		this.header = CQBot.bot.bind("on", {
+		this.header = CQBot.get(CQBot).bot.bind("on", {
 			"notice.group_increase": (event) => {
 				event.stopPropagation();
 				const {operator_id, user_id, sub_type, group_id} = event.context;
@@ -78,7 +78,7 @@ class CQBotEvent extends Plug {
 	}
 
 	async uninstall() {
-		CQBot.bot.unbind(this.header);
+		CQBot.get(CQBot).bot.unbind(this.header);
 	}
 
 	@canCall({
@@ -107,11 +107,9 @@ class CQBotEvent extends Plug {
 		maxLength: 10,
 	})
 	protected getHelp(): CQTag[] {
-		const s: string = Plug.corpus.filter(c => c.isOpen && !c.needAdmin &&
+		const s: string = Plug.corpus.filter(c => c.isOpen > 0 && !c.needAdmin &&
 				c.help !== undefined).map<string>((c) => `${c.name}:${c.help}`).join("\n");
 		return [CQ.text(s)];
 	}
 
 }
-
-export default new CQBotEvent();

@@ -6,7 +6,7 @@ import {canCall} from "../utils/Annotation.js";
 import {DataCache} from "../utils/repeat.js";
 import {isAtMe} from "../utils/Util.js";
 
-class CQBotRepeat extends Plug {
+export class CQBotRepeat extends Plug {
 	private static Random(...arr: string[]): string[] {
 		for (let i = arr.length - 1; i > 0; i--) {
 			const j = (Math.random() * i) | 0;
@@ -44,7 +44,7 @@ class CQBotRepeat extends Plug {
 			return [];
 		}
 		const find = event.cqTags.find((tag) => (tag instanceof CQText)) as CQText | undefined;
-		if (find === undefined || /^[-+$*.]/.test(find.text)) {
+		if (find == null || /^[-+$*.]/.test(find.text)) {
 			return [];
 		}
 		const msg = CQBotRepeat.Random(...event.cqTags.map<string>(tag => {
@@ -115,5 +115,3 @@ class RepeatCache {
 		return this.user.size;
 	}
 }
-
-export default new CQBotRepeat();

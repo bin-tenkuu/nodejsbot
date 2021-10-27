@@ -5,9 +5,9 @@ import {Plug} from "../Plug.js";
 import {canCall} from "../utils/Annotation.js";
 import {Corpus, Group} from "../utils/Models.js";
 import {CQMessage, onlyText, sendAdminGroup, sendGroup, sendPrivate} from "../utils/Util";
-import {default as CQDate} from "./CQData.js";
+import {CQData} from "./CQData.js";
 
-class CQBot extends Plug {
+export class CQBot extends Plug {
 	private static async sendCorpusTags(event: CQMessage, hrtime: [number, number],
 			callback: (this: void, tags: CQTag[], element: Corpus) => Promise<MessageId>) {
 		const text = onlyText(event);
@@ -146,12 +146,12 @@ class CQBot extends Plug {
 			"message.group": (event) => {
 				const time = process.hrtime();
 				let {group_id, user_id} = event.context;
-				let group: Group = CQDate.getGroup(group_id);
+				let group: Group = CQData.get(CQData).getGroup(group_id);
 				group.exp++;
 				if (group.baned) {
 					return;
 				}
-				if (CQDate.getMember(user_id).baned) {
+				if (CQData.get(CQData).getMember(user_id).baned) {
 					return;
 				}
 				CQBot.sendCorpusTags(event, time, async (tags) => {
@@ -193,5 +193,3 @@ class CQBot extends Plug {
 		return [CQ.text(str.join("\n"))];
 	}
 }
-
-export default new CQBot();

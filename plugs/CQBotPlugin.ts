@@ -3,9 +3,9 @@ import {Plug} from "../Plug.js";
 import {canCall, canCallRet} from "../utils/Annotation.js";
 import {Corpus} from "../utils/Models.js";
 import {CQMessage} from "../utils/Util.js";
-import {default as CQData} from "./CQData.js";
+import {CQData} from "./CQData.js";
 
-class CQBotPlugin extends Plug {
+export class CQBotPlugin extends Plug {
 
 	private static getCorpusList(type?: "私聊" | "群聊"): Corpus[] {
 		if (type === "私聊") {
@@ -20,7 +20,7 @@ class CQBotPlugin extends Plug {
 	private static setBanQQ(text: string, ban: 0 | 1) {
 		const matches = text.match(/\d+/g) ?? [];
 		for (const value of matches) {
-			CQData.setBaned(+value, ban);
+			CQData.get(CQData).setBaned(+value, ban);
 		}
 		return matches.join("\n");
 	}
@@ -41,7 +41,7 @@ class CQBotPlugin extends Plug {
 	protected getter(event: CQMessage, execArray: RegExpExecArray): canCallRet {
 		event.stopPropagation();
 		const {type} = execArray.groups as { type?: string } ?? {};
-		if (type === undefined) {
+		if (type == null) {
 			return [];
 		}
 		switch (type) {
@@ -57,7 +57,7 @@ class CQBotPlugin extends Plug {
 			});
 		case "ban":
 			const banList: number[] = [];
-			for (const {id, is_baned} of CQData.getMembers()) {
+			for (const {id, is_baned} of CQData.get(CQData).getMembers()) {
 				if (is_baned === 1) {
 					banList.push(id);
 				}
@@ -101,17 +101,17 @@ class CQBotPlugin extends Plug {
 	protected corpusList(event: CQMessage, execArray: RegExpExecArray): CQTag[] {
 		event.stopPropagation();
 		const {type, open} = execArray.groups as { type?: "私聊" | "群聊", open?: "开" | "关" } ?? {};
-		let isOpen: boolean;
+		let isOpen: (msg: { name: string, isOpen: number, index: number }) => boolean;
 		if (open === "开") {
-			isOpen = true;
+			isOpen = msg => msg.isOpen === 1;
 		} else if (open === "关") {
-			isOpen = false;
+			isOpen = msg => msg.isOpen === 0;
 		} else {
-			return [];
+			isOpen = _ => true;
 		}
 		return CQBotPlugin.getCorpusList(type).map((msg, index) => {
 			return {name: msg.name, isOpen: msg.isOpen, index};
-		}).filter(msg => msg.isOpen === isOpen).map(({name, index}) => {
+		}).filter(isOpen).map(({name, index}) => {
 			return CQ.text(`${index} :${name}\n`);
 		});
 	}
@@ -127,20 +127,20 @@ class CQBotPlugin extends Plug {
 		const {
 			type, open, nums,
 		} = execArray.groups as { type?: "私聊" | "群聊", open?: "开" | "关", nums?: string } ?? {};
-		if (nums === undefined) {
+		if (nums == null) {
 			return [];
 		}
 		const number = +nums;
-		let s: boolean;
+		let s: 0 | 1;
 		if (open === "开") {
-			s = true;
+			s = 1;
 		} else if (open === "关") {
-			s = false;
+			s = 0;
 		} else {
 			return [];
 		}
 		const element = CQBotPlugin.getCorpusList(type)[number];
-		if (element === undefined) {
+		if (element == null) {
 			return [];
 		}
 		element.isOpen = s;
@@ -158,11 +158,11 @@ class CQBotPlugin extends Plug {
 		const {
 			type, nums,
 		} = execArray.groups as { type?: "私聊" | "群聊", nums?: string } ?? {};
-		if (nums === undefined) {
+		if (nums == null) {
 			return [];
 		}
 		const element = CQBotPlugin.getCorpusList(type)[+nums];
-		if (element === undefined) {
+		if (element == null) {
 			return [];
 		}
 		const stringify = JSON.stringify(element, (key, value) => {
@@ -184,20 +184,20 @@ class CQBotPlugin extends Plug {
 	protected pluginInfo(event: CQMessage, execArray: RegExpExecArray): CQTag[] {
 		event.stopPropagation();
 		const {other} = execArray.groups as { other?: string } ?? {};
-		if (other === undefined) {
+		if (other == null) {
 			return [];
 		}
 		if (other === "") {
 			let str = [...Plug.plugs.keys()].map((p, i) => `${i}. ${p}`).join("\n");
 			return [CQ.text(str)];
 		}
-		const plugin = Plug.plugs.get(other);
-		if (plugin === undefined) {
+		const plugin: Plug | undefined = Plug.plugs.get(other);
+		if (plugin == null) {
 			return [CQ.text("未知插件名称")];
 		}
 		const str = JSON.stringify({
 			...plugin.toJSON(),
-			canAutoCall: [...plugin.canAutoCall],
+			croups: plugin.corpus,
 		}, undefined, 1);
 		return [CQ.text(str)];
 	}
@@ -223,5 +223,3 @@ class CQBotPlugin extends Plug {
 		return [];
 	}
 }
-
-export default new CQBotPlugin();

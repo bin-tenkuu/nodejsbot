@@ -157,7 +157,7 @@ class Modified {
 
 export type IGroup = { readonly id: number, exp: number, gmt_modified: number, is_baned: 0 | 1 }
 
-export class Group extends Modified implements IGroup, JSONAble {
+export class Group extends Modified implements IGroup, JSONable {
 	private _exp: number = 0;
 	private readonly _id: number;
 	private _is_baned: 0 | 1 = 0;
@@ -206,7 +206,7 @@ export class Group extends Modified implements IGroup, JSONAble {
 
 export type IMember = { readonly id: number, name: string, exp: number, gmt_modified: number, is_baned: 0 | 1 };
 
-export class Member extends Modified implements IMember, JSONAble {
+export class Member extends Modified implements IMember, JSONable {
 	private readonly _id: number;
 	private _is_baned: 0 | 1 = 0;
 	private _name: string = "";
@@ -308,10 +308,10 @@ export type ICorpus = {
 	 */
 	needAdmin?: boolean,
 	/**
-	 * 是否启用
-	 * @default true
+	 * 大于0则启用，0则关闭，小于0则报错
+	 * @default 1
 	 */
-	isOpen?: boolean,
+	isOpen?: number,
 	/**消息回调*/
 	then?: CorpusCB<MessageId>,
 	/**消息错误回调*/
@@ -335,8 +335,8 @@ export type ICorpus = {
 	weight: number,
 };
 
-export class Corpus extends Logable implements ICorpus {
-	public plugName: string;
+export class Corpus extends Logable implements ICorpus, JSONable {
+	public plug: { new(): Plug };
 	public funcName: string;
 	public func: Function | undefined = undefined;
 	public name: string;
@@ -345,7 +345,7 @@ export class Corpus extends Logable implements ICorpus {
 	public canPrivate: boolean;
 	// public forward: boolean;
 	public help: string | undefined;
-	public isOpen: boolean;
+	public isOpen: number;
 	public maxLength: number;
 	public minLength: number;
 	public needAdmin: boolean;
@@ -353,9 +353,9 @@ export class Corpus extends Logable implements ICorpus {
 	public then: CorpusCB<MessageId>;
 	public catch: CorpusCB<ErrorAPIResponse>;
 
-	constructor(plugName: string, funcName: string, iCorpus: ICorpus) {
+	constructor(plug: { new(): Plug }, funcName: string, iCorpus: ICorpus) {
 		super();
-		this.plugName = plugName;
+		this.plug = plug;
 		this.funcName = funcName;
 		this.name = iCorpus.name ?? this.toString();
 		// noinspection RegExpUnexpectedAnchor
@@ -363,7 +363,7 @@ export class Corpus extends Logable implements ICorpus {
 		this.canGroup = iCorpus.canGroup ?? true;
 		this.canPrivate = iCorpus.canPrivate ?? true;
 		// this.forward = iCorpus.forward ?? false;
-		this.isOpen = iCorpus.isOpen ?? true;
+		this.isOpen = iCorpus.isOpen ?? 1;
 		this.maxLength = iCorpus.maxLength ?? 100;
 		this.minLength = iCorpus.minLength ?? 0;
 		this.help = iCorpus.help;
@@ -382,7 +382,7 @@ export class Corpus extends Logable implements ICorpus {
 		case 0:
 			return null;
 		case 1:
-			if (this.canPrivate && this.isOpen && !this.needAdmin) {
+			if (this.canPrivate && this.isOpen > 0 && !this.needAdmin) {
 				break;
 			}
 			return null;
@@ -397,7 +397,7 @@ export class Corpus extends Logable implements ICorpus {
 		case 0:
 			return null;
 		case 1:
-			if (this.canGroup && this.isOpen && !this.needAdmin) {
+			if (this.canGroup && this.isOpen > 0 && !this.needAdmin) {
 				break;
 			}
 			return null;
@@ -411,15 +411,16 @@ export class Corpus extends Logable implements ICorpus {
 		if (exec == null) {
 			return [];
 		}
-		const plug: Plug | undefined = Plug.plugs.get(this.plugName);
-		if (plug === undefined) {
+		const plug: Plug = Plug.get(this.plug);
+		if (plug == null) {
+			this.isOpen = -1;
 			return [CQ.text(`插件${this.plugName}不存在`)];
 		}
-		if (this.func === undefined) {
+		if (this.func == null) {
 			const func: canCallType = Reflect.get(plug, this.funcName);
 			if (typeof func !== "function") {
-				this.isOpen = false;
-				let text = `插件${this.toString()}不是方法`;
+				this.isOpen = -1;
+				let text = `插件${this}不是方法`;
 				this.logger.error(text);
 				return [CQ.text(text)];
 			}
@@ -431,8 +432,8 @@ export class Corpus extends Logable implements ICorpus {
 			} else if (event.contextType === "message.group" && this.canGroup) {
 				return await (this.func as canCallGroupType).call(plug, event, exec);
 			} else {
-				this.logger.info(`不可调用[${this.toString()}]`);
-				return [CQ.text(`插件${this.plugName}的${this.func}方法不可在${event.contextType}环境下调用`)];
+				this.logger.info(`不可调用[${this}]`);
+				return [CQ.text(`插件${this}方法不可在${event.contextType}环境下调用`)];
 			}
 		} catch (e) {
 			this.logger.error("调用出错", e);
@@ -440,11 +441,18 @@ export class Corpus extends Logable implements ICorpus {
 		}
 	}
 
+	public toJSON() {
+		return {
+			name: this.name, regexp: this.regexp.toString(), canGroup: this.canGroup, canPrivate: this.canPrivate,
+			help: this.help, isOpen: this.isOpen, minLength: this.minLength, maxLength: this.maxLength,
+			needAdmin: this.needAdmin, weight: this.weight,
+		};
+	}
+
 	private test(event: CQMessage, length: number): 0 | 1 | 2 {
-		if (event.isCanceled) {
-			return 0;
-		}
-		if (length < this.minLength || length > this.maxLength) {
+		if (event.isCanceled ||
+				length < this.minLength || length > this.maxLength ||
+				this.isOpen < 0) {
 			return 0;
 		}
 		if (isAdmin(event)) {
@@ -452,10 +460,17 @@ export class Corpus extends Logable implements ICorpus {
 		}
 		return 1;
 	}
+
+	public get plugName() {
+		return this.plug.name;
+	}
 }
 
 export type CorpusCB<T> = (this: Corpus, value: T, event: CQMessage) => void | PromiseLike<void>
+type JSONObject = {
+	[key: string]: string | number | boolean | JSONObject | JSONObject[] | null | undefined;
+}
 
-interface JSONAble<T = unknown> {
-	toJSON(): T;
+interface JSONable {
+	toJSON(): JSONObject;
 }

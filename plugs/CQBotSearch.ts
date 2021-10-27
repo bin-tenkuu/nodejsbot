@@ -5,7 +5,7 @@ import {canCall} from "../utils/Annotation.js";
 import {sauceNAO} from "../utils/Search.js";
 import {sendAuto} from "../utils/Util.js";
 
-class CQBotSearch extends Plug {
+export class CQBotSearch extends Plug {
 
 	/**
 	 * 解析部分数据
@@ -54,15 +54,15 @@ class CQBotSearch extends Plug {
 		help: "同时发送图片可以搜图",
 		canPrivate: false,
 		weight: 5,
-		isOpen:false
+		isOpen: 0,
 	})
 	protected async getSauceNAO(event: CQEvent<"message.group">): Promise<CQTag[]> {
 		const tag: CQTag | undefined = event.cqTags.find(tag => tag instanceof CQImage);
-		if (tag === undefined) {
+		if (tag == null) {
 			return [CQ.text("请同时发送图片")];
 		}
 		const url = tag.get("url");
-		if (url === undefined) {
+		if (url == null) {
 			return [];
 		}
 		this.logger.info("开始搜图");
@@ -124,5 +124,3 @@ class CQBotSearch extends Plug {
 		}
 	}
 }
-
-export default new CQBotSearch();
