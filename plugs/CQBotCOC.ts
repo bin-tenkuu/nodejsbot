@@ -103,7 +103,7 @@ export class CQBotCOC extends Plug {
 	@canCall({
 		name: ".dset <key>[=<value>]",
 		regexp: /^\.dset +(?<key>\w[\w\d]+)(?:=(?<value>[+\-*d0-9#]+))?/i,
-		help: "设置/删除简写",
+		help: "删除[设置]简写",
 		minLength: 5,
 		maxLength: 100,
 		weight: 1,
@@ -135,7 +135,7 @@ export class CQBotCOC extends Plug {
 		name: ".d <表达式> <...>",
 		regexp: /^\.d +(?:(?<times>\d)#)?(?<dice>[^ ]+)/i,
 		weight: 1,
-		help: "骰子及简单表达式计算",
+		help: "骰子主功能，附带简单表达式计算",
 		minLength: 4,
 		maxLength: 500,
 	})
@@ -157,7 +157,7 @@ export class CQBotCOC extends Plug {
 
 	@canCall({
 		name: "多重随机数",
-		isOpen: 0,
+		isOpen: -1,
 		weight: 10,
 	})
 	protected getRandom(event: CQMessage, execArray: RegExpExecArray): CQTag[] {

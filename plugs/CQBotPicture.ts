@@ -39,7 +39,7 @@ export class CQBotPicture extends Plug {
 	@canCall({
 		name: "来点[<r18>][<key>]色图",
 		regexp: /^[来來发發给給l][张張个個幅点點份d](?<r18>r18的?)?(?<keyword>.*)?[涩色瑟铯s][图圖t]$/i,
-		help: "来点色图,可选参数:r18,关键字",
+		help: "来点色图，可选参数：r18，key",
 		minLength: 4,
 		weight: 5,
 		deleteMSG: 20,
@@ -114,7 +114,7 @@ export class CQBotPicture extends Plug {
 	@canCall({
 		name: "看看p站<pid>[-<p>]",
 		regexp: /^看{1,2}p站(?<pid>\d+)(?:-(?<p>\d+))?$/,
-		help: "看看p站带上pid发送",
+		help: "看看p站带上pid发送，可选参数：p",
 		minLength: 5,
 		weight: 5,
 		deleteMSG: 90,

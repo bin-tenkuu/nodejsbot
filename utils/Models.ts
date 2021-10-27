@@ -505,8 +505,8 @@ export class Corpus extends Logable implements ICorpus, JSONable {
 export type CorpusCB<T> = (this: Corpus, value: T, event: CQMessage) => void | PromiseLike<void>
 type JSONObject = {
 	[key: string]: string | number | boolean | JSONObject | JSONObject[] | null | undefined;
-}
+};
 
-interface JSONable {
+export interface JSONable {
 	toJSON(): JSONObject;
 }

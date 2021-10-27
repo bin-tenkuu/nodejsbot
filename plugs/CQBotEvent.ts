@@ -2,7 +2,8 @@ import {CQ, CQTag} from "go-cqwebsocket";
 import {PartialSocketHandle} from "go-cqwebsocket/out/Interfaces";
 import {Plug} from "../Plug.js";
 import {canCall} from "../utils/Annotation.js";
-import {CQMessage, sendAdminQQ, sendGroup, sendPrivate} from "../utils/Util.js";
+import {Corpus} from "../utils/Models.js";
+import {CQMessage, isAdmin, sendAdminQQ, sendGroup, sendPrivate} from "../utils/Util.js";
 import {CQBot} from "./CQBot.js";
 
 export class CQBotEvent extends Plug {
@@ -97,16 +98,24 @@ export class CQBotEvent extends Plug {
 	}
 
 	@canCall({
-		name: ".help|帮助",
-		regexp: /^\.(?:help|帮助)$/,
+		name: ".(help|帮助)<id>",
+		regexp: /^\.(?:help|帮助)(?<num> *\d*)$/,
 		forward: true,
 		weight: 2,
 		minLength: 3,
 		maxLength: 10,
 	})
-	protected getHelp(): CQTag[] {
-		const s: string = Plug.corpus.filter(c => c.isOpen > 0 && !c.needAdmin &&
-				c.help != null).map<string>((c) => `${c.name}:${c.help}`).join("\n");
+	protected getHelp(event: CQMessage, regExpExecArray: RegExpExecArray): CQTag[] {
+		let {num} = regExpExecArray.groups as { num: string } ?? {};
+		const predicate: (c: Corpus) => boolean = isAdmin(event) ?
+				c => c.help != null :
+				c => c.isOpen > 0 && !c.needAdmin && c.help != null;
+		const corpuses: Corpus[] = Plug.corpus.filter(predicate);
+		if (+num > 0) {
+			const corpus: Corpus = corpuses[+num];
+			return [CQ.text(`${corpus.name}${corpus.help}`)];
+		}
+		const s: string = corpuses.map<string>((c, i) => `${i} :${c.name}:${c.help}`).join("\n");
 		return [CQ.text(s)];
 	}
 

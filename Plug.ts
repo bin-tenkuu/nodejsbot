@@ -1,5 +1,5 @@
 import {Logable} from "./utils/logger.js";
-import {Corpus} from "./utils/Models.js";
+import {Corpus, JSONable} from "./utils/Models.js";
 
 const State = {
 	create: 0,
@@ -8,7 +8,7 @@ const State = {
 	error: 3,
 } as const;
 
-export abstract class Plug extends Logable {
+export abstract class Plug extends Logable implements JSONable {
 	public static readonly plugs: Map<string, Plug> = new Map();
 	public static readonly corpus: Corpus[] = [];
 	public static readonly plugTypes: Map<{ new(): Plug }, Plug> = new Map();
@@ -120,6 +120,6 @@ export abstract class Plug extends Logable {
 	}
 
 	public get corpus(): Corpus[] {
-		return Plug.corpus.filter(value => value.plug === this.constructor);
+		return Plug.corpus.filter(value => value.plugName === this.constructor.name);
 	}
 }

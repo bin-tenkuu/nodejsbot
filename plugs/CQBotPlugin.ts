@@ -1,30 +1,10 @@
 import {CQ, CQTag} from "go-cqwebsocket";
 import {Plug} from "../Plug.js";
 import {canCall, canCallRet} from "../utils/Annotation.js";
-import {Corpus} from "../utils/Models.js";
 import {CQMessage} from "../utils/Util.js";
 import {CQData} from "./CQData.js";
 
 export class CQBotPlugin extends Plug {
-
-	private static getCorpusList(type?: "私聊" | "群聊"): Corpus[] {
-		if (type === "私聊") {
-			return Plug.corpus.filter(c => c.canPrivate);
-		} else if (type === "群聊") {
-			return Plug.corpus.filter(c => c.canGroup);
-		} else {
-			return Plug.corpus;
-		}
-	}
-
-	private static setBanQQ(text: string, ban: 0 | 1) {
-		const matches = text.match(/\d+/g) ?? [];
-		for (const value of matches) {
-			CQData.get(CQData).setBaned(+value, ban);
-		}
-		return matches.join("\n");
-	}
-
 	constructor() {
 		super(module);
 		this.name = "QQBot插件系统";
@@ -73,34 +53,44 @@ export class CQBotPlugin extends Plug {
 	}
 
 	@canCall({
-		name: ".设置<type> <other>",
-		regexp: /^\.设置(?<type>[^ ]+) (?<other>.+)$/,
+		name: ".设置[群][un]ban <other>",
+		regexp: /^\.设置(?<group>群)?(?<type>un)?ban (?<other>.+)$/,
 		needAdmin: true,
+		help: "设置群聊、私聊的ban状态",
 		weight: 4,
 	})
 	protected setter(event: CQMessage, execArray: RegExpExecArray): CQTag[] {
 		event.stopPropagation();
-		const {type, other = ""} = execArray.groups as { type?: string, other?: string } ?? {};
-		switch (type) {
-		case "ban":
-			return [CQ.text(CQBotPlugin.setBanQQ(other, 1))];
-		case "unban":
-			return [CQ.text(CQBotPlugin.setBanQQ(other, 0))];
-		default:
-			return [];
+		const {group, type, other = ""} = execArray.groups as { type?: "un", other?: string, group?: "群" } ?? {};
+		let isBan: 0 | 1 = type == null ? 1 : 0;
+		const cqData: CQData = CQData.get(CQData);
+		const matches = other.match(/\d+/g) ?? [];
+		const cqTexts = [CQ.text(matches.join("\n"))];
+		if (group == null) {
+			for (const value of matches) {
+				cqData.setGroupBaned(+value, isBan);
+			}
+			cqTexts.unshift(CQ.text("已ban群：\n"));
+		} else {
+			for (const value of matches) {
+				cqData.setBaned(+value, isBan);
+			}
+			cqTexts.unshift(CQ.text("已banQQ：\n"));
 		}
+		return cqTexts;
 	}
 
 	@canCall({
-		name: ".语料库<type><open>",
-		regexp: /^\.语料库(?<type>[私群]聊)?(?<open>[开关])$/,
+		name: ".语料库<open>",
+		regexp: /^\.语料库(?<open>[开关])$/,
 		needAdmin: true,
 		forward: true,
+		help: "查看全部语料库状态",
 		weight: 4,
 	})
 	protected corpusList(event: CQMessage, execArray: RegExpExecArray): CQTag[] {
 		event.stopPropagation();
-		const {type, open} = execArray.groups as { type?: "私聊" | "群聊", open?: "开" | "关" } ?? {};
+		const {open} = execArray.groups as { open?: "开" | "关" } ?? {};
 		let isOpen: (msg: { name: string, isOpen: number, index: number }) => boolean;
 		if (open === "开") {
 			isOpen = msg => msg.isOpen === 1;
@@ -109,24 +99,23 @@ export class CQBotPlugin extends Plug {
 		} else {
 			isOpen = _ => true;
 		}
-		return CQBotPlugin.getCorpusList(type).map((msg, index) => {
+		return Plug.corpus.map((msg, index) => {
 			return {name: msg.name, isOpen: msg.isOpen, index};
-		}).filter(isOpen).map(({name, index}) => {
-			return CQ.text(`${index} :${name}\n`);
+		}).filter(isOpen).map(({name, index, isOpen}) => {
+			return CQ.text(`${index} (${isOpen}):${name}\n`);
 		});
 	}
 
 	@canCall({
-		name: ".语料库<type><open><nums>",
-		regexp: /^\.语料库(?<type>[私群]聊)?(?<open>[开关])(?<nums>\s?\d+)$/,
+		name: ".语料库<open><nums>",
+		regexp: /^\.语料库(?<open>[开关])(?<nums>\s?\d+)$/,
 		needAdmin: true,
+		help: "设置语料库状态",
 		weight: 4,
 	})
 	protected corpusStat(event: CQMessage, execArray: RegExpExecArray): CQTag[] {
 		event.stopPropagation();
-		const {
-			type, open, nums,
-		} = execArray.groups as { type?: "私聊" | "群聊", open?: "开" | "关", nums?: string } ?? {};
+		const {open, nums} = execArray.groups as { open?: "开" | "关", nums?: string } ?? {};
 		if (nums == null) {
 			return [];
 		}
@@ -139,7 +128,7 @@ export class CQBotPlugin extends Plug {
 		} else {
 			return [];
 		}
-		const element = CQBotPlugin.getCorpusList(type)[number];
+		const element = Plug.corpus[number];
 		if (element == null) {
 			return [];
 		}
@@ -148,29 +137,23 @@ export class CQBotPlugin extends Plug {
 	}
 
 	@canCall({
-		name: ".语料库<type><nums>",
-		regexp: /^\.语料库(?<type>[私群]聊)?(?<nums>\s?\d+)$/,
+		name: ".语料库<nums>",
+		regexp: /^\.语料库(?<nums>\s?\d+)$/,
 		needAdmin: true,
+		help: "查看语料库详情",
 		weight: 4,
 	})
 	protected corpusInfo(event: CQMessage, execArray: RegExpExecArray): CQTag[] {
 		event.stopPropagation();
-		const {
-			type, nums,
-		} = execArray.groups as { type?: "私聊" | "群聊", nums?: string } ?? {};
+		const {nums} = execArray.groups as { nums?: string } ?? {};
 		if (nums == null) {
 			return [];
 		}
-		const element = CQBotPlugin.getCorpusList(type)[+nums];
+		const element = Plug.corpus[+nums];
 		if (element == null) {
 			return [];
 		}
-		const stringify = JSON.stringify(element, (key, value) => {
-			if (value instanceof RegExp) {
-				return value.toString();
-			}
-			return value;
-		}, 1);
+		const stringify = JSON.stringify(element, undefined, 1);
 		return [CQ.text(stringify)];
 	}
 
@@ -179,6 +162,7 @@ export class CQBotPlugin extends Plug {
 		regexp: /^\.插件(?<other>.*)$/,
 		needAdmin: true,
 		forward: true,
+		help: "查看插件信息",
 		weight: 4,
 	})
 	protected pluginInfo(event: CQMessage, execArray: RegExpExecArray): CQTag[] {
@@ -204,7 +188,7 @@ export class CQBotPlugin extends Plug {
 
 	@canCall({
 		name: ".模式",
-		regexp: /^\.模式(?<type>风控|普通)$/,
+		regexp: /^\.模式(?<type>风控)$/,
 		needAdmin: true,
 		canGroup: false,
 		canPrivate: true,
