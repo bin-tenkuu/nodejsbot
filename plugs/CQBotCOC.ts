@@ -221,7 +221,7 @@ export class CQBotCOC extends Plug {
 			num?: string
 		} ?? {};
 		let num: number = 1;
-		if (numStr !== undefined) {
+		if (numStr != null) {
 			num = +numStr;
 		}
 		if (num === 0) {

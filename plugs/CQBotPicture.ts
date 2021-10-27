@@ -2,7 +2,7 @@ import {CQ, CQTag} from "go-cqwebsocket";
 import {Plug} from "../Plug.js";
 import {canCall} from "../utils/Annotation.js";
 import {lolicon, pixivCat} from "../utils/Search.js";
-import {CQMessage, deleteMsg, getPRegular, sendAdminQQ} from "../utils/Util.js";
+import {CQMessage, getPRegular, sendAdminQQ} from "../utils/Util.js";
 import {CQData} from "./CQData.js";
 
 
@@ -38,13 +38,11 @@ export class CQBotPicture extends Plug {
 	/**获取随机色图*/
 	@canCall({
 		name: "来点[<r18>][<key>]色图",
-		regexp: /^[来來发發给給][张張个個幅点點份](?<r18>[Rr]18的?)?(?<keyword>.*)?[涩色瑟铯s][图圖t]$/,
+		regexp: /^[来來发發给給l][张張个個幅点點份d](?<r18>r18的?)?(?<keyword>.*)?[涩色瑟铯s][图圖t]$/i,
 		help: "来点色图,可选参数:r18,关键字",
 		minLength: 4,
 		weight: 5,
-		then(m, e) {
-			deleteMsg(e.bot, m.message_id, 20);
-		},
+		deleteMSG: 20,
 	})
 	protected async getSeTu(event: CQMessage, exec: RegExpExecArray): Promise<CQTag[]> {
 		event.stopPropagation();
@@ -54,7 +52,7 @@ export class CQBotPicture extends Plug {
 		this.usingSeTu = true;
 		const groups = {
 			keyword: exec.groups?.keyword,
-			r18: exec.groups?.r18 !== undefined,
+			r18: exec.groups?.r18 != null,
 		};
 		groups.keyword ??= "";
 		const userId: number = event.context.user_id;
@@ -89,6 +87,8 @@ export class CQBotPicture extends Plug {
 				return [CQ.text("色图数量不足")];
 			}
 			const first = data.data[0];
+			const dataMSG: string = `标题：${first.title
+			}\n作者：${first.author}\n原图p${first.p}：www.pixiv.net/i/${first.pid}`;
 			// if (event.contextType === "message.group") {
 			// 	const {
 			// 		message_id: messageId,
@@ -96,12 +96,11 @@ export class CQBotPicture extends Plug {
 			// 	} = event.context;
 			// 	sendForward(event, [
 			// 		CQ.nodeId(messageId),
-			// 		CQ.node(nickname, userId, `标题：${first.title
-			// 		}\n作者：${first.author}\n原图：www.pixiv.net/i/${first.pid}\np${first.p}`),
+			// 		CQ.node(nickname, userId, dataMSG),
 			// 		CQ.node(nickname, userId, CQ.escape(first.tags.join("\n"))),
 			// 	]).catch(NOP);
 			// }
-			return [CQ.image(first.url)];
+			return [CQ.image(first.url), CQ.text(dataMSG)];
 		} catch (reason) {
 			sendAdminQQ(event.bot, "色图坏了").catch(NOP);
 			this.logger.error(reason);
@@ -118,9 +117,7 @@ export class CQBotPicture extends Plug {
 		help: "看看p站带上pid发送",
 		minLength: 5,
 		weight: 5,
-		then(m, e) {
-			deleteMsg(e.bot, m.message_id, 90);
-		},
+		deleteMSG: 90,
 	})
 	protected async getPixiv(event: CQMessage, exec: RegExpExecArray): Promise<CQTag[]> {
 		event.stopPropagation();

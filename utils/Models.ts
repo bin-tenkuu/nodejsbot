@@ -1,9 +1,9 @@
 import {CQ, CQEvent, CQTag} from "go-cqwebsocket";
 import {ErrorAPIResponse, MessageId} from "go-cqwebsocket/out/Interfaces.js";
 import {Plug} from "../Plug.js";
-import {canCallGroupType, canCallPrivateType, canCallType} from "./Annotation.js";
+import {canCallType} from "./Annotation.js";
 import {Logable} from "./logger.js";
-import {CQMessage, isAdmin} from "./Util.js";
+import {CQMessage, deleteMsg, isAdmin, onlyText} from "./Util.js";
 
 type sauceNAOResultsHeader = {
 	/** 库id */
@@ -237,7 +237,9 @@ export class Member extends Modified implements IMember, JSONable {
 	}
 
 	public toJSON(): IMember {
-		return {id: this._id, exp: this._exp, name: this._name, gmt_modified: this._gmt_modified, is_baned: this._is_baned};
+		return {
+			id: this._id, exp: this._exp, name: this._name, gmt_modified: this._gmt_modified, is_baned: this._is_baned,
+		};
 	}
 
 	public get exp(): number {
@@ -308,7 +310,7 @@ export type ICorpus = {
 	 */
 	needAdmin?: boolean,
 	/**
-	 * 大于0则启用，0则关闭，小于0则报错
+	 * 大于 0 则启用，0 则关闭，小于 0 则报错
 	 * @default 1
 	 */
 	isOpen?: number,
@@ -333,29 +335,67 @@ export type ICorpus = {
 	 * @default 10
 	 */
 	weight: number,
+	/**
+	 * 大于 0 时延时固定时间撤回，单位s
+	 * @default 0
+	 */
+	deleteMSG?: number,
 };
 
 export class Corpus extends Logable implements ICorpus, JSONable {
-	public plug: { new(): Plug };
+	public static async sendCorpusTags(event: CQMessage, hrtime: [number, number],
+			callback: (this: void, tags: CQTag[], element: Corpus) => Promise<MessageId>): Promise<void> {
+		const text = onlyText(event);
+		const corpus: string[] = [];
+		for (const element of Plug.corpus) {
+			const exec: RegExpExecArray | null = event.contextType === "message.private" ?
+					element.execPrivate(event, text) : element.execGroup(event, text);
+			if (exec === null) {
+				continue;
+			}
+			const msg = await element.run(event, exec).catch<CQTag[]>(e => {
+				this.logger.error("语料库转换失败:" + element.name);
+				this.logger.error(e);
+				return [CQ.text("error:" + element.name + "\n")];
+			});
+			if (msg.length < 1) {
+				continue;
+			}
+			await callback(msg, element).then(value => {
+				deleteMsg(event.bot, value.message_id, element.deleteMSG);
+				element.then(value, event);
+			}, reason => {
+				element.catch(reason, event);
+			}).finally(() => {
+				corpus.push(element.name);
+			}).catch(NOP);
+		}
+		if (corpus.length > 0) {
+			Plug.hrtime(hrtime, corpus.join(","));
+		}
+	}
+
+	public plugName: string;
 	public funcName: string;
-	public func: Function | undefined = undefined;
+	public func: Function | null = null;
 	public name: string;
 	public regexp: RegExp;
 	public canGroup: boolean;
 	public canPrivate: boolean;
 	// public forward: boolean;
-	public help: string | undefined;
+	public help: string | undefined = undefined;
 	public isOpen: number;
 	public maxLength: number;
 	public minLength: number;
 	public needAdmin: boolean;
 	public weight: number;
+	public deleteMSG: number;
 	public then: CorpusCB<MessageId>;
 	public catch: CorpusCB<ErrorAPIResponse>;
 
-	constructor(plug: { new(): Plug }, funcName: string, iCorpus: ICorpus) {
+	constructor(plugName: string, funcName: string, iCorpus: ICorpus) {
 		super();
-		this.plug = plug;
+		this.plugName = plugName;
 		this.funcName = funcName;
 		this.name = iCorpus.name ?? this.toString();
 		// noinspection RegExpUnexpectedAnchor
@@ -369,6 +409,7 @@ export class Corpus extends Logable implements ICorpus, JSONable {
 		this.help = iCorpus.help;
 		this.needAdmin = iCorpus.needAdmin ?? false;
 		this.weight = iCorpus.weight ?? 10;
+		this.deleteMSG = iCorpus.deleteMSG ?? 0;
 		this.then = iCorpus.then ?? (() => undefined);
 		this.catch = iCorpus.catch ?? (() => Corpus.logger.error(this.toString()));
 	}
@@ -411,12 +452,12 @@ export class Corpus extends Logable implements ICorpus, JSONable {
 		if (exec == null) {
 			return [];
 		}
-		const plug: Plug = Plug.get(this.plug);
-		if (plug == null) {
-			this.isOpen = -1;
-			return [CQ.text(`插件${this.plugName}不存在`)];
-		}
 		if (this.func == null) {
+			const plug: Plug | undefined = Plug.plugs.get(this.plugName);
+			if (plug == null) {
+				this.isOpen = -1;
+				return [CQ.text(`插件${this.plugName}不存在`)];
+			}
 			const func: canCallType = Reflect.get(plug, this.funcName);
 			if (typeof func !== "function") {
 				this.isOpen = -1;
@@ -424,13 +465,12 @@ export class Corpus extends Logable implements ICorpus, JSONable {
 				this.logger.error(text);
 				return [CQ.text(text)];
 			}
-			this.func = func;
+			this.func = func.bind(plug);
 		}
 		try {
-			if (event.contextType === "message.private" && this.canPrivate) {
-				return await (this.func as canCallPrivateType).call(plug, event, exec);
-			} else if (event.contextType === "message.group" && this.canGroup) {
-				return await (this.func as canCallGroupType).call(plug, event, exec);
+			if (event.contextType === "message.private" && this.canPrivate ||
+					event.contextType === "message.group" && this.canGroup) {
+				return await this.func(event, exec);
 			} else {
 				this.logger.info(`不可调用[${this}]`);
 				return [CQ.text(`插件${this}方法不可在${event.contextType}环境下调用`)];
@@ -459,10 +499,6 @@ export class Corpus extends Logable implements ICorpus, JSONable {
 			return 2;
 		}
 		return 1;
-	}
-
-	public get plugName() {
-		return this.plug.name;
 	}
 }
 

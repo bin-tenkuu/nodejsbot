@@ -11,13 +11,14 @@ export class CQData extends Plug {
 		return db.sync<Member>(db => {
 			const im: IMember | undefined = db.prepare(
 					`SELECT id, name, exp, gmt_modified, is_baned FROM Members WHERE id = ?`).get(id);
-			if (im !== undefined) {
+			if (im != null) {
 				return new Member(im);
 			}
 			const member = new Member(id);
 			member.modified();
 			db.prepare<IMember>(`INSERT INTO Members(id, name, exp, gmt_modified, is_baned, gmt_create)
-      VALUES ($id, $name, $exp, $gmt_modified, $is_baned, $gmt_modified)`).run(member.toJSON());
+            VALUES ($id, $name, $exp, $gmt_modified, $is_baned, $gmt_modified)`)
+					.run(member.toJSON());
 			return member;
 		});
 	}
@@ -26,13 +27,13 @@ export class CQData extends Plug {
 		return db.sync<Group>(db => {
 			const im: IGroup | undefined = db.prepare(
 					`SELECT id, exp, gmt_modified, is_baned FROM tb_group WHERE id = ?`).get(id);
-			if (im !== undefined) {
+			if (im != null) {
 				return new Group(im);
 			}
 			const member = new Group(id);
 			member.modified();
 			db.prepare<IGroup>(`INSERT INTO tb_group(id, exp, gmt_modified, is_baned, gmt_create)
-      VALUES ($id, $exp, $gmt_modified, $is_baned, $gmt_modified)`).run(member.toJSON());
+            VALUES ($id, $exp, $gmt_modified, $is_baned, $gmt_modified)`).run(member.toJSON());
 			return member;
 		});
 	}
@@ -42,8 +43,8 @@ export class CQData extends Plug {
 			this.logger.info("保存开始(Members)");
 			let change = 0, noChange = 0;
 			const stmt = db.prepare<IMember>(`UPDATE Members
-      SET name = $name, exp = $exp, gmt_modified = $gmt_modified, is_baned = $is_baned
-      WHERE id = $id;`);
+            SET name = $name, exp = $exp, gmt_modified = $gmt_modified, is_baned = $is_baned
+            WHERE id = $id;`);
 			for (const member of map.values()) {
 				if (member.is_modified) {
 					stmt.run(member.toJSON());
@@ -63,8 +64,8 @@ export class CQData extends Plug {
 			this.logger.info("保存开始(Group)");
 			let change = 0;
 			const stmt = db.prepare<IGroup>(`UPDATE tb_group
-      SET exp = $exp, gmt_modified = $gmt_modified, is_baned = $is_baned
-      WHERE id = $id;`);
+            SET exp = $exp, gmt_modified = $gmt_modified, is_baned = $is_baned
+            WHERE id = $id;`);
 			for (const member of map.values()) {
 				if (!member.is_modified) {
 					return;

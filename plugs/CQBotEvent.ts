@@ -2,7 +2,7 @@ import {CQ, CQTag} from "go-cqwebsocket";
 import {PartialSocketHandle} from "go-cqwebsocket/out/Interfaces";
 import {Plug} from "../Plug.js";
 import {canCall} from "../utils/Annotation.js";
-import {CQMessage, deleteMsg, sendAdminQQ, sendGroup, sendPrivate} from "../utils/Util.js";
+import {CQMessage, sendAdminQQ, sendGroup, sendPrivate} from "../utils/Util.js";
 import {CQBot} from "./CQBot.js";
 
 export class CQBotEvent extends Plug {
@@ -18,14 +18,14 @@ export class CQBotEvent extends Plug {
 		this.header = CQBot.get(CQBot).bot.bind("on", {
 			"notice.group_increase": (event) => {
 				event.stopPropagation();
-				const {operator_id, user_id, sub_type, group_id} = event.context;
+				const {operator_id, user_id, sub_type} = event.context;
 				let str;
 				if (operator_id === 0) {
 					str = `@${user_id} ${sub_type === "approve" ? "欢迎" : "被邀请"}入群`;
 				} else {
 					str = `@${user_id} 被管理员{@${operator_id}} ${sub_type === "approve" ? "同意" : "邀请"}入群`;
 				}
-				event.bot.send_group_msg(group_id, str).catch(NOP);
+				sendGroup(event, [CQ.text(str)]).catch(NOP);
 			},
 			"notice.group_decrease": (event) => {
 				event.stopPropagation();
@@ -44,7 +44,7 @@ export class CQBotEvent extends Plug {
 					str = `@${info.nickname}(${info.user_id})${str}`;
 					return sendGroup(event, [CQ.text(str)]);
 				}).catch(() => {
-					sendAdminQQ(event.bot, str);
+					return sendAdminQQ(event.bot, [CQ.text(`来自群：${group_id}\n${str}`)]);
 				});
 			},
 			"request.friend": (event) => {
@@ -86,9 +86,7 @@ export class CQBotEvent extends Plug {
 		regexp: /^\.report(?<txt>.+)$/,
 		help: "附上消息发送给开发者",
 		weight: 6,
-		then(v, event) {
-			deleteMsg(event.bot, v.message_id, 10);
-		},
+		deleteMSG: 10,
 	})
 	protected sendReport(event: CQMessage, execArray: RegExpExecArray): CQTag[] {
 		const {txt}: { txt?: string } = execArray.groups as { txt?: string } ?? {};
@@ -108,7 +106,7 @@ export class CQBotEvent extends Plug {
 	})
 	protected getHelp(): CQTag[] {
 		const s: string = Plug.corpus.filter(c => c.isOpen > 0 && !c.needAdmin &&
-				c.help !== undefined).map<string>((c) => `${c.name}:${c.help}`).join("\n");
+				c.help != null).map<string>((c) => `${c.name}:${c.help}`).join("\n");
 		return [CQ.text(s)];
 	}
 

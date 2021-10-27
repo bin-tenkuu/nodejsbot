@@ -2,8 +2,8 @@ import {CQ, CQEvent} from "go-cqwebsocket";
 import {CQImage, CQTag} from "go-cqwebsocket/out/tags";
 import {Plug} from "../Plug.js";
 import {canCall} from "../utils/Annotation.js";
+import {sauceNAOResult} from "../utils/Models.js";
 import {sauceNAO} from "../utils/Search.js";
-import {sendAuto} from "../utils/Util.js";
 
 export class CQBotSearch extends Plug {
 
@@ -42,6 +42,14 @@ export class CQBotSearch extends Plug {
 		}
 	}
 
+	private static toTag(result: sauceNAOResult["results"][number]): CQTag[] {
+		return [
+			CQ.image(result.header.thumbnail),
+			CQ.text(`相似度: ${result.header.similarity}%\n`),
+			CQ.text(CQBotSearch.decodeData(result.header.index_id, result.data)),
+		];
+	}
+
 	constructor() {
 		super(module);
 		this.name = "QQ群聊-搜图";
@@ -55,9 +63,11 @@ export class CQBotSearch extends Plug {
 		canPrivate: false,
 		weight: 5,
 		isOpen: 0,
+		deleteMSG: 60,
 	})
 	protected async getSauceNAO(event: CQEvent<"message.group">): Promise<CQTag[]> {
-		const tag: CQTag | undefined = event.cqTags.find(tag => tag instanceof CQImage);
+		// @ts-ignore
+		const tag: CQImage | undefined = event.cqTags.find<CQImage>(tag => tag instanceof CQImage);
 		if (tag == null) {
 			return [CQ.text("请同时发送图片")];
 		}
@@ -67,10 +77,7 @@ export class CQBotSearch extends Plug {
 		}
 		this.logger.info("开始搜图");
 		event.stopPropagation();
-		const {
-			message_id: messageId,
-			sender: {nickname: nickName, user_id: userId},
-		} = event.context;
+		const {message_id: messageId, sender: {/*nickname: nickName,*/ user_id: userId}} = event.context;
 		try {
 			const result = await sauceNAO(url);
 			// console.log(result);
@@ -82,24 +89,12 @@ export class CQBotSearch extends Plug {
 					CQ.text(`搜图无结果`),
 				];
 			}
-			// const [first, second, third] = result.results;
+			const [first, second, third] = result.results;
 			// sendForward(event, [
 			// 	CQ.nodeId(messageId),
-			// 	CQ.node(nickName, userId, [
-			// 		CQ.image(first.header.thumbnail),
-			// 		CQ.text(`相似度: ${first.header.similarity}%\n`),
-			// 		CQ.text(CQBotSearch.decodeData(first.header.index_id, first.data)),
-			// 	]),
-			// 	CQ.node(nickName, userId, [
-			// 		CQ.image(second.header.thumbnail),
-			// 		CQ.text(`相似度: ${second.header.similarity}%\n`),
-			// 		CQ.text(CQBotSearch.decodeData(second.header.index_id, second.data)),
-			// 	]),
-			// 	CQ.node(nickName, userId, [
-			// 		CQ.image(third.header.thumbnail),
-			// 		CQ.text(`相似度: ${third.header.similarity}%\n`),
-			// 		CQ.text(CQBotSearch.decodeData(third.header.index_id, third.data)),
-			// 	]),
+			// 	CQ.node(nickName, userId, CQBotSearch.toTag(first)),
+			// 	CQ.node(nickName, userId, CQBotSearch.toTag(second)),
+			// 	CQ.node(nickName, userId, CQBotSearch.toTag(third)),
 			// ]).catch(() => {
 			// 	return sendAuto(event, [
 			// 		CQ.reply(messageId),
@@ -110,17 +105,19 @@ export class CQBotSearch extends Plug {
 			return [
 				CQ.reply(messageId),
 				CQ.at(userId),
-				CQ.text("有结果，加载中"),
+				// CQ.text("有结果，加载中"),
+				...CQBotSearch.toTag(first),
+				...CQBotSearch.toTag(second),
+				...CQBotSearch.toTag(third),
 			];
 		} catch (e) {
-			this.logger.warn("搜图出错");
+			this.logger.error("搜图出错");
 			this.logger.error(e);
-			sendAuto(event, [
+			return [
 				CQ.reply(messageId),
 				CQ.at(userId),
 				CQ.text(`搜图出错`),
-			]);
-			return [];
+			];
 		}
 	}
 }

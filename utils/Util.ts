@@ -23,8 +23,8 @@ export function isAtMe({context: {self_id}, cqTags}: CQEvent<"message.group">): 
 }
 
 export function onlyText({context: {raw_message}}: CQMessage): string {
-	if (raw_message !== undefined) {
-		return CQ.unescape(raw_message.replace(/\[[^\]]+\]/g, "").trim());
+	if (raw_message != null) {
+		return CQ.unescape(raw_message.replace(/\[[^\]]+]/g, "").trim());
 	}
 	return "";
 }

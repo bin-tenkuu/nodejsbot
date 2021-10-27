@@ -1,44 +1,13 @@
 import {CQ, CQTag, CQWebSocket} from "go-cqwebsocket";
-import {MessageId, Status} from "go-cqwebsocket/out/Interfaces";
+import {Status} from "go-cqwebsocket/out/Interfaces";
 import {CQWS} from "../config/config.json";
 import {Plug} from "../Plug.js";
 import {canCall} from "../utils/Annotation.js";
 import {Corpus, Group} from "../utils/Models.js";
-import {CQMessage, onlyText, sendAdminGroup, sendGroup, sendPrivate} from "../utils/Util";
+import {sendAdminGroup, sendGroup, sendPrivate} from "../utils/Util";
 import {CQData} from "./CQData.js";
 
 export class CQBot extends Plug {
-	private static async sendCorpusTags(event: CQMessage, hrtime: [number, number],
-			callback: (this: void, tags: CQTag[], element: Corpus) => Promise<MessageId>) {
-		const text = onlyText(event);
-		const corpus: string[] = [];
-		for (const element of Plug.corpus) {
-			const exec: RegExpExecArray | null = event.contextType === "message.private" ?
-					element.execPrivate(event, text) : element.execGroup(event, text);
-			if (exec === null) {
-				continue;
-			}
-			const msg = await element.run(event, exec).catch<CQTag[]>(e => {
-				this.logger.error("语料库转换失败:" + element.name);
-				this.logger.error(e);
-				return [CQ.text("error:" + element.name + "\n")];
-			});
-			if (msg.length < 1) {
-				continue;
-			}
-			await callback(msg, element).then(value => {
-				element.then(value, event);
-			}, reason => {
-				element.catch(reason, event);
-			}).finally(() => {
-				corpus.push(element.name);
-			}).catch(NOP);
-		}
-		if (corpus.length > 0) {
-			Plug.hrtime(hrtime, corpus.join(","));
-		}
-	}
-
 	public bot: CQWebSocket = new CQWebSocket(CQWS);
 	private needOpen: number = 0;
 	private stateCache = {
@@ -154,7 +123,7 @@ export class CQBot extends Plug {
 				if (CQData.get(CQData).getMember(user_id).baned) {
 					return;
 				}
-				CQBot.sendCorpusTags(event, time, async (tags) => {
+				Corpus.sendCorpusTags(event, time, async (tags) => {
 					// if (!corpus.forward) {
 					return sendGroup(event, tags);
 					// } else if (tags[0].tagName === "node") {
@@ -166,7 +135,7 @@ export class CQBot extends Plug {
 			},
 			"message.private": (event) => {
 				const time = process.hrtime();
-				CQBot.sendCorpusTags(event, time, (tags) => {
+				Corpus.sendCorpusTags(event, time, (tags) => {
 					return sendPrivate(event, tags);
 				}).catch(NOP);
 			},
