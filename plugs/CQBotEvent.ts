@@ -16,7 +16,7 @@ export class CQBotEvent extends Plug {
 	}
 
 	async install() {
-		this.header = CQBot.get(CQBot).bot.bind("on", {
+		this.header = CQBot.getInst().bot.bind("on", {
 			"notice.group_increase": (event) => {
 				event.stopPropagation();
 				const {operator_id, user_id, sub_type} = event.context;
@@ -79,7 +79,7 @@ export class CQBotEvent extends Plug {
 	}
 
 	async uninstall() {
-		CQBot.get(CQBot).bot.unbind(this.header);
+		CQBot.getInst().bot.unbind(this.header);
 	}
 
 	@canCall({

@@ -1,3 +1,4 @@
+import {canCall} from "./utils/Annotation.js";
 import {Logable} from "./utils/logger.js";
 import {Corpus, JSONable} from "./utils/Models.js";
 
@@ -9,27 +10,18 @@ const State = {
 } as const;
 
 export abstract class Plug extends Logable implements JSONable {
-	public static readonly plugs: Map<string, Plug> = new Map();
+	public static readonly plugs: Map<{ new(): Plug }, Plug> = new Map();
 	public static readonly corpus: Corpus[] = [];
-	public static readonly plugTypes: Map<{ new(): Plug }, Plug> = new Map();
 
-	public static get<T extends Plug>(type: { new(): T }): T {
-		let instance: Plug | undefined = this.plugTypes.get(type);
-		if (instance == null || !(instance instanceof type)) {
-			instance = new type();
-			this.plugTypes.set(type, instance);
+	/**获取当前类的实例*/
+	public static getInst<T extends Plug>(this: { new(): T }): T {
+		let instance: Plug | undefined = Plug.plugs.get(this);
+		if (instance == null) {
+			instance = new this();
+			canCall.merge(this, Plug.corpus);
+			Plug.plugs.set(this, instance);
 		}
 		return <T>instance;
-	}
-
-	public static hrtime(time: [number, number], msg: string = "本次请求"): void {
-		let [s, ns] = process.hrtime(time);
-		ns /= 1e3;
-		if (ns < 1e3) {
-			return this.logger.info(`耗时:${s}秒${ns}微秒:\t${msg}`);
-		}
-		ns = (ns | 0) / 1e3;
-		return this.logger.info(`耗时:${s}秒${ns}毫秒:\t${msg}`);
 	}
 
 	public readonly module: NodeModule;
@@ -59,12 +51,7 @@ export abstract class Plug extends Logable implements JSONable {
 		return {"name": this.name, "State": this.state};
 	}
 
-	[Symbol.toStringTag](): string {
-		return this.constructor.name;
-	}
-
 	#init(): void {
-		Plug.plugs.set(this.constructor.name, this);
 		this.install = async function () {
 			try {
 				if (this.#state === State.error) {
@@ -120,6 +107,6 @@ export abstract class Plug extends Logable implements JSONable {
 	}
 
 	public get corpus(): Corpus[] {
-		return Plug.corpus.filter(value => value.plugName === this.constructor.name);
+		return canCall.get(<any>this.constructor);
 	}
 }

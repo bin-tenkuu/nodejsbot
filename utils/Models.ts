@@ -362,7 +362,9 @@ export class Corpus extends Logable implements ICorpus, JSONable {
 				continue;
 			}
 			await callback(msg, element).then(value => {
-				deleteMsg(event.bot, value.message_id, element.deleteMSG);
+				if (element.deleteMSG > 0) {
+					deleteMsg(event.bot, value.message_id, element.deleteMSG);
+				}
 				element.then(value, event);
 			}, reason => {
 				element.catch(reason, event);
@@ -371,11 +373,11 @@ export class Corpus extends Logable implements ICorpus, JSONable {
 			}).catch(NOP);
 		}
 		if (corpus.length > 0) {
-			Plug.hrtime(hrtime, corpus.join(","));
+			this.hrtime(hrtime, corpus.join(","));
 		}
 	}
 
-	public plugName: string;
+	public plugType: { new(): Plug };
 	public funcName: string;
 	public func: Function | null = null;
 	public name: string;
@@ -393,9 +395,9 @@ export class Corpus extends Logable implements ICorpus, JSONable {
 	public then: CorpusCB<MessageId>;
 	public catch: CorpusCB<ErrorAPIResponse>;
 
-	constructor(plugName: string, funcName: string, iCorpus: ICorpus) {
+	constructor(plugType: { new(): Plug }, funcName: string, iCorpus: ICorpus) {
 		super();
-		this.plugName = plugName;
+		this.plugType = plugType;
 		this.funcName = funcName;
 		this.name = iCorpus.name ?? this.toString();
 		// noinspection RegExpUnexpectedAnchor
@@ -453,7 +455,7 @@ export class Corpus extends Logable implements ICorpus, JSONable {
 			return [];
 		}
 		if (this.func == null) {
-			const plug: Plug | undefined = Plug.plugs.get(this.plugName);
+			const plug: Plug | undefined = Plug.plugs.get(this.plugType);
 			if (plug == null) {
 				this.isOpen = -1;
 				return [CQ.text(`插件${this.plugName}不存在`)];
@@ -499,6 +501,10 @@ export class Corpus extends Logable implements ICorpus, JSONable {
 			return 2;
 		}
 		return 1;
+	}
+
+	public get plugName() {
+		return this.plugType.name;
 	}
 }
 

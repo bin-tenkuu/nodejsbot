@@ -56,7 +56,7 @@ export class CQBotPicture extends Plug {
 		};
 		groups.keyword ??= "";
 		const userId: number = event.context.user_id;
-		const member = CQData.get(CQData).getMember(userId);
+		const member = CQData.getInst().getMember(userId);
 		if (!member.addExp(-5)) {
 			// this.usingSeTu = false;
 			// return [CQ.text("不够活跃")];
@@ -132,7 +132,7 @@ export class CQBotPicture extends Plug {
 			return [CQ.text("pid获取失败")];
 		}
 		const userId: number = event.context.user_id;
-		const member = CQData.get(CQData).getMember(userId);
+		const member = CQData.getInst().getMember(userId);
 		if (!member.addExp(-5)) {
 			// this.usingSearching = false;
 			// return [CQ.text("不够活跃")];

@@ -116,12 +116,12 @@ export class CQBot extends Plug {
 			"message.group": (event) => {
 				const time = process.hrtime();
 				let {group_id, user_id} = event.context;
-				let group: Group = CQData.get(CQData).getGroup(group_id);
+				let group: Group = CQData.getInst().getGroup(group_id);
 				group.exp++;
 				if (group.baned) {
 					return;
 				}
-				if (CQData.get(CQData).getMember(user_id).baned) {
+				if (CQData.getInst().getMember(user_id).baned) {
 					return;
 				}
 				Corpus.sendCorpusTags(event, time, async (tags) => {

@@ -1,6 +1,7 @@
 import {CQ, CQTag} from "go-cqwebsocket";
 import {Plug} from "../Plug.js";
 import {canCall, canCallRet} from "../utils/Annotation.js";
+import {ElementAtOrNull} from "../utils/Generators.js";
 import {CQMessage} from "../utils/Util.js";
 import {CQData} from "./CQData.js";
 
@@ -37,7 +38,7 @@ export class CQBotPlugin extends Plug {
 			});
 		case "ban":
 			const banList: number[] = [];
-			for (const {id, is_baned} of CQData.get(CQData).getMembers()) {
+			for (const {id, is_baned} of CQData.getInst().getMembers()) {
 				if (is_baned === 1) {
 					banList.push(id);
 				}
@@ -63,7 +64,7 @@ export class CQBotPlugin extends Plug {
 		event.stopPropagation();
 		const {group, type, other = ""} = execArray.groups as { type?: "un", other?: string, group?: "群" } ?? {};
 		let isBan: 0 | 1 = type == null ? 1 : 0;
-		const cqData: CQData = CQData.get(CQData);
+		const cqData: CQData = CQData.getInst();
 		const matches = other.match(/\d+/g) ?? [];
 		const cqTexts = [CQ.text(matches.join("\n"))];
 		if (group == null) {
@@ -158,8 +159,8 @@ export class CQBotPlugin extends Plug {
 	}
 
 	@canCall({
-		name: ".插件<other>",
-		regexp: /^\.插件(?<other>.*)$/,
+		name: ".插件<id>",
+		regexp: /^\.插件(?<id> *\d*)$/,
 		needAdmin: true,
 		forward: true,
 		help: "查看插件信息",
@@ -167,17 +168,17 @@ export class CQBotPlugin extends Plug {
 	})
 	protected pluginInfo(event: CQMessage, execArray: RegExpExecArray): CQTag[] {
 		event.stopPropagation();
-		const {other} = execArray.groups as { other?: string } ?? {};
-		if (other == null) {
+		const {id} = execArray.groups as { id?: string } ?? {};
+		if (id == null) {
 			return [];
 		}
-		if (other === "") {
-			let str = [...Plug.plugs.keys()].map((p, i) => `${i}. ${p}`).join("\n");
+		if (id === "") {
+			let str = [...Plug.plugs.values()].map(({name}, i) => `${i}. ${name}`).join("\n");
 			return [CQ.text(str)];
 		}
-		const plugin: Plug | undefined = Plug.plugs.get(other);
+		const plugin: Plug | null = ElementAtOrNull(Plug.plugs.values(), +id);
 		if (plugin == null) {
-			return [CQ.text("未知插件名称")];
+			return [CQ.text("未知插件ID")];
 		}
 		const str = JSON.stringify({
 			...plugin.toJSON(),

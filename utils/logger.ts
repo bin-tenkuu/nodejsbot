@@ -66,6 +66,16 @@ export function getLogger(name?: string) {
 export class Logable {
 	private static readonly _logger: Logger = logger;
 
+	public static hrtime(time: [number, number], msg: string = "本次请求"): void {
+		let [s, ns] = process.hrtime(time);
+		ns /= 1e3;
+		if (ns < 1e3) {
+			return this.logger.info(`耗时:${s}秒${ns}微秒:\t${msg}`);
+		}
+		ns = (ns | 0) / 1e3;
+		return this.logger.info(`耗时:${s}秒${ns}毫秒:\t${msg}`);
+	}
+
 	public static get logger(): Logger {
 		function LoggerGetter(this: typeof Logable): Logger {
 			return this._logger;
@@ -86,6 +96,8 @@ export class Logable {
 		}
 		return this._logger;
 	}
+
+	[Symbol.toStringTag] = this.constructor.name;
 
 	public get logger(): Logger {
 		// @ts-ignore
