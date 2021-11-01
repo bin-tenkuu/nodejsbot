@@ -1,11 +1,13 @@
-import {CQ, CQTag} from "go-cqwebsocket";
+import {CQ, CQTag, CQWebSocket} from "go-cqwebsocket";
 import {Plug} from "../Plug.js";
 import {canCall, canCallRet} from "../utils/Annotation.js";
 import {ElementAtOrNull} from "../utils/Generators.js";
-import {CQMessage} from "../utils/Util.js";
+import {CQMessage, sendAdminQQ} from "../utils/Util.js";
 import {CQData} from "./CQData.js";
 
 export class CQBotPlugin extends Plug {
+	private static method: Readonly<CQWebSocket> = CQWebSocket.prototype;
+
 	constructor() {
 		super(module);
 		this.name = "QQBot插件系统";
@@ -189,7 +191,7 @@ export class CQBotPlugin extends Plug {
 
 	@canCall({
 		name: ".模式",
-		regexp: /^\.模式(?<type>风控)$/,
+		regexp: /^\.模式(?<type>风控|正常)$/,
 		needAdmin: true,
 		canGroup: false,
 		canPrivate: true,
@@ -200,11 +202,13 @@ export class CQBotPlugin extends Plug {
 		const {type} = execArray.groups as { type?: string } ?? {};
 		switch (type) {
 		case "风控":
-			Plug.corpus.forEach(c => {
-				c.canGroup = false;
-			});
-			return [CQ.text(type)];
+			event.bot.send_group_msg = () => Promise.resolve({message_id: 0});
+			break;
+		case "正常":
+			event.bot.send_group_msg = CQBotPlugin.method.send_group_msg;
+			break;
 		}
+		sendAdminQQ(event.bot, String(type)).catch(NOP);
 		return [];
 	}
 }

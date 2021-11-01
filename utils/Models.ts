@@ -430,7 +430,10 @@ export class Corpus extends Logable implements ICorpus, JSONable {
 			}
 			return null;
 		case 2:
-			break;
+			if (this.canGroup) {
+				break;
+			}
+			return null;
 		}
 		return this.regexp.exec(text);
 	}
@@ -445,7 +448,10 @@ export class Corpus extends Logable implements ICorpus, JSONable {
 			}
 			return null;
 		case 2:
-			break;
+			if (this.canGroup) {
+				break;
+			}
+			return null;
 		}
 		return this.regexp.exec(text);
 	}
@@ -470,8 +476,8 @@ export class Corpus extends Logable implements ICorpus, JSONable {
 			this.func = func.bind(plug);
 		}
 		try {
-			if (event.contextType === "message.private" && this.canPrivate ||
-					event.contextType === "message.group" && this.canGroup) {
+			if (this.canPrivate && event.contextType === "message.private" ||
+					this.canGroup && event.contextType === "message.group") {
 				return await this.func(event, exec);
 			} else {
 				this.logger.info(`不可调用[${this}]`);

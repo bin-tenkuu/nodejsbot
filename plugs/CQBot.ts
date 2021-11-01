@@ -4,7 +4,7 @@ import {CQWS} from "../config/config.json";
 import {Plug} from "../Plug.js";
 import {canCall} from "../utils/Annotation.js";
 import {Corpus, Group} from "../utils/Models.js";
-import {sendAdminGroup, sendGroup, sendPrivate} from "../utils/Util";
+import {sendAdminGroup, sendAdminQQ, sendGroup, sendPrivate} from "../utils/Util";
 import {CQData} from "./CQData.js";
 
 export class CQBot extends Plug {
@@ -26,12 +26,12 @@ export class CQBot extends Plug {
 			this.bot.bind("onceAll", {
 				"socket.open": (event) => {
 					this.logger.info("连接");
-					sendAdminGroup(event.bot, "已上线");
+					sendAdminQQ(event.bot, "已上线");
 					resolve();
 					const sendStateInterval = setInterval(() => {
 						const message: CQTag[] = this.sendState();
 						if (message.length > 0) {
-							sendAdminGroup(this.bot, message).catch(() => {
+							sendAdminQQ(this.bot, message).catch(() => {
 								clearInterval(sendStateInterval);
 							});
 						}
