@@ -83,7 +83,7 @@ export class CQBotEvent extends Plug {
 	}
 
 	@canCall({
-		name: ".report <...>",
+		name: ".report <txt>",
 		regexp: /^\.report(?<txt>.+)$/,
 		help: "附上消息发送给开发者",
 		weight: 6,

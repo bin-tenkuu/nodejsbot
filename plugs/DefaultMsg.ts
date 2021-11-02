@@ -11,7 +11,7 @@ export class DefaultMsg extends Plug {
 
 	@canCall({
 		name: ".ping",
-		regexp: /^\.ping$/,
+		regexp: /^\.ping$/i,
 		minLength: 4,
 		maxLength: 6,
 		help: "测试bot是否连接正常",

@@ -15,8 +15,8 @@ export class CQBotPlugin extends Plug {
 	}
 
 	@canCall({
-		name: ".获取<type>列表<other>",
-		regexp: /^\.获取(?<type>[^ ]+)列表(?<other>.*)$/,
+		name: ".获取<type>列表",
+		regexp: /^\.获取(?<type>[^ ]+)列表$/,
 		needAdmin: true,
 		forward: true,
 		weight: 4,
@@ -84,34 +84,26 @@ export class CQBotPlugin extends Plug {
 	}
 
 	@canCall({
-		name: ".语料库<open>",
-		regexp: /^\.语料库(?<open>[开关])$/,
+		name: ".语料库",
+		regexp: /^\.语料库$/,
 		needAdmin: true,
 		forward: true,
+		maxLength: 10,
 		help: "查看全部语料库状态",
 		weight: 4,
 	})
-	protected corpusList(event: CQMessage, execArray: RegExpExecArray): CQTag[] {
+	protected corpusList(event: CQMessage): CQTag[] {
 		event.stopPropagation();
-		const {open} = execArray.groups as { open?: "开" | "关" } ?? {};
-		let isOpen: (msg: { name: string, isOpen: number, index: number }) => boolean;
-		if (open === "开") {
-			isOpen = msg => msg.isOpen === 1;
-		} else if (open === "关") {
-			isOpen = msg => msg.isOpen === 0;
-		} else {
-			isOpen = _ => true;
-		}
 		return Plug.corpus.map((msg, index) => {
 			return {name: msg.name, isOpen: msg.isOpen, index};
-		}).filter(isOpen).map(({name, index, isOpen}) => {
+		}).map(({name, index, isOpen}) => {
 			return CQ.text(`${index} (${isOpen}):${name}\n`);
 		});
 	}
 
 	@canCall({
-		name: ".语料库<open><nums>",
-		regexp: /^\.语料库(?<open>[开关])(?<nums>\s?\d+)$/,
+		name: ".语料库<open><nums[]>",
+		regexp: /^\.语料库(?<open>[开关])(?<nums>[\d ]+)$/,
 		needAdmin: true,
 		help: "设置语料库状态",
 		weight: 4,
@@ -141,7 +133,7 @@ export class CQBotPlugin extends Plug {
 
 	@canCall({
 		name: ".语料库<nums>",
-		regexp: /^\.语料库(?<nums>\s?\d+)$/,
+		regexp: /^\.语料库(?<nums>\d+)$/,
 		needAdmin: true,
 		help: "查看语料库详情",
 		weight: 4,

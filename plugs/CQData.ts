@@ -130,7 +130,7 @@ export class CQData extends Plug {
 
 	@canCall({
 		name: ".state[<qq>]",
-		regexp: /^\.state(?<qq> ?\d{3,12})?$/,
+		regexp: /^\.state(?<qq> ?\d{5,12})?$/i,
 		help: "查看自己/<qq>的信息",
 		weight: 6,
 	})

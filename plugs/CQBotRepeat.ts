@@ -29,6 +29,7 @@ export class CQBotRepeat extends Plug {
 		name: "(复读)",
 		regexp: /^/,
 		canPrivate: false,
+		maxLength: 50,
 		weight: 90,
 	})
 	protected getRepeat(event: CQEvent<"message.group">): CQTag[] {
@@ -67,6 +68,7 @@ export class CQBotRepeat extends Plug {
 		name: "(@复读AI)",
 		regexp: /^/,
 		canPrivate: false,
+		maxLength: 50,
 		weight: 91,
 	})
 	protected MemeAI(event: CQEvent<"message.group">, execArray: RegExpExecArray): CQTag[] {

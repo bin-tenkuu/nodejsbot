@@ -159,8 +159,8 @@ class Modified {
 export type IGroup = { readonly id: number, exp: number, gmt_modified: number, is_baned: 0 | 1 }
 
 export class Group extends Modified implements IGroup, JSONable {
-	private _exp: number = 0;
 	private readonly _id: number;
+	private _exp: number = 0;
 	private _is_baned: 0 | 1 = 0;
 
 	constructor(obj: IGroup | number) {
@@ -378,14 +378,13 @@ export class Corpus extends Logable implements ICorpus, JSONable {
 		}
 	}
 
-	public plugType: { new(): Plug };
-	public funcName: string;
-	public func: Function | null = null;
-	public name: string;
+	public readonly plugType: { new(): Plug };
+	public readonly funcName: string;
+	public readonly name: string;
 	public regexp: RegExp;
 	public canGroup: boolean;
 	public canPrivate: boolean;
-	// public forward: boolean;
+	public forward: boolean;
 	public help: string | undefined = undefined;
 	public isOpen: number;
 	public maxLength: number;
@@ -395,6 +394,7 @@ export class Corpus extends Logable implements ICorpus, JSONable {
 	public deleteMSG: number;
 	public then: CorpusCB<MessageId>;
 	public catch: CorpusCB<ErrorAPIResponse>;
+	public func: Function | null = null;
 
 	constructor(plugType: { new(): Plug }, funcName: string, iCorpus: ICorpus) {
 		super();
@@ -405,7 +405,7 @@ export class Corpus extends Logable implements ICorpus, JSONable {
 		this.regexp = iCorpus.regexp ?? /$^/;
 		this.canGroup = iCorpus.canGroup ?? true;
 		this.canPrivate = iCorpus.canPrivate ?? true;
-		// this.forward = iCorpus.forward ?? false;
+		this.forward = iCorpus.forward ?? false;
 		this.isOpen = iCorpus.isOpen ?? 1;
 		this.maxLength = iCorpus.maxLength ?? 100;
 		this.minLength = iCorpus.minLength ?? 0;

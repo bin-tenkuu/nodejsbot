@@ -16,7 +16,7 @@ export abstract class Plug extends Logable implements JSONable {
 	/**获取当前类的实例*/
 	public static getInst<T extends Plug>(this: { new(): T }): T {
 		let instance: Plug | undefined = Plug.plugs.get(this);
-		if (instance == null) {
+		if (!(instance instanceof this)) {
 			instance = new this();
 			canCall.merge(this, Plug.corpus);
 			Plug.plugs.set(this, instance);
@@ -25,8 +25,8 @@ export abstract class Plug extends Logable implements JSONable {
 	}
 
 	public readonly module: NodeModule;
-	public description: string = "这个插件没有描述";
 	public declare readonly __proto__: Readonly<this>;
+	public description: string = "这个插件没有描述";
 	public _error: any = null;
 	public name: string = this.constructor.name;
 	#state: number = State.create;
