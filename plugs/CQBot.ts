@@ -4,7 +4,7 @@ import {CQWS} from "../config/config.json";
 import {Plug} from "../Plug.js";
 import {canCall} from "../utils/Annotation.js";
 import {Corpus, Group} from "../utils/Models.js";
-import {sendAdminGroup, sendAdminQQ, sendGroup, sendPrivate} from "../utils/Util";
+import {sendAdminQQ, sendGroup, sendPrivate} from "../utils/Util";
 import {CQData} from "./CQData.js";
 
 export class CQBot extends Plug {
@@ -48,7 +48,7 @@ export class CQBot extends Plug {
 	}
 
 	async uninstall() {
-		await sendAdminGroup(this.bot, "即将下线");
+		await sendAdminQQ(this.bot, "即将下线");
 		return new Promise<void>((resolve, reject) => {
 			this.bot.bind("on", {
 				"socket.close": () => {
@@ -124,7 +124,7 @@ export class CQBot extends Plug {
 				if (CQData.getInst().getMember(user_id).baned) {
 					return;
 				}
-				Corpus.sendCorpusTags(event, time, async (tags) => {
+				Corpus.sendCorpusTags(event, time, async (event, tags) => {
 					// if (!corpus.forward) {
 					return sendGroup(event, tags);
 					// } else if (tags[0].tagName === "node") {
@@ -136,7 +136,7 @@ export class CQBot extends Plug {
 			},
 			"message.private": (event) => {
 				const time = process.hrtime();
-				Corpus.sendCorpusTags(event, time, (tags) => {
+				Corpus.sendCorpusTags(event, time, (event, tags) => {
 					return sendPrivate(event, tags);
 				}).catch(NOP);
 			},

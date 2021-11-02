@@ -161,7 +161,7 @@ export class CQBotPlugin extends Plug {
 	}
 
 	@canCall({
-		name: ".插件<id>",
+		name: ".插件[<id>]",
 		regexp: /^\.插件(?<id> *\d*)$/,
 		needAdmin: true,
 		forward: true,

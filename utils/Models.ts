@@ -1,4 +1,5 @@
 import {CQ, CQEvent, CQTag} from "go-cqwebsocket";
+import {PromiseRes} from "go-cqwebsocket/out/Interfaces";
 import {ErrorAPIResponse, MessageId} from "go-cqwebsocket/out/Interfaces.js";
 import {Plug} from "../Plug.js";
 import {canCallType} from "./Annotation.js";
@@ -343,8 +344,8 @@ export type ICorpus = {
 };
 
 export class Corpus extends Logable implements ICorpus, JSONable {
-	public static async sendCorpusTags(event: CQMessage, hrtime: [number, number],
-			callback: (this: void, tags: CQTag[], element: Corpus) => Promise<MessageId>): Promise<void> {
+	public static async sendCorpusTags<T extends CQMessage>(event: T, hrtime: [number, number],
+			callback: (this: void, event: T, tags: CQTag[], element: Corpus) => PromiseRes<MessageId>): Promise<void> {
 		const text = onlyText(event);
 		const corpus: string[] = [];
 		for (const element of Plug.corpus) {
@@ -361,12 +362,12 @@ export class Corpus extends Logable implements ICorpus, JSONable {
 			if (msg.length < 1) {
 				continue;
 			}
-			await callback(msg, element).then(value => {
+			await callback(event, msg, element).then((value) => {
 				if (element.deleteMSG > 0) {
 					deleteMsg(event.bot, value.message_id, element.deleteMSG);
 				}
 				element.then(value, event);
-			}, reason => {
+			}, (reason) => {
 				element.catch(reason, event);
 			}).finally(() => {
 				corpus.push(element.name);
@@ -413,7 +414,7 @@ export class Corpus extends Logable implements ICorpus, JSONable {
 		this.weight = iCorpus.weight ?? 10;
 		this.deleteMSG = iCorpus.deleteMSG ?? 0;
 		this.then = iCorpus.then ?? (() => undefined);
-		this.catch = iCorpus.catch ?? (() => Corpus.logger.error(this.toString()));
+		this.catch = iCorpus.catch ?? ((e) => Corpus.logger.error(`${this}:${JSON.stringify(e)}`));
 	}
 
 	public toString(): string {
@@ -422,36 +423,36 @@ export class Corpus extends Logable implements ICorpus, JSONable {
 
 	public execPrivate(event: CQEvent<"message.private">, text: string): RegExpExecArray | null {
 		switch (this.test(event, text.length)) {
+		case -1:
+			return null;
 		case 0:
-			return null;
+			if (this.needAdmin || this.isOpen <= 0 || !this.canPrivate) {
+				return null;
+			}
+			break;
 		case 1:
-			if (this.canPrivate && this.isOpen > 0 && !this.needAdmin) {
-				break;
+			if (!this.canPrivate) {
+				return null;
 			}
-			return null;
-		case 2:
-			if (this.canGroup) {
-				break;
-			}
-			return null;
+			break;
 		}
 		return this.regexp.exec(text);
 	}
 
 	public execGroup(event: CQEvent<"message.group">, text: string): RegExpExecArray | null {
 		switch (this.test(event, text.length)) {
+		case -1:
+			return null;
 		case 0:
-			return null;
+			if (this.needAdmin || this.isOpen <= 0 || !this.canGroup) {
+				return null;
+			}
+			break;
 		case 1:
-			if (this.canGroup && this.isOpen > 0 && !this.needAdmin) {
-				break;
+			if (!this.canGroup) {
+				return null;
 			}
-			return null;
-		case 2:
-			if (this.canGroup) {
-				break;
-			}
-			return null;
+			break;
 		}
 		return this.regexp.exec(text);
 	}
@@ -497,16 +498,14 @@ export class Corpus extends Logable implements ICorpus, JSONable {
 		};
 	}
 
-	private test(event: CQMessage, length: number): 0 | 1 | 2 {
-		if (event.isCanceled ||
-				length < this.minLength || length > this.maxLength ||
-				this.isOpen < 0) {
-			return 0;
+	private test(event: CQMessage, length: number): -1 | 0 | 1 {
+		if (event.isCanceled || length < this.minLength || length > this.maxLength || this.isOpen < 0) {
+			return -1;
 		}
 		if (isAdmin(event)) {
-			return 2;
+			return 1;
 		}
-		return 1;
+		return 0;
 	}
 
 	public get plugName() {

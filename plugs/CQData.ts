@@ -3,7 +3,7 @@ import {Plug} from "../Plug.js";
 import {canCall} from "../utils/Annotation.js";
 import {db} from "../utils/database.js";
 import {Group, IGroup, IMember, Member} from "../utils/Models.js";
-import {DataCache} from "../utils/repeat.js";
+import {CacheMap} from "../utils/repeat.js";
 import {CQMessage} from "../utils/Util.js";
 
 export class CQData extends Plug {
@@ -82,7 +82,7 @@ export class CQData extends Plug {
 	private readonly groupMap = new Map<number, Group>();
 	private autoSaving: boolean = false;
 	private saving: boolean = false;
-	private readonly cache = new DataCache<number, boolean>();
+	private readonly cache = new CacheMap<number, boolean>();
 
 	public constructor() {
 		super(module);

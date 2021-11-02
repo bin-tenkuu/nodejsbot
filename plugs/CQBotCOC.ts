@@ -3,7 +3,7 @@ import {Plug} from "../Plug.js";
 import {canCall} from "../utils/Annotation.js";
 import {dice, DiceResult, distribution} from "../utils/COCUtils.js";
 import {db} from "../utils/database.js";
-import {DataCache} from "../utils/repeat.js";
+import {CacheMap} from "../utils/repeat.js";
 import {CQMessage} from "../utils/Util.js";
 
 export class CQBotCOC extends Plug {
@@ -68,7 +68,7 @@ export class CQBotCOC extends Plug {
 
 	private shortKey = new Map<string, string>();
 	private cheater: boolean = false;
-	private readonly cache = new DataCache<number, DiceCache>(undefined,
+	private readonly cache = new CacheMap<number, DiceCache>(undefined,
 			(l, r) => l.max === r.max,
 	);
 	private specialEffects: string = "bug";

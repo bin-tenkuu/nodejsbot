@@ -108,9 +108,9 @@ export function sendGroup<T>({bot, context: {group_id = adminGroup}}: hasGroup<T
 
 /**
  * 定时撤回消息
- * @param bot 消息
- * @param id 消息id
- * @param delay 延时时间/s
+ * @param bot {CQWebSocket} 消息
+ * @param id {number} 消息id
+ * @param delay {number} 延时时间/s
  */
 export function deleteMsg(bot: CQWebSocket, id: number, delay: number = 0): NodeJS.Timeout {
 	if (delay < 0) {

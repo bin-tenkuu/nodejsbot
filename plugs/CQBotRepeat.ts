@@ -3,7 +3,7 @@ import {CQImage} from "go-cqwebsocket/out/tags";
 import {CQText} from "go-cqwebsocket/out/tags.js";
 import {Plug} from "../Plug.js";
 import {canCall} from "../utils/Annotation.js";
-import {DataCache} from "../utils/repeat.js";
+import {CacheMap} from "../utils/repeat.js";
 import {isAtMe} from "../utils/Util.js";
 
 export class CQBotRepeat extends Plug {
@@ -15,7 +15,7 @@ export class CQBotRepeat extends Plug {
 		return arr;
 	}
 
-	private repeatCache = new DataCache<number, RepeatCache>(undefined,
+	private repeatCache = new CacheMap<number, RepeatCache>(undefined,
 			(l, r) => l.msg === r.msg,
 	);
 

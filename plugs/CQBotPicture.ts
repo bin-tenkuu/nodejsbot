@@ -43,6 +43,7 @@ export class CQBotPicture extends Plug {
 		minLength: 4,
 		weight: 5,
 		deleteMSG: 20,
+		isOpen: 0,
 	})
 	protected async getSeTu(event: CQMessage, exec: RegExpExecArray): Promise<CQTag[]> {
 		event.stopPropagation();
@@ -118,6 +119,7 @@ export class CQBotPicture extends Plug {
 		minLength: 5,
 		weight: 5,
 		deleteMSG: 90,
+		isOpen: 0,
 	})
 	protected async getPixiv(event: CQMessage, exec: RegExpExecArray): Promise<CQTag[]> {
 		event.stopPropagation();

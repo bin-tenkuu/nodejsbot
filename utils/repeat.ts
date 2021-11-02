@@ -1,27 +1,25 @@
-import Cache from "node-cache";
+import NodeCache from "node-cache";
 
 export type IEqual<T> = (l: T, r: T) => boolean;
 
-export class DataCache<TKey extends Cache.Key, TValue> {
-	public _equatable: IEqual<TValue>;
-	private cache: Cache;
+export class CacheMap<K extends NodeCache.Key, V> {
+	public _equatable: IEqual<V>;
+	private cache: NodeCache;
 
 	/**
 	 *
 	 * @param options 未明确指定时,不克隆,过期时间10min,过期后删除
 	 * @param equatable 比较器,默认使用强比较
 	 */
-	constructor(options?: Cache.Options | undefined | null, equatable: IEqual<TValue> = (l, r) => l === r) {
-		this.cache = new Cache(options ?? {useClones: false, stdTTL: 600, deleteOnExpire: true});
+	constructor(options?: NodeCache.Options | undefined | null, equatable: IEqual<V> = (l, r) => l === r) {
+		this.cache = new NodeCache(Object.assign({useClones: false, stdTTL: 600, deleteOnExpire: true}, options));
 		this._equatable = equatable;
 	}
 
-	get(key: TKey, data?: undefined): TValue | undefined;
-
-	get(key: TKey, data: TValue): TValue;
-
-	get(key: TKey, data: TValue | undefined): TValue | undefined {
-		let node = this.cache.get<TValue>(key);
+	get(key: K, data: V): V;
+	get(key: K, data?: undefined): V | undefined;
+	get(key: K, data?: V | undefined): V | undefined {
+		let node = this.cache.get<V>(key);
 		if (data == null) {
 			return node;
 		}
@@ -32,13 +30,16 @@ export class DataCache<TKey extends Cache.Key, TValue> {
 		return node;
 	}
 
-	set(key: TKey, data: TValue, ttl?: number): void {
-		this.cache.set(key, data, <number>ttl);
-	}
-
-	has(key: TKey): boolean {
+	has(key: K): boolean {
 		return this.cache.has(key);
 	}
 
+	set(key: K, data: V, ttl?: number): void {
+		this.cache.set(key, data, <number>ttl);
+	}
+
+	public get [Symbol.toStringTag]() {
+		return CacheMap.name;
+	}
 }
 
