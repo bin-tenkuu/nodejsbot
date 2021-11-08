@@ -29,7 +29,7 @@ export abstract class Plug extends Logable implements JSONable {
 	public description: string = "这个插件没有描述";
 	public _error: any = null;
 	public name: string = this.constructor.name;
-	#state: number = State.create;
+	#state: typeof State[keyof typeof State] = State.create;
 
 	protected constructor(module: NodeModule) {
 		super();
@@ -48,7 +48,7 @@ export abstract class Plug extends Logable implements JSONable {
 	}
 
 	public toJSON() {
-		return {"name": this.name, "State": this.state};
+		return {"name": this.name, "description": this.description, "State": this.state};
 	}
 
 	#init(): void {
@@ -98,12 +98,8 @@ export abstract class Plug extends Logable implements JSONable {
 		this.logger.error(e);
 	}
 
-	public get installed() {
-		return this.#state === State.installed;
-	}
-
-	public get state(): number {
-		return this.#state;
+	public get state(): string {
+		return Object.entries(State).find(v => v[1] === this.#state)?.[0] ?? "unknown";
 	}
 
 	public get corpus(): Corpus[] {

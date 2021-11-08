@@ -1,0 +1,11 @@
+{
+	"$schema": "schema/config.schema.json",
+	"CQWS": {
+		"accessToken": "",
+		"baseUrl": "ws://127.0.0.1:6700"
+	},
+	"adminId": -1,
+	"adminGroup": -1,
+	"SauceNAOkey": "0000000000000000000000000000000000000000",
+	"SeTuApiKey": "0000000000000000000000"
+}
