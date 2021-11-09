@@ -48,16 +48,18 @@ export class CQBot extends Plug {
 	}
 
 	async uninstall() {
+		this.needOpen = -1;
 		await sendAdminGroup(this.bot, "即将下线");
-		return new Promise<void>((resolve, reject) => {
-			this.bot.bind("on", {
+		this.bot.reconnect()
+		return new Promise<void>((resolve) => {
+			this.bot.bind("once", {
 				"socket.close": () => {
 					this.logger.info("断开");
 					resolve();
 				},
 				"socket.error": () => {
 					this.logger.info("断开");
-					reject();
+					resolve();
 				},
 			});
 			this.bot.disconnect();

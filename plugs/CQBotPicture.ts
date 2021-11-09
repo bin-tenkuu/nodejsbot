@@ -51,10 +51,9 @@ export class CQBotPicture extends Plug {
 		}
 		this.usingSeTu = true;
 		const groups = {
-			keyword: exec.groups?.keyword,
+			keyword: exec.groups?.keyword ?? "",
 			r18: exec.groups?.r18 != null,
 		};
-		groups.keyword ??= "";
 		const userId: number = event.context.user_id;
 		const member = CQData.getInst().getMember(userId);
 		if (!member.addExp(-5)) {

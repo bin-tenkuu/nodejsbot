@@ -80,8 +80,6 @@ export class Logable {
 		return this.logger.info(`耗时 ${s} 秒 ${ns} 毫秒:\t${msg}`);
 	}
 
-	[Symbol.toStringTag] = this.constructor.name;
-
 	public static get logger(): Logger {
 		function LoggerGetter(this: typeof Logable): Logger {
 			return this._logger;
@@ -106,5 +104,9 @@ export class Logable {
 	public get logger(): Logger {
 		// @ts-ignore
 		return this.constructor.logger;
+	}
+
+	private get [Symbol.toStringTag]() {
+		return this.constructor.name;
 	}
 }
