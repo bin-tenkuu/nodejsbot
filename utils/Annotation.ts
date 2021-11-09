@@ -24,7 +24,7 @@ canCall.get = function (target: { new(): Plug }): Corpus[] {
 	return Reflect.getMetadata(canCall.name, target) ?? [];
 };
 canCall.merge = function (target: { new(): Plug }, corpuses: Corpus[]) {
-	for (let corpus of canCall.get(target)) {
+	for (const corpus of canCall.get(target)) {
 		const index: number = corpuses.findIndex(value => value.weight > corpus.weight);
 		if (index === -1) {
 			corpuses.push(corpus);

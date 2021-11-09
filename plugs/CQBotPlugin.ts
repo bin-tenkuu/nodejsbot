@@ -65,7 +65,7 @@ export class CQBotPlugin extends Plug {
 	protected setter(event: CQMessage, execArray: RegExpExecArray): CQTag[] {
 		event.stopPropagation();
 		const {group, type, other = ""} = execArray.groups as { type?: "un", other?: string, group?: "群" } ?? {};
-		let isBan: 0 | 1 = type == null ? 1 : 0;
+		const isBan: 0 | 1 = type == null ? 1 : 0;
 		const cqData: CQData = CQData.getInst();
 		const matches = other.match(/\d+/g) ?? [];
 		const cqTexts = [CQ.text(matches.join("\n"))];
@@ -167,7 +167,7 @@ export class CQBotPlugin extends Plug {
 			return [];
 		}
 		if (id === "") {
-			let str = [...Plug.plugs.values()].map(({name}, i) => `${i}. ${name}`).join("\n");
+			const str = [...Plug.plugs.values()].map(({name}, i) => `${i}. ${name}`).join("\n");
 			return [CQ.text(str)];
 		}
 		const plugin: Plug | null = ElementAtOrNull(Plug.plugs.values(), +id);

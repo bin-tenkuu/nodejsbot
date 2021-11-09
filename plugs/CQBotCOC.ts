@@ -25,7 +25,7 @@ export class CQBotCOC extends Plug {
 				max: num,
 			};
 		}
-		let dices: DiceResult = cheater ? {
+		const dices: DiceResult = cheater ? {
 			list: new Uint32Array(num).fill(1),
 			num: num,
 			max: +max,
@@ -257,7 +257,7 @@ export class CQBotCOC extends Plug {
 				return `${calc.op}${calc.origin}=${calc.num}`;
 			}
 		}
-		let preRet: string = handles.filter(v => v.list !== null).map((v) => {
+		const preRet: string = handles.filter(v => v.list !== null).map((v) => {
 			return `${v.origin}：[${v.list}]=${v.num}`;
 		}).join("\n");
 		str = handles.map(value => `${value.op}${value.origin}`).join("");
@@ -287,7 +287,7 @@ class SpecialEffects {
 		"wrf": [
 			"温柔f", data => {
 				const list: Uint32Array | null = data.list;
-				if (list === null) {
+				if (list == null) {
 					return;
 				}
 				if (list.length > 2 && list[0] === list[1]) {
@@ -300,7 +300,7 @@ class SpecialEffects {
 		"cbf": [
 			"残暴f", data => {
 				const list: Uint32Array | null = data.list;
-				if (list === null) {
+				if (list == null) {
 					return;
 				}
 				// data.num += list[0] - list[1];

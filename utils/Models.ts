@@ -4,142 +4,16 @@ import {ErrorAPIResponse, MessageId} from "go-cqwebsocket/out/Interfaces.js";
 import {Plug} from "../Plug.js";
 import {canCallType} from "./Annotation.js";
 import {Logable} from "./logger.js";
-import {CQMessage, deleteMsg, isAdmin, onlyText} from "./Util.js";
+import {CQMessage, deleteMsg, isAdmin, onlyText, sendGroup, sendPrivate} from "./Util.js";
 
-type sauceNAOResultsHeader = {
-	/** 库id */
-	index_id: number,
-	/** 库名字 */
-	index_name: string
-	/** 相似度 */
-	similarity: number,
-	/** 缩略图url */
-	thumbnail: string
-};
-export type sauceNAOResult = {
-	header: {
-		/** 长时限制 */
-		long_limit: string,
-		/**长时剩余*/
-		long_remaining: number,
-		/** 短时限制 */
-		short_limit: string,
-		/**短时剩余*/
-		short_remaining: number,
-		/** 请求的结果数 */
-		results_requested: string,
-		/**返回的结果数*/
-		results_returned: number
-	},
-	results: {
-		header: sauceNAOResultsHeader,
-		data: {
-			[key: string]: unknown
-		}
-	}[]
-};
-export type paulzzhTouHouType = {
-	author: string
-	height: number
-	id: number
-	jpegurl: string
-	md5: string
-	preview: string
-	size: number
-	source: string
-	tags: string
-	timestamp: number
-	url: string
-	width: number
-};
-export type loliconPost = {
-	/**
-	 * 0为非 R18，1为 R18，2为混合（在库中的分类，不等同于作品本身的 R18 标识）
-	 * @default 0
-	 */
-	r18?: number
-	/**返回从标题、作者、标签中按指定关键字模糊匹配的结果，大小写不敏感，性能和准度较差且功能单一，建议使用tag代替*/
-	keyword?: string
-	/**
-	 * 一次返回的结果数量，范围为1到100；在指定关键字或标签的情况下，结果数量可能会不足指定的数量
-	 * @default 1
-	 */
-	num?: number
-	/**
-	 * 是否使用 master_1200 缩略图
-	 * @default ["original"]
-	 */
-	size1200?: boolean
-};
-export type loliconDate = {
-	/**返回码，可能值详见后续部分*/
-	code: number
-	/**错误信息之类的*/
-	msg: string
-	/**结果数*/
-	count: number
-	/**色图数组*/
-	data: setu[]
-};
-type setu = {
-	/**作品 PID*/
-	pid: number
-	/**作品所在 P*/
-	p: number
-	/**作者 UID*/
-	uid: number
-	/**作品标题*/
-	title: string
-	/**作者名（入库时，并过滤掉 @ 及其后内容）*/
-	author: string
-	/**图片链接（可能存在有些作品因修改或删除而导致 404 的情况）*/
-	url: string
-	/**是否 R18（在色图库中的分类，并非作者标识的 R18）*/
-	r18: boolean
-	/**原图宽度 px*/
-	width: number
-	/**原图高度 px*/
-	height: number
-	/**作品标签，包含标签的中文翻译（有的话）*/
-	tags: string[]
-};
-export type toubiecType = {
-	id: string
-	imgurl: string
-	width: string
-	height: string
-	client_ip: string
-	client_lsp: string
-};
-export type pixivCatType = {
-	success: false
-	error: string
-} | ({
-	success: true
-	id: number
-	id_str: string
-} & ({
-	multiple: true
-	html: string
-	original_urls: string[]
-	original_urls_proxy: string[]
-} | {
-	multiple: false
-	original_url: string
-	original_url_proxy: string
-}));
-export type DMXKType = {
-	"code": string,
-	"imgurl": string,
-	"width": string,
-	"height": string
-};
-export type YHType = {
-	"code": string,
-	"imgurl": string,
-	"width": string,
-	"height": string
-};
+export type sauceNAOResult = I.sauceNAOResult;
+export type paulzzhTouHouType = I.paulzzhTouHouType;
+export type loliconPost = I.loliconPost;
+export type loliconDate = I.loliconDate;
+export type toubiecType = I.toubiecType;
+export type pixivCatType = I.pixivCatType;
+export type DMXKType = I.DMXKType;
+export type YHType = I.YHType;
 
 class Modified {
 	public is_modified: boolean = false;
@@ -344,38 +218,66 @@ export type ICorpus = {
 };
 
 export class Corpus extends Logable implements ICorpus, JSONable {
-	public static async sendCorpusTags<T extends CQMessage>(event: T, hrtime: [number, number],
-			callback: (this: void, event: T, tags: CQTag[], element: Corpus) => PromiseRes<MessageId>): Promise<void> {
+	public static async sendGroupTags(event: CQEvent<"message.group">, hrtime: [number, number]): Promise<void> {
 		const text = onlyText(event);
 		const corpus: string[] = [];
 		for (const element of Plug.corpus) {
-			const exec: RegExpExecArray | null = event.contextType === "message.private" ?
-					element.execPrivate(event, text) : element.execGroup(event, text);
-			if (exec === null) {
+			const exec: RegExpExecArray | null = element.execGroup(event, text);
+			if (exec == null) {
 				continue;
 			}
-			const msg = await element.run(event, exec).catch<CQTag[]>(e => {
-				this.logger.error("语料库转换失败:" + element.name);
-				this.logger.error(e);
-				return [CQ.text("error:" + element.name + "\n")];
-			});
+			const msg = await element.run(event, exec);
 			if (msg.length < 1) {
 				continue;
 			}
-			await callback(event, msg, element).then((value) => {
+			// if (!corpus.forward) {
+			// 	return sendGroup(event, tags);
+			// } else if (tags[0].tagName === "node") {
+			// 	return sendForward(event, tags as messageNode);
+			// } else {
+			// 	return sendForwardQuick(event, tags);
+			// }
+			await this.then(sendGroup(event, msg).then((msg) => {
 				if (element.deleteMSG > 0) {
-					deleteMsg(event.bot, value.message_id, element.deleteMSG);
+					deleteMsg(event.bot, msg.message_id, element.deleteMSG);
 				}
-				element.then(value, event);
-			}, (reason) => {
-				element.catch(reason, event);
-			}).finally(() => {
-				corpus.push(element.name);
-			}).catch(NOP);
+				return msg;
+			}), element, event, corpus);
+		}
+		if (corpus.length > 0) {
+			const {user_id, group_id} = event.context;
+			const txt = `\t来源：${group_id ?? ""}.${user_id}`;
+			this.hrtime(hrtime, corpus.join(",") + txt);
+		}
+	}
+
+	public static async sendPrivateTags(event: CQEvent<"message.private">, hrtime: [number, number]): Promise<void> {
+		const text = onlyText(event);
+		const corpus: string[] = [];
+		for (const element of Plug.corpus) {
+			const exec: RegExpExecArray | null = element.execPrivate(event, text);
+			if (exec == null) {
+				continue;
+			}
+			const msg = await element.run(event, exec);
+			if (msg.length < 1) {
+				continue;
+			}
+			await this.then(sendPrivate(event, msg), element, event, corpus);
 		}
 		if (corpus.length > 0) {
 			this.hrtime(hrtime, corpus.join(","));
 		}
+	}
+
+	private static async then(prom: Promise<MessageId>, element: Corpus, event: CQMessage, corpus: string[]) {
+		return prom.then((value) => {
+			return element.then(event, value);
+		}, (reason) => {
+			return element.catch(event, reason);
+		}).finally(() => {
+			corpus.push(element.name);
+		}).catch(NOP);
 	}
 
 	public readonly plugType: { new(): Plug };
@@ -470,23 +372,23 @@ export class Corpus extends Logable implements ICorpus, JSONable {
 			const func: canCallType = Reflect.get(plug, this.funcName);
 			if (typeof func !== "function") {
 				this.isOpen = -1;
-				let text = `插件${this}不是方法`;
+				const text = `插件${this}不是方法`;
 				this.logger.error(text);
 				return [CQ.text(text)];
 			}
 			this.func = func.bind(plug);
 		}
-		try {
-			if (this.canPrivate && event.contextType === "message.private" ||
-					this.canGroup && event.contextType === "message.group") {
+		if (this.canPrivate && event.contextType === "message.private" ||
+				this.canGroup && event.contextType === "message.group") {
+			try {
 				return await this.func(event, exec);
-			} else {
-				this.logger.info(`不可调用[${this}]`);
-				return [CQ.text(`插件${this}方法不可在${event.contextType}环境下调用`)];
+			} catch (e) {
+				this.logger.error("调用出错", e);
+				return [CQ.text(`调用出错:` + this.toString())];
 			}
-		} catch (e) {
-			this.logger.error("调用出错", e);
-			return [CQ.text(`调用出错:` + this.toString())];
+		} else {
+			this.logger.info(`不可调用[${this}]`);
+			return [CQ.text(`插件${this}方法不可在${event.contextType}环境下调用`)];
 		}
 	}
 
@@ -513,11 +415,134 @@ export class Corpus extends Logable implements ICorpus, JSONable {
 	}
 }
 
-export type CorpusCB<T> = (this: Corpus, value: T, event: CQMessage) => void | PromiseLike<void>
-type JSONObject = {
-	[key: string]: string | number | boolean | JSONObject | JSONObject[] | null | undefined;
-};
+type CorpusCB<T> = (this: Corpus, event: CQMessage, value: T) => void | Promise<void>
 
 export interface JSONable {
-	toJSON(): JSONObject;
+	toJSON(): I.JSONObject;
+}
+
+module I {
+	export type CCB<T> = (this: void, event: T, tags: CQTag[], element: Corpus) => PromiseRes<MessageId>
+	export type sauceNAOResultsHeader = {
+		/** 库id */
+		index_id: number, /** 库名字 */
+		index_name: string
+		/** 相似度 */
+		similarity: number, /** 缩略图url */
+		thumbnail: string
+	};
+	export type JSONObject = {
+		[key: string]: string | number | boolean | JSONObject | JSONObject[] | null | undefined;
+	};
+	export type setu = {
+		/**作品 PID*/
+		pid: number
+		/**作品所在 P*/
+		p: number
+		/**作者 UID*/
+		uid: number
+		/**作品标题*/
+		title: string
+		/**作者名（入库时，并过滤掉 @ 及其后内容）*/
+		author: string
+		/**图片链接（可能存在有些作品因修改或删除而导致 404 的情况）*/
+		url: string
+		/**是否 R18（在色图库中的分类，并非作者标识的 R18）*/
+		r18: boolean
+		/**原图宽度 px*/
+		width: number
+		/**原图高度 px*/
+		height: number
+		/**作品标签，包含标签的中文翻译（有的话）*/
+		tags: string[]
+	};
+	export type sauceNAOResult = {
+		header: {
+			/** 长时限制 */
+			long_limit: string, /**长时剩余*/
+			long_remaining: number, /** 短时限制 */
+			short_limit: string, /**短时剩余*/
+			short_remaining: number, /** 请求的结果数 */
+			results_requested: string, /**返回的结果数*/
+			results_returned: number
+		}, results: {
+			header: I.sauceNAOResultsHeader, data: {
+				[key: string]: unknown
+			}
+		}[]
+	};
+	export type paulzzhTouHouType = {
+		author: string
+		height: number
+		id: number
+		jpegurl: string
+		md5: string
+		preview: string
+		size: number
+		source: string
+		tags: string
+		timestamp: number
+		url: string
+		width: number
+	};
+	export type pixivCatType = {
+		success: false
+		error: string
+	} | ({
+		success: true
+		id: number
+		id_str: string
+	} & ({
+		multiple: true
+		html: string
+		original_urls: string[]
+		original_urls_proxy: string[]
+	} | {
+		multiple: false
+		original_url: string
+		original_url_proxy: string
+	}));
+	export type loliconPost = {
+		/**
+		 * 0为非 R18，1为 R18，2为混合（在库中的分类，不等同于作品本身的 R18 标识）
+		 * @default 0
+		 */
+		r18?: number
+		/**返回从标题、作者、标签中按指定关键字模糊匹配的结果，大小写不敏感，性能和准度较差且功能单一，建议使用tag代替*/
+		keyword?: string
+		/**
+		 * 一次返回的结果数量，范围为1到100；在指定关键字或标签的情况下，结果数量可能会不足指定的数量
+		 * @default 1
+		 */
+		num?: number
+		/**
+		 * 是否使用 master_1200 缩略图
+		 * @default ["original"]
+		 */
+		size1200?: boolean
+	};
+	export type loliconDate = {
+		/**返回码，可能值详见后续部分*/
+		code: number
+		/**错误信息之类的*/
+		msg: string
+		/**结果数*/
+		count: number
+		/**色图数组*/
+		data: I.setu[]
+	};
+	export type toubiecType = {
+		id: string
+		imgurl: string
+		width: string
+		height: string
+		client_ip: string
+		client_lsp: string
+	};
+	export type DMXKType = {
+		"code": string, "imgurl": string, "width": string, "height": string
+	};
+	export type YHType = {
+		"code": string, "imgurl": string, "width": string, "height": string
+	};
 }

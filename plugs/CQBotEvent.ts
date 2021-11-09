@@ -106,7 +106,7 @@ export class CQBotEvent extends Plug {
 		maxLength: 10,
 	})
 	protected getHelp(event: CQMessage, regExpExecArray: RegExpExecArray): CQTag[] {
-		let {num} = regExpExecArray.groups as { num: string } ?? {};
+		const {num} = regExpExecArray.groups as { num: string } ?? {};
 		const predicate: (c: Corpus) => boolean = isAdmin(event) ?
 				c => c.help != null :
 				c => c.isOpen > 0 && !c.needAdmin && c.help != null;

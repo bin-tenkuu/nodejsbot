@@ -2,9 +2,8 @@ import {CQ, CQTag} from "go-cqwebsocket";
 import {Plug} from "../Plug.js";
 import {canCall} from "../utils/Annotation.js";
 import {lolicon, pixivCat} from "../utils/Search.js";
-import {CQMessage, getPRegular, sendAdminQQ} from "../utils/Util.js";
+import {CQMessage, sendAdminQQ} from "../utils/Util.js";
 import {CQData} from "./CQData.js";
-
 
 export class CQBotPicture extends Plug {
 	private static code(code: number) {
@@ -89,7 +88,7 @@ export class CQBotPicture extends Plug {
 			}
 			const first = data.data[0];
 			const dataMSG: string = `标题：${first.title
-			}\n作者：${first.author}\n原图p${first.p}：www.pixiv.net/i/${first.pid}`;
+			}\n作者：${first.author}\n原图p${first.p}：https://pixiv.net/i/${first.pid}`;
 			// if (event.contextType === "message.group") {
 			// 	const {
 			// 		message_id: messageId,
@@ -153,11 +152,11 @@ export class CQBotPicture extends Plug {
 				ps = ps >= length ? length - 1 : ps < 1 ? 1 : ps;
 				return [
 					CQ.text(`总共${length}张图片,这是第${ps},${ps + 1}张`),
-					CQ.image(getPRegular(urlsProxy[ps - 1])),
-					CQ.image(getPRegular(urlsProxy[ps])),
+					CQ.image((urlsProxy[ps - 1])),
+					CQ.image((urlsProxy[ps])),
 				];
 			} else {
-				return [CQ.image(getPRegular(data.original_url_proxy))];
+				return [CQ.image((data.original_url_proxy))];
 			}
 		} catch (e) {
 			member.addExp(5);

@@ -21,7 +21,7 @@ global.IsDebug = process.execArgv.includes("--inspect") ? () => true : () => fal
 // 传入构造函数，自动生成
 //*
 Promise.resolve().then(async () => {
-	let time = process.hrtime();
+	const time = process.hrtime();
 	await CQData.getInst().install();
 	await HttpOption.getInst().install();
 	await CQBot.getInst().install();

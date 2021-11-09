@@ -14,7 +14,7 @@ class SQLControl extends Logable {
 		}
 		this._db = new BDb3(filename);
 		process.on("beforeExit", _ => {
-			this.close();
+			this._close();
 		});
 	}
 
@@ -22,14 +22,16 @@ class SQLControl extends Logable {
 		return func(this.db);
 	}
 
+	private _close(e?: any) {
+		e != null && this.logger.error(e);
+		if (this._db.open) {
+			this._db.close();
+		}
+	}
+
 	/**关闭数据库*/
 	public get close(): (e?: any) => void {
-		return (e?: any) => {
-			e != null && this.logger.error(e);
-			if (this._db.open) {
-				this._db.close();
-			}
-		};
+		return this._close.bind(this);
 	}
 
 	private get db(): Database {

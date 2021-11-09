@@ -127,7 +127,3 @@ function cast2Text(message: CQTag[]): CQText[] {
 
 type hasUser<T> = T extends { bot: CQWebSocket, context: { user_id: number } } ? T : never;
 type hasGroup<T> = T extends { bot: CQWebSocket, context: { group_id: number } } ? T : never;
-
-export function getPRegular(url: string) {
-	return url.replace("original", "master").replace(/(?<!1200)\.\w+$/, "_master1200.jpg");
-}

@@ -66,15 +66,21 @@ export function getLogger(name?: string) {
 export class Logable {
 	private static readonly _logger: Logger = logger;
 
+	public static new<T, P extends any[]>(this: new(...arg: P) => T, ...arg: P): T {
+		return new this(...arg);
+	}
+
 	public static hrtime(time: [number, number], msg: string = "本次请求"): void {
 		let [s, ns] = process.hrtime(time);
 		ns /= 1e3;
 		if (ns < 1e3) {
-			return this.logger.info(`耗时:${s}秒${ns}微秒:\t${msg}`);
+			return this.logger.info(`耗时 ${s} 秒 ${ns} 微秒:\t${msg}`);
 		}
 		ns = (ns | 0) / 1e3;
-		return this.logger.info(`耗时:${s}秒${ns}毫秒:\t${msg}`);
+		return this.logger.info(`耗时 ${s} 秒 ${ns} 毫秒:\t${msg}`);
 	}
+
+	[Symbol.toStringTag] = this.constructor.name;
 
 	public static get logger(): Logger {
 		function LoggerGetter(this: typeof Logable): Logger {
@@ -96,8 +102,6 @@ export class Logable {
 		}
 		return this._logger;
 	}
-
-	[Symbol.toStringTag] = this.constructor.name;
 
 	public get logger(): Logger {
 		// @ts-ignore

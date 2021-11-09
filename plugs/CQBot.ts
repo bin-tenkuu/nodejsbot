@@ -4,7 +4,7 @@ import {CQWS} from "../config/config.json";
 import {Plug} from "../Plug.js";
 import {canCall} from "../utils/Annotation.js";
 import {Corpus, Group} from "../utils/Models.js";
-import {sendAdminQQ, sendGroup, sendPrivate} from "../utils/Util";
+import {sendAdminGroup} from "../utils/Util";
 import {CQData} from "./CQData.js";
 
 export class CQBot extends Plug {
@@ -26,12 +26,12 @@ export class CQBot extends Plug {
 			this.bot.bind("onceAll", {
 				"socket.open": (event) => {
 					this.logger.info("连接");
-					sendAdminQQ(event.bot, "已上线");
+					sendAdminGroup(event.bot, "已上线");
 					resolve();
 					const sendStateInterval = setInterval(() => {
 						const message: CQTag[] = this.sendState();
 						if (message.length > 0) {
-							sendAdminQQ(this.bot, message).catch(() => {
+							sendAdminGroup(this.bot, message).catch(() => {
 								clearInterval(sendStateInterval);
 							});
 						}
@@ -48,7 +48,7 @@ export class CQBot extends Plug {
 	}
 
 	async uninstall() {
-		await sendAdminQQ(this.bot, "即将下线");
+		await sendAdminGroup(this.bot, "即将下线");
 		return new Promise<void>((resolve, reject) => {
 			this.bot.bind("on", {
 				"socket.close": () => {
@@ -115,8 +115,8 @@ export class CQBot extends Plug {
 		this.bot.bind("on", {
 			"message.group": (event) => {
 				const time = process.hrtime();
-				let {group_id, user_id} = event.context;
-				let group: Group = CQData.getInst().getGroup(group_id);
+				const {group_id, user_id} = event.context;
+				const group: Group = CQData.getInst().getGroup(group_id);
 				group.exp++;
 				if (group.baned) {
 					return;
@@ -124,21 +124,11 @@ export class CQBot extends Plug {
 				if (CQData.getInst().getMember(user_id).baned) {
 					return;
 				}
-				Corpus.sendCorpusTags(event, time, async (event, tags) => {
-					// if (!corpus.forward) {
-					return sendGroup(event, tags);
-					// } else if (tags[0].tagName === "node") {
-					// 	return sendForward(event, tags as messageNode);
-					// } else {
-					// 	return sendForwardQuick(event, tags);
-					// }
-				}).catch(NOP);
+				Corpus.sendGroupTags(event, time).catch(NOP);
 			},
 			"message.private": (event) => {
 				const time = process.hrtime();
-				Corpus.sendCorpusTags(event, time, (event, tags) => {
-					return sendPrivate(event, tags);
-				}).catch(NOP);
+				Corpus.sendPrivateTags(event, time).catch(NOP);
 			},
 		});
 	}

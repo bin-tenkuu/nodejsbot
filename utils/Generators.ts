@@ -154,7 +154,7 @@ export function* GroupBy<T, TKey, TValue, TResult>(source: Iterable<T>, keySelec
 		elementSelector: ForEach<T, TValue>,
 		resultSelector?: (item: TKey, list: TValue[]) => TResult): Generator<unknown, void, void> {
 	const map: Map<TKey, TValue[]> = ToLookUp(source, keySelector, elementSelector);
-	if (resultSelector === undefined) {
+	if (resultSelector == null) {
 		yield* AsGenerator(map);
 	} else {
 		for (const [key, list] of map) {
@@ -548,7 +548,7 @@ function FirstOrDefault<T>(source: Iterable<T>, predicate: ForEach<T, boolean> =
  * @constructor
  */
 export function Last<T>(source: Iterable<T>, predicate: ForEach<T, boolean> = _ => true): T {
-	let last: T | typeof Default = LastOrDefault(source, predicate);
+	const last: T | typeof Default = LastOrDefault(source, predicate);
 	if (last === Default) {
 		throw new Error("No Match");
 	}
@@ -563,7 +563,7 @@ export function Last<T>(source: Iterable<T>, predicate: ForEach<T, boolean> = _ 
  * @constructor
  */
 export function LastOrNull<T>(source: Iterable<T>, predicate: ForEach<T, boolean> = _ => true): T | null {
-	let last: T | typeof Default = LastOrDefault(source, predicate);
+	const last: T | typeof Default = LastOrDefault(source, predicate);
 	return last === Default ? null : last;
 }
 

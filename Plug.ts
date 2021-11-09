@@ -14,7 +14,7 @@ export abstract class Plug extends Logable implements JSONable {
 	public static readonly corpus: Corpus[] = [];
 
 	/**获取当前类的实例*/
-	public static getInst<T extends Plug>(this: { new(): T }): T {
+	public static getInst<T extends Plug>(this: new() => T): T {
 		let instance: Plug | undefined = Plug.plugs.get(this);
 		if (!(instance instanceof this)) {
 			instance = new this();
