@@ -20,10 +20,10 @@ export function canCall(corpus: ICorpus): FunctionDecorator<canCallType, Plug, s
 		Reflect.defineMetadata(canCall.name, corpuses, target.constructor);
 	};
 }
-canCall.get = function (target: { new(): Plug }): Corpus[] {
+canCall.get = function (target: new() => Plug): Corpus[] {
 	return Reflect.getMetadata(canCall.name, target) ?? [];
 };
-canCall.merge = function (target: { new(): Plug }, corpuses: Corpus[]) {
+canCall.merge = function (target: new() => Plug, corpuses: Corpus[]) {
 	for (const corpus of canCall.get(target)) {
 		const index: number = corpuses.findIndex(value => value.weight > corpus.weight);
 		if (index === -1) {

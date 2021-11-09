@@ -42,7 +42,6 @@ export class CQBotPicture extends Plug {
 		minLength: 4,
 		weight: 5,
 		deleteMSG: 20,
-		isOpen: 0,
 	})
 	protected async getSeTu(event: CQMessage, exec: RegExpExecArray): Promise<CQTag[]> {
 		event.stopPropagation();
@@ -86,8 +85,7 @@ export class CQBotPicture extends Plug {
 				return [CQ.text("色图数量不足")];
 			}
 			const first = data.data[0];
-			const dataMSG: string = `标题：${first.title
-			}\n作者：${first.author}\n原图p${first.p}：https://pixiv.net/i/${first.pid}`;
+			const dataMSG: string = `作者：${first.author}\n原图p${first.p}：${first.pid}`;
 			// if (event.contextType === "message.group") {
 			// 	const {
 			// 		message_id: messageId,

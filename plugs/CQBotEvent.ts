@@ -64,7 +64,7 @@ export class CQBotEvent extends Plug {
 				event.stopPropagation();
 				const {name, size, url} = event.context.file;
 				sendPrivate(event, [
-					CQ.text("上传失败\n"),
+					// CQ.text("上传失败\n"),
 					CQ.text(`文件名:${name}\n文件大小:${size}\n文件链接:${url}`),
 				]).catch(reason => {
 					this.logger.error(reason.msg);

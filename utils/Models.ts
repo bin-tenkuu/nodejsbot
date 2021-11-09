@@ -280,7 +280,7 @@ export class Corpus extends Logable implements ICorpus, JSONable {
 		}).catch(NOP);
 	}
 
-	public readonly plugType: { new(): Plug };
+	public readonly plugType: new() => Plug;
 	public readonly funcName: string;
 	public readonly name: string;
 	public regexp: RegExp;
@@ -298,7 +298,7 @@ export class Corpus extends Logable implements ICorpus, JSONable {
 	public catch: CorpusCB<ErrorAPIResponse>;
 	public func: Function | null = null;
 
-	constructor(plugType: { new(): Plug }, funcName: string, iCorpus: ICorpus) {
+	constructor(plugType: new() => Plug, funcName: string, iCorpus: ICorpus) {
 		super();
 		this.plugType = plugType;
 		this.funcName = funcName;

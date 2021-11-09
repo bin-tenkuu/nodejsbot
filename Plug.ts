@@ -10,7 +10,7 @@ const State = {
 } as const;
 
 export abstract class Plug extends Logable implements JSONable {
-	public static readonly plugs: Map<{ new(): Plug }, Plug> = new Map();
+	public static readonly plugs: Map<new() => Plug, Plug> = new Map();
 	public static readonly corpus: Corpus[] = [];
 
 	/**获取当前类的实例*/
