@@ -128,17 +128,13 @@ export class CQBot extends Plug {
 					return;
 				}
 				Corpus.sendGroupTags(event, time).then(b => {
-					if (b) {
-						Counter.getInst().record(event);
-					}
+					b && Counter.getInst().record(event);
 				}, NOP);
 			},
 			"message.private": (event) => {
 				const time = process.hrtime();
 				Corpus.sendPrivateTags(event, time).then(b => {
-					if (b) {
-						Counter.getInst().record(event);
-					}
+					b && Counter.getInst().record(event);
 				}, NOP);
 			},
 		});
