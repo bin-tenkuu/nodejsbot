@@ -36,13 +36,14 @@ export class Counter extends Plug {
 		needAdmin: true,
 		weight: 10,
 	})
-	protected logText(): CQText[] {
+	protected logText(event: CQMessage): CQText[] {
+		this.record(event);
 		let str = "";
 		if (this.group.size > 0) {
-			str += "群聊：\n" + [...Counter.map(this.group)].join("\n");
+			str += "群：\n" + [...Counter.map(this.group)].join("\n");
 		}
 		if (this.member.size > 0) {
-			str += "私聊：\n" + [...Counter.map(this.member)].join("\n");
+			str += "\n人：\n" + [...Counter.map(this.member)].join("\n");
 		}
 		return [CQ.text(str)];
 	}

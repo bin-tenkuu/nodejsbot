@@ -51,7 +51,6 @@ export class CQBot extends Plug {
 	async uninstall() {
 		this.needOpen = -1;
 		await sendAdminGroup(this.bot, "即将下线");
-		this.bot.reconnect();
 		return new Promise<void>((resolve) => {
 			this.bot.bind("once", {
 				"socket.close": () => {
@@ -103,10 +102,11 @@ export class CQBot extends Plug {
 						this.bot.reconnect();
 					}, this.needOpen);
 					this.needOpen = (this.needOpen + 1000) << 1;
+					this.logger.info(`重连中 [${context.code}]: ${context.reason}`);
 				} else {
 					require("child_process").exec("npm stop");
+					this.logger.info(`已关闭 [${context.code}]: ${context.reason}`);
 				}
-				this.logger.info(`已关闭 [${context.code}]: ${context.reason}`);
 			},
 		});
 		this.bot.messageSuccess = (ret, message) => {

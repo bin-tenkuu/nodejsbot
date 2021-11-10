@@ -115,7 +115,7 @@ export class CQBotEvent extends Plug {
 			const corpus: Corpus = corpuses[+num];
 			return [CQ.text(`${corpus.name}${corpus.help}`)];
 		}
-		const s: string = corpuses.map<string>((c, i) => `${i} :${c.name}:${c.help}`).join("\n");
+		const s: string = corpuses.map<string>((c, i) => `${i} :${c.name}`).join("\n");
 		return [CQ.text(s)];
 	}
 
