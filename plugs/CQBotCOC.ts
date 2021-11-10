@@ -82,7 +82,7 @@ export class CQBotCOC extends Plug {
 
 	@canCall({
 		name: ".dstat",
-		regexp: /^\.dstat$/i,
+		regexp: /^[.．。]dstat$/i,
 		help: "查看全部简写",
 		minLength: 5,
 		maxLength: 7,
@@ -102,7 +102,7 @@ export class CQBotCOC extends Plug {
 
 	@canCall({
 		name: ".dset <key>[=<value>]",
-		regexp: /^\.dset +(?<key>\w[\w\d]+)(?:=(?<value>[+\-*d0-9#]+))?/i,
+		regexp: /^[.．。]dset +(?<key>\w[\w\d]+)(?:=(?<value>[+\-*d0-9#]+))?/i,
 		help: "删除[设置]简写",
 		minLength: 5,
 		maxLength: 100,
@@ -133,7 +133,7 @@ export class CQBotCOC extends Plug {
 
 	@canCall({
 		name: ".d <表达式> <...>",
-		regexp: /^\.d +(?:(?<times>\d)#)?(?<dice>[^ ]+)/i,
+		regexp: /^[.．。]d +(?:(?<times>\d)#)?(?<dice>[^ ]+)/i,
 		weight: 1,
 		help: "骰子主功能，附带简单表达式计算",
 		minLength: 4,
@@ -172,7 +172,7 @@ export class CQBotCOC extends Plug {
 
 	@canCall({
 		name: ".dall1:打开全1模式",
-		regexp: /^\.dall1$/i,
+		regexp: /^[.．。]dall1$/i,
 		weight: 1,
 		minLength: 5,
 		maxLength: 10,
@@ -185,7 +185,7 @@ export class CQBotCOC extends Plug {
 
 	@canCall({
 		name: ".d[bug|(wr|cb|aj)f?]:打开/关闭特殊模式",
-		regexp: /^\.d(?<operator>[a-z]{2,3})$/i,
+		regexp: /^[.．。]d(?<operator>[a-z]{2,3})$/i,
 		weight: 1,
 		minLength: 2,
 		maxLength: 10,
@@ -209,7 +209,7 @@ export class CQBotCOC extends Plug {
 
 	@canCall({
 		name: ".dp<num>",
-		regexp: /^\.dp(?<num> ?\d*)$/i,
+		regexp: /^[.．。]dp(?<num> ?\d*)$/i,
 		help: "10分钟之内加投骰",
 		minLength: 4,
 		maxLength: 10,

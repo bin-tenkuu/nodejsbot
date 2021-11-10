@@ -68,7 +68,7 @@ export class CQBot extends Plug {
 
 	@canCall({
 		name: ".状态",
-		regexp: /^\.状态$/,
+		regexp: /^[.．。]状态$/,
 		needAdmin: true,
 		help: "获取当前状态",
 		weight: 2,

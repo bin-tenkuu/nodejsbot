@@ -84,7 +84,7 @@ export class CQBotEvent extends Plug {
 
 	@canCall({
 		name: ".report <txt>",
-		regexp: /^\.report(?<txt>.+)$/,
+		regexp: /^[.．。]report(?<txt>.+)$/,
 		help: "附上消息发送给开发者",
 		weight: 6,
 		deleteMSG: 10,
@@ -99,7 +99,7 @@ export class CQBotEvent extends Plug {
 
 	@canCall({
 		name: ".(help|帮助)<id>",
-		regexp: /^\.(?:help|帮助)(?<num> *\d*)$/,
+		regexp: /^[.．。](?:help|帮助)(?<num> *\d*)$/,
 		forward: true,
 		weight: 2,
 		minLength: 3,

@@ -16,7 +16,7 @@ export class CQBotPlugin extends Plug {
 
 	@canCall({
 		name: ".获取<type>列表",
-		regexp: /^\.获取(?<type>[^ ]+)列表$/,
+		regexp: /^[.．。]获取(?<type>[^ ]+)列表$/,
 		needAdmin: true,
 		forward: true,
 		weight: 4,
@@ -57,7 +57,7 @@ export class CQBotPlugin extends Plug {
 
 	@canCall({
 		name: ".设置[群][un]ban <other>",
-		regexp: /^\.设置(?<group>群)?(?<type>un)?ban (?<other>.+)$/,
+		regexp: /^[.．。]设置(?<group>群)?(?<type>un)?ban (?<other>.+)$/,
 		needAdmin: true,
 		help: "设置群聊、私聊的ban状态",
 		weight: 4,
@@ -85,7 +85,7 @@ export class CQBotPlugin extends Plug {
 
 	@canCall({
 		name: ".语料库",
-		regexp: /^\.语料库$/,
+		regexp: /^[.．。]语料库$/,
 		needAdmin: true,
 		forward: true,
 		maxLength: 10,
@@ -103,7 +103,7 @@ export class CQBotPlugin extends Plug {
 
 	@canCall({
 		name: ".语料库<open><nums[]>",
-		regexp: /^\.语料库(?<open>[开关])(?<nums>[\d ]+)$/,
+		regexp: /^[.．。]语料库(?<open>[开关])(?<nums>[\d ]+)$/,
 		needAdmin: true,
 		help: "设置语料库状态",
 		weight: 4,
@@ -133,7 +133,7 @@ export class CQBotPlugin extends Plug {
 
 	@canCall({
 		name: ".语料库<nums>",
-		regexp: /^\.语料库(?<nums>\d+)$/,
+		regexp: /^[.．。]语料库(?<nums>\d+)$/,
 		needAdmin: true,
 		help: "查看语料库详情",
 		weight: 4,
@@ -154,7 +154,7 @@ export class CQBotPlugin extends Plug {
 
 	@canCall({
 		name: ".插件[<id>]",
-		regexp: /^\.插件(?<id> *\d*)$/,
+		regexp: /^[.．。]插件(?<id> *\d*)$/,
 		needAdmin: true,
 		forward: true,
 		help: "查看插件信息",
@@ -176,14 +176,14 @@ export class CQBotPlugin extends Plug {
 		}
 		const str = JSON.stringify({
 			...plugin.toJSON(),
-			croups: plugin.corpus,
+			"croups": plugin.corpus,
 		}, undefined, 1);
 		return [CQ.text(str)];
 	}
 
 	@canCall({
 		name: ".模式",
-		regexp: /^\.模式(?<type>风控|正常)$/,
+		regexp: /^[.．。]模式(?<type>风控|正常)$/,
 		needAdmin: true,
 		canGroup: false,
 		canPrivate: true,

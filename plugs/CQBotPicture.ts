@@ -167,7 +167,7 @@ export class CQBotPicture extends Plug {
 
 	@canCall({
 		name: ".色图失败列表",
-		regexp: /^\.色图失败列表$/,
+		regexp: /^[.．。]色图失败列表$/,
 		forward: true,
 		needAdmin: true,
 		weight: 3,

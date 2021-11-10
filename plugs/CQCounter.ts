@@ -1,19 +1,25 @@
-import {CQEvent} from "go-cqwebsocket";
+import {CQ} from "go-cqwebsocket";
+import {CQText} from "go-cqwebsocket/out/tags";
 import {Plug} from "../Plug.js";
+import {canCall} from "../utils/Annotation.js";
 import {CQMessage} from "../utils/Util.js";
 
 export class Counter extends Plug {
-	private group = new Map<number, Map<number, number>>();
+	private static* map(map: Map<number, number>): Generator<string, void, void> {
+		for (const [g, n] of map.entries()) {
+			yield ` ${g}：${n}次`;
+		}
+	}
+
+	private group = new Map<number, number>();
 	private member = new Map<number, number>();
 
 	constructor() {
 		super(module);
-		this.name = "QQ机器人";
-		this.description = "用于连接go-cqhttp服务的bot";
+		this.name = "日志记录器";
+		this.description = "数据收集专用";
 	}
 
-	public record(event: CQEvent<"message.private">): void;
-	public record(event: CQEvent<"message.group">): void;
 	public record(event: CQMessage): void {
 		if (event.contextType === "message.group") {
 			const {group_id, user_id} = event.context;
@@ -24,17 +30,30 @@ export class Counter extends Plug {
 		}
 	}
 
-	private addGroup(g: number, u: number) {
-		let uM: Map<number, number> | undefined = this.group.get(g);
-		if (uM == null) {
-			uM = new Map<number, number>();
-			this.group.set(g, uM);
+	@canCall({
+		name: "日志",
+		regexp: /[.．。]日志/,
+		needAdmin: true,
+		weight: 10,
+	})
+	protected logText(): CQText[] {
+		let str = "";
+		if (this.group.size > 0) {
+			str += "群聊：\n" + [...Counter.map(this.group)].join("\n");
 		}
-		const exp: number = uM.get(u) ?? 0;
-		uM.set(u, exp + 1);
+		if (this.member.size > 0) {
+			str += "私聊：\n" + [...Counter.map(this.member)].join("\n");
+		}
+		return [CQ.text(str)];
 	}
 
-	private addMember(u: number) {
+	private addGroup(g: number, u: number): void {
+		const exp: number = this.group.get(g) ?? 0;
+		this.group.set(g, exp + 1);
+		this.addMember(u);
+	}
+
+	private addMember(u: number): void {
 		const exp: number = this.member.get(u) ?? 0;
 		this.member.set(u, exp + 1);
 	}

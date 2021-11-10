@@ -58,7 +58,7 @@ export class CQBotSearch extends Plug {
 
 	@canCall({
 		name: ".搜图",
-		regexp: /^\.搜图$/,
+		regexp: /^[.．。]搜图$/,
 		help: "同时发送图片可以搜图",
 		canPrivate: false,
 		weight: 5,
