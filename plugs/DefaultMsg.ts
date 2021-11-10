@@ -41,7 +41,7 @@ export class DefaultMsg extends Plug {
 		name: ".data",
 		regexp: /^[.．。]data$/,
 		help: "开发者信息",
-		weight: 6,
+		weight: 10,
 		deleteMSG: 90,
 	})
 	protected sendReportInfo(event: CQMessage): CQTag[] {
