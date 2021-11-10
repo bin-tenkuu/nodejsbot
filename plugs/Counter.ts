@@ -36,8 +36,7 @@ export class Counter extends Plug {
 		needAdmin: true,
 		weight: 10,
 	})
-	protected logText(event: CQMessage): CQText[] {
-		this.record(event);
+	protected logText(): CQText[] {
 		let str = "";
 		if (this.group.size > 0) {
 			str += "群：\n" + [...Counter.map(this.group)].join("\n");
