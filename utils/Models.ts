@@ -218,7 +218,7 @@ export type ICorpus = {
 };
 
 export class Corpus extends Logable implements ICorpus, JSONable {
-	public static async sendGroupTags(event: CQEvent<"message.group">, hrtime: [number, number]): Promise<void> {
+	public static async sendGroupTags(event: CQEvent<"message.group">, hrtime: [number, number]): Promise<boolean> {
 		const text = onlyText(event);
 		const corpus: string[] = [];
 		for (const element of Plug.corpus) {
@@ -248,10 +248,12 @@ export class Corpus extends Logable implements ICorpus, JSONable {
 			const {user_id, group_id} = event.context;
 			const txt = `\t来源：${group_id ?? ""}.${user_id}`;
 			this.hrtime(hrtime, corpus.join(",") + txt);
+			return true;
 		}
+		return false;
 	}
 
-	public static async sendPrivateTags(event: CQEvent<"message.private">, hrtime: [number, number]): Promise<void> {
+	public static async sendPrivateTags(event: CQEvent<"message.private">, hrtime: [number, number]): Promise<boolean> {
 		const text = onlyText(event);
 		const corpus: string[] = [];
 		for (const element of Plug.corpus) {
@@ -266,8 +268,12 @@ export class Corpus extends Logable implements ICorpus, JSONable {
 			await this.then(sendPrivate(event, msg), element, event, corpus);
 		}
 		if (corpus.length > 0) {
-			this.hrtime(hrtime, corpus.join(","));
+			const {user_id} = event.context;
+			const txt = `\t来源：${user_id}`;
+			this.hrtime(hrtime, corpus.join(",") + txt);
+			return true;
 		}
+		return false;
 	}
 
 	private static async then(prom: Promise<MessageId>, element: Corpus, event: CQMessage, corpus: string[]) {

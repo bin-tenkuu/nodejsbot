@@ -5,6 +5,7 @@ import {Plug} from "../Plug.js";
 import {canCall} from "../utils/Annotation.js";
 import {Corpus, Group} from "../utils/Models.js";
 import {sendAdminGroup} from "../utils/Util";
+import {Counter} from "./Counter.js";
 import {CQData} from "./CQData.js";
 
 export class CQBot extends Plug {
@@ -50,7 +51,7 @@ export class CQBot extends Plug {
 	async uninstall() {
 		this.needOpen = -1;
 		await sendAdminGroup(this.bot, "即将下线");
-		this.bot.reconnect()
+		this.bot.reconnect();
 		return new Promise<void>((resolve) => {
 			this.bot.bind("once", {
 				"socket.close": () => {
@@ -126,11 +127,19 @@ export class CQBot extends Plug {
 				if (CQData.getInst().getMember(user_id).baned) {
 					return;
 				}
-				Corpus.sendGroupTags(event, time).catch(NOP);
+				Corpus.sendGroupTags(event, time).then(b => {
+					if (b) {
+						Counter.getInst().record(event);
+					}
+				}, NOP);
 			},
 			"message.private": (event) => {
 				const time = process.hrtime();
-				Corpus.sendPrivateTags(event, time).catch(NOP);
+				Corpus.sendPrivateTags(event, time).then(b => {
+					if (b) {
+						Counter.getInst().record(event);
+					}
+				}, NOP);
 			},
 		});
 	}

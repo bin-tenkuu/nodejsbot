@@ -1,4 +1,5 @@
 import "reflect-metadata";
+import {Counter} from "./plugs/Counter.js";
 import {CQBot} from "./plugs/CQBot.js";
 import {CQBotCOC} from "./plugs/CQBotCOC.js";
 import {CQBotEvent} from "./plugs/CQBotEvent.js";
@@ -33,6 +34,7 @@ Promise.resolve().then(async () => {
 	await CQBotSearch.getInst().install();
 	await CQBotPicture.getInst().install();
 	await DefaultMsg.getInst().install();
+	await Counter.getInst().install();
 	Logable.hrtime(time, "初始化");
 }).then(() => {
 	logger.info("启动完成");
