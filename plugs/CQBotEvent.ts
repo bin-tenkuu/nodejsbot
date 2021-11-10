@@ -83,21 +83,6 @@ export class CQBotEvent extends Plug {
 	}
 
 	@canCall({
-		name: ".report <txt>",
-		regexp: /^[.．。]report(?<txt>.+)$/,
-		help: "附上消息发送给开发者",
-		weight: 6,
-		deleteMSG: 10,
-	})
-	protected sendReport(event: CQMessage, execArray: RegExpExecArray): CQTag[] {
-		const {txt}: { txt?: string } = execArray.groups as { txt?: string } ?? {};
-		event.stopPropagation();
-		const {nickname, user_id} = event.context.sender;
-		sendAdminQQ(event.bot, `来自 ${nickname} (${user_id}):\n${txt}`).catch(NOP);
-		return [CQ.text("收到")];
-	}
-
-	@canCall({
 		name: ".(help|帮助)<id>",
 		regexp: /^[.．。](?:help|帮助)(?<num> *\d*)$/,
 		forward: true,

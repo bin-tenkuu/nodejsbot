@@ -1,6 +1,7 @@
 import {CQ, CQTag} from "go-cqwebsocket";
 import {Plug} from "../Plug.js";
 import {canCall} from "../utils/Annotation.js";
+import {CQMessage, sendAdminQQ} from "../utils/Util.js";
 
 export class DefaultMsg extends Plug {
 	constructor() {
@@ -20,6 +21,38 @@ export class DefaultMsg extends Plug {
 	protected ping(): CQTag[] {
 		return [CQ.text(".pong!")];
 	}
+
+	@canCall({
+		name: ".report <txt>",
+		regexp: /^[.．。]report(?<txt>.+)$/,
+		help: "附上消息发送给开发者",
+		weight: 6,
+		deleteMSG: 10,
+	})
+	protected sendReport(event: CQMessage, execArray: RegExpExecArray): CQTag[] {
+		const {txt}: { txt?: string } = execArray.groups as { txt?: string } ?? {};
+		event.stopPropagation();
+		const {nickname, user_id} = event.context.sender;
+		sendAdminQQ(event.bot, `来自 ${nickname} (${user_id}):\n${txt}`).catch(NOP);
+		return [CQ.text("收到")];
+	}
+
+	@canCall({
+		name: ".data",
+		regexp: /^[.．。]data$/,
+		help: "开发者信息",
+		weight: 6,
+		deleteMSG: 90,
+	})
+	protected sendReportInfo(event: CQMessage): CQTag[] {
+		event.stopPropagation();
+		return [
+			CQ.text("开发者QQ：2938137849\n"),
+			CQ.text("项目地址github：2938137849/nodejsbot\n"),
+			CQ.text("轮子github：Mrs4s/go-cqhttp"),
+		];
+	}
+
 }
 
 /*

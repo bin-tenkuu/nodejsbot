@@ -185,7 +185,7 @@ export class CQBotCOC extends Plug {
 
 	@canCall({
 		name: ".d[bug|(wr|cb|aj)f?]:打开/关闭特殊模式",
-		regexp: /^[.．。]d(?<operator>[a-z]{2,3})$/i,
+		regexp: /^[.．。]d(?<operator>bug|(?:wr|cb|aj)f?)$/i,
 		weight: 1,
 		minLength: 2,
 		maxLength: 10,
