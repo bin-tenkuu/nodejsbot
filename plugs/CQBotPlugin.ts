@@ -39,14 +39,10 @@ export class CQBotPlugin extends Plug {
 				return [CQ.text(s)];
 			});
 		case "ban":
-			const banList: number[] = [];
-			for (const {id, is_baned} of CQData.getInst().getMembers()) {
-				if (is_baned === 1) {
-					banList.push(id);
-				}
-			}
-			const s = banList.join("\n");
-			return [CQ.text(s)];
+			const data: CQData = CQData.getInst();
+			const groupBan: number[] = [...data.getGroups()].filter(v => v.baned).map(v => v.id);
+			const banList: number[] = [...data.getMembers()].filter(v => v.baned).map(v => v.id);
+			return [CQ.text(`群：\n${groupBan.join("\n")}\n人：\n${banList.join("\n")}`)];
 				// case "poke":
 				// 	let uin = event.context.self_id;
 				// 	return CQData.pokeGroup.map(v => CQ.node(String(v.id), uin, v.text));
@@ -71,14 +67,14 @@ export class CQBotPlugin extends Plug {
 		const cqTexts = [CQ.text(matches.join("\n"))];
 		if (group == null) {
 			for (const value of matches) {
-				cqData.setGroupBaned(+value, isBan);
-			}
-			cqTexts.unshift(CQ.text("已ban群：\n"));
-		} else {
-			for (const value of matches) {
 				cqData.setBaned(+value, isBan);
 			}
-			cqTexts.unshift(CQ.text("已banQQ：\n"));
+			cqTexts.unshift(CQ.text(`已${type ?? ""}banQQ：\n`));
+		} else {
+			for (const value of matches) {
+				cqData.setGroupBaned(+value, isBan);
+			}
+			cqTexts.unshift(CQ.text(`已${type ?? ""}ban群：\n`));
 		}
 		return cqTexts;
 	}

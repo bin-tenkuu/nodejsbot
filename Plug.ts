@@ -18,7 +18,6 @@ export abstract class Plug extends Logable implements JSONable {
 		let instance: Plug | undefined = Plug.plugs.get(this);
 		if (!(instance instanceof this)) {
 			instance = new this();
-			canCall.merge(this, Plug.corpus);
 			Plug.plugs.set(this, instance);
 		}
 		return <T>instance;
@@ -62,10 +61,10 @@ export abstract class Plug extends Logable implements JSONable {
 				}
 				await this.__proto__.install.call(this);
 				this.#state = State.installed;
+				canCall.merge(this);
+				this.logger.info("已启动\t" + this.toString());
 			} catch (e) {
 				this.error = e;
-			} finally {
-				this.logger.info("已启动\t" + this.toString());
 			}
 		};
 		this.uninstall = async function () {
@@ -78,10 +77,10 @@ export abstract class Plug extends Logable implements JSONable {
 					return;
 				}
 				this.#state = State.uninstalled;
+				canCall.separate(this);
+				this.logger.info("已停止\t" + this.toString());
 			} catch (e) {
 				this.error = e;
-			} finally {
-				this.logger.info("已停止\t" + this.toString());
 			}
 		};
 		this.#state = State.uninstalled;
@@ -103,6 +102,6 @@ export abstract class Plug extends Logable implements JSONable {
 	}
 
 	public get corpus(): Corpus[] {
-		return canCall.get(<any>this.constructor);
+		return Plug.corpus.filter(v => v.plug === this);
 	}
 }

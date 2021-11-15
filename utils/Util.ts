@@ -1,4 +1,4 @@
-import {CQ, CQEvent, CQTag, CQWebSocket} from "go-cqwebsocket";
+import {CQ, CQEvent, CQTag, CQWebSocket, messageNode} from "go-cqwebsocket";
 import {MessageId, PromiseRes} from "go-cqwebsocket/out/Interfaces";
 import {CQAt, CQText} from "go-cqwebsocket/out/tags";
 import {adminGroup, adminId} from "../config/config.json";
@@ -87,24 +87,24 @@ export function sendGroup<T>({bot, context: {group_id = adminGroup}}: hasGroup<T
 	});
 }
 
-// export function sendForward<T>({bot, context: {group_id = adminGroup}}: hasGroup<T>,
-// 		message: messageNode): PromiseRes<MessageId> {
-// 	return bot.send_group_forward_msg(group_id, message as messageNode).catch(() => {
-// 		return bot.send_group_msg(group_id, "合并转发消息发送失败");
-// 	});
-// }
-//
-// export function sendForwardQuick<T>({bot, context: {group_id = adminGroup, sender}}: CQEvent<"message.group">,
-// 		message: CQTag[]): PromiseRes<MessageId> {
-// 	const {user_id: userId, nickname: name} = sender;
-// 	const map: messageNode = message.map(tags => CQ.node(name, userId, [tags]));
-// 	return bot.send_group_forward_msg(group_id, map).catch(() => {
-// 		const map: messageNode = message.map(tags => CQ.node(name, userId, cast2Text([tags])));
-// 		return bot.send_group_forward_msg(group_id, map);
-// 	}).catch(() => {
-// 		return bot.send_group_msg(group_id, "合并转发消息发送失败");
-// 	});
-// }
+export function sendForward<T>({bot, context: {group_id = adminGroup}}: hasGroup<T>,
+		message: messageNode): PromiseRes<MessageId> {
+	return bot.send_group_forward_msg(group_id, message as messageNode).catch(() => {
+		return bot.send_group_msg(group_id, "合并转发消息发送失败");
+	});
+}
+
+export function sendForwardQuick<T>({bot, context: {group_id = adminGroup, sender}}: CQEvent<"message.group">,
+		message: CQTag[]): PromiseRes<MessageId> {
+	const {user_id: userId, nickname: name} = sender;
+	const map: messageNode = message.map(tags => CQ.node(name, userId, [tags]));
+	return bot.send_group_forward_msg(group_id, map).catch(() => {
+		const map: messageNode = message.map(tags => CQ.node(name, userId, cast2Text([tags])));
+		return bot.send_group_forward_msg(group_id, map);
+	}).catch(() => {
+		return bot.send_group_msg(group_id, "合并转发消息发送失败");
+	});
+}
 
 /**
  * 定时撤回消息

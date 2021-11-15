@@ -9,7 +9,7 @@ import {CQMessage} from "../utils/Util.js";
 export class CQData extends Plug {
 	private static loadMember(id: number): Member {
 		return db.sync<Member>(db => {
-			const im: IMember | undefined = db.prepare(
+			const im: IMember | undefined = db.prepare<[number]>(
 					`SELECT id, name, exp, gmt_modified, is_baned FROM Members WHERE id = ?`).get(id);
 			if (im != null) {
 				return new Member(im);
@@ -18,7 +18,7 @@ export class CQData extends Plug {
 			member.modified();
 			db.prepare<IMember>(`INSERT INTO Members(id, name, exp, gmt_modified, is_baned, gmt_create)
             VALUES ($id, $name, $exp, $gmt_modified, $is_baned, $gmt_modified)`)
-					.run(member.toJSON());
+			.run(member.toJSON());
 			return member;
 		});
 	}
@@ -40,13 +40,13 @@ export class CQData extends Plug {
 
 	private static saveMember(map: Map<number, Member>): void {
 		db.sync(db => {
-			this.logger.info("保存开始(Members)");
+			this.logger.info(`保存开始(Members):${map.size}`);
 			let change = 0, noChange = 0;
 			const stmt = db.prepare<IMember>(`UPDATE Members
             SET name = $name, exp = $exp, gmt_modified = $gmt_modified, is_baned = $is_baned
             WHERE id = $id;`);
 			for (const member of map.values()) {
-				if (member.is_modified) {
+				if (member.is_modified || member.baned) {
 					stmt.run(member.toJSON());
 					member.is_modified = false;
 					++change;
@@ -61,7 +61,7 @@ export class CQData extends Plug {
 
 	private static saveGroup(map: Map<number, Group>) {
 		db.sync(db => {
-			this.logger.info("保存开始(Group)");
+			this.logger.info(`保存开始(Group):${map.size}`);
 			let change = 0;
 			const stmt = db.prepare<IGroup>(`UPDATE tb_group
             SET exp = $exp, gmt_modified = $gmt_modified, is_baned = $is_baned
@@ -80,9 +80,9 @@ export class CQData extends Plug {
 
 	private readonly memberMap = new Map<number, Member>();
 	private readonly groupMap = new Map<number, Group>();
+	private readonly cache = new CacheMap<number, boolean>();
 	private autoSaving: boolean = false;
 	private saving: boolean = false;
-	private readonly cache = new CacheMap<number, boolean>();
 
 	public constructor() {
 		super(module);
@@ -92,6 +92,7 @@ export class CQData extends Plug {
 
 	public async install() {
 		this.autoSave();
+		this.#init();
 	}
 
 	public async uninstall() {
@@ -118,6 +119,10 @@ export class CQData extends Plug {
 
 	public getMembers(): IterableIterator<Member> {
 		return this.memberMap.values();
+	}
+
+	public getGroups(): IterableIterator<Group> {
+		return this.groupMap.values();
 	}
 
 	public setBaned(id: number, is_baned: 0 | 1 | boolean): void {
@@ -159,6 +164,23 @@ export class CQData extends Plug {
 		event.stopPropagation();
 		this.getMember(event.context.user_id).addExp(1);
 		return [];
+	}
+
+	#init(): void {
+		db.sync(db => {
+			const menberBan: IMember[] = db.prepare<[]>(`SELECT id, name, exp, gmt_modified, is_baned
+            FROM Members
+            WHERE is_baned = 1`).all();
+			for (const v of menberBan) {
+				this.memberMap.set(v.id, new Member(v));
+			}
+			const groupBan: IGroup[] = db.prepare<[]>(`SELECT id, exp, gmt_modified, is_baned
+            FROM tb_group
+            WHERE is_baned = 1`).all();
+			for (const v of groupBan) {
+				this.groupMap.set(v.id, new Group(v));
+			}
+		});
 	}
 
 	private async save(): Promise<void> {

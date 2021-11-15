@@ -49,22 +49,20 @@ export class CQBotPicture extends Plug {
 			return [];
 		}
 		this.usingSeTu = true;
-		const groups = {
-			keyword: exec.groups?.keyword ?? "",
-			r18: exec.groups?.r18 != null,
-		};
-		const userId: number = event.context.user_id;
-		const member = CQData.getInst().getMember(userId);
-		if (!member.addExp(-5)) {
-			// this.usingSeTu = false;
-			// return [CQ.text("不够活跃")];
-		}
-		if (this.setuSet.has(groups.keyword)) {
-			this.usingSeTu = false;
-			return [CQ.text("没有，爬")];
-		}
-		this.logger.info("开始色图", groups);
 		try {
+			const groups = {
+				keyword: exec.groups?.keyword ?? "",
+				r18: exec.groups?.r18 != null,
+			};
+			const userId: number = event.context.user_id;
+			const member = CQData.getInst().getMember(userId);
+			if (!member.addExp(-5)) {
+				// return [CQ.text("不够活跃")];
+			}
+			if (this.setuSet.has(groups.keyword)) {
+				return [CQ.text("没有，爬")];
+			}
+			this.logger.info("开始色图", groups);
 			const data = await lolicon({
 				size1200: true,
 				keyword: groups.keyword,
@@ -103,7 +101,9 @@ export class CQBotPicture extends Plug {
 			this.logger.error(reason);
 			return [CQ.text("未知错误,或网络错误")];
 		} finally {
-			this.usingSeTu = false;
+			process.nextTick(() => {
+				this.usingSeTu = false;
+			});
 		}
 	}
 
@@ -123,19 +123,17 @@ export class CQBotPicture extends Plug {
 			return [];
 		}
 		this.usingSearching = true;
-		const {pid, p} = (exec.groups as { pid?: string, p?: string }) ?? {};
-		this.logger.debug(`p站图片请求：pid:${pid},p:${p}`);
-		if (pid == null) {
-			this.usingSearching = false;
-			return [CQ.text("pid获取失败")];
-		}
-		const userId: number = event.context.user_id;
-		const member = CQData.getInst().getMember(userId);
-		if (!member.addExp(-5)) {
-			// this.usingSearching = false;
-			// return [CQ.text("不够活跃")];
-		}
 		try {
+			const {pid, p} = (exec.groups as { pid?: string, p?: string }) ?? {};
+			this.logger.debug(`p站图片请求：pid:${pid},p:${p}`);
+			if (pid == null) {
+				return [CQ.text("pid获取失败")];
+			}
+			const userId: number = event.context.user_id;
+			const member = CQData.getInst().getMember(userId);
+			if (!member.addExp(-5)) {
+				// return [CQ.text("不够活跃")];
+			}
 			const data = await pixivCat(pid);
 			if (!data.success) {
 				this.logger.info(`请求失败`);
@@ -156,12 +154,13 @@ export class CQBotPicture extends Plug {
 				return [CQ.image((data.original_url_proxy))];
 			}
 		} catch (e) {
-			member.addExp(5);
 			sendAdminQQ(event.bot, "p站图片加载出错").catch(NOP);
 			this.logger.error(e);
 			return [CQ.text("网络请求错误或内部错误")];
 		} finally {
-			this.usingSearching = false;
+			process.nextTick(() => {
+				this.usingSearching = false;
+			});
 		}
 	}
 

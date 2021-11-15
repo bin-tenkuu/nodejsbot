@@ -1,8 +1,8 @@
 import {CQ, CQEvent, CQTag} from "go-cqwebsocket";
-import {PromiseRes} from "go-cqwebsocket/out/Interfaces";
 import {ErrorAPIResponse, MessageId} from "go-cqwebsocket/out/Interfaces.js";
 import {Plug} from "../Plug.js";
-import {canCallType} from "./Annotation.js";
+import {CQData} from "../plugs/CQData.js";
+import {canCallGroupFunc, canCallPrivateFunc, canCallType} from "./Annotation.js";
 import {Logable} from "./logger.js";
 import {CQMessage, deleteMsg, isAdmin, onlyText, sendGroup, sendPrivate} from "./Util.js";
 
@@ -33,9 +33,9 @@ class Modified {
 export type IGroup = { readonly id: number, exp: number, gmt_modified: number, is_baned: 0 | 1 }
 
 export class Group extends Modified implements IGroup, JSONable {
-	private readonly _id: number;
-	private _exp: number = 0;
-	private _is_baned: 0 | 1 = 0;
+	protected readonly _id: number;
+	protected _exp: number = 0;
+	protected _is_baned: 0 | 1 = 0;
 
 	constructor(obj: IGroup | number) {
 		super();
@@ -45,6 +45,7 @@ export class Group extends Modified implements IGroup, JSONable {
 		} else {
 			this._id = obj.id;
 			this._exp = obj.exp;
+			this._gmt_modified = obj.gmt_modified;
 		}
 	}
 
@@ -79,25 +80,15 @@ export class Group extends Modified implements IGroup, JSONable {
 	}
 }
 
-export type IMember = { readonly id: number, name: string, exp: number, gmt_modified: number, is_baned: 0 | 1 };
+export type IMember = IGroup & { name: string };
 
-export class Member extends Modified implements IMember, JSONable {
-	private readonly _id: number;
-	private _is_baned: 0 | 1 = 0;
+export class Member extends Group implements IMember, JSONable {
 	private _name: string = "";
-	private _exp: number = 0;
 
 	constructor(obj: IMember | number) {
-		super();
-		if (typeof obj === "number") {
-			this._id = obj;
-			return;
-		} else {
-			this._id = obj.id;
+		super(obj);
+		if (typeof obj !== "number") {
 			this._name = obj.name;
-			this._exp = obj.exp;
-			this._is_baned = obj.is_baned;
-			this._gmt_modified = obj.gmt_modified;
 		}
 	}
 
@@ -117,28 +108,6 @@ export class Member extends Modified implements IMember, JSONable {
 		};
 	}
 
-	public get exp(): number {
-		return this._exp;
-	}
-
-	public set exp(v: number) {
-		this._exp = v;
-		this.modified();
-	}
-
-	public get id(): number {
-		return this._id;
-	}
-
-	public get is_baned(): 0 | 1 {
-		return this._is_baned;
-	}
-
-	public set is_baned(value: 0 | 1) {
-		this._is_baned = value;
-		this.modified();
-	}
-
 	public get name(): string {
 		return this._name;
 	}
@@ -148,12 +117,9 @@ export class Member extends Modified implements IMember, JSONable {
 		this.modified();
 	}
 
-	public get baned(): boolean {
-		return this._is_baned !== 0;
-	}
 }
 
-export type ICorpus = {
+export interface ICorpus {
 	/**
 	 * 正则匹配
 	 * @default /$^/
@@ -189,10 +155,6 @@ export type ICorpus = {
 	 * @default 1
 	 */
 	isOpen?: number,
-	/**消息回调*/
-	then?: CorpusCB<MessageId>,
-	/**消息错误回调*/
-	catch?: CorpusCB<ErrorAPIResponse>,
 	/**帮助文本*/
 	help?: string | undefined,
 	/**
@@ -215,10 +177,21 @@ export type ICorpus = {
 	 * @default 0
 	 */
 	deleteMSG?: number,
-};
+	/**消息回调*/
+	then?(event: CQMessage, value: MessageId): void | Promise<void>,
+	/**消息错误回调*/
+	catch?(event: CQMessage, value: ErrorAPIResponse): void | Promise<void>,
+}
 
-export class Corpus extends Logable implements ICorpus, JSONable {
+export class Corpus<T extends Plug = Plug> extends Logable implements ICorpus, JSONable {
 	public static async sendGroupTags(event: CQEvent<"message.group">, hrtime: [number, number]): Promise<boolean> {
+		const {group_id, user_id} = event.context;
+		if (CQData.getInst().getGroup(group_id).baned) {
+			return false;
+		}
+		if (CQData.getInst().getMember(user_id).baned) {
+			return false;
+		}
 		const text = onlyText(event);
 		const corpus: string[] = [];
 		for (const element of Plug.corpus) {
@@ -254,6 +227,10 @@ export class Corpus extends Logable implements ICorpus, JSONable {
 	}
 
 	public static async sendPrivateTags(event: CQEvent<"message.private">, hrtime: [number, number]): Promise<boolean> {
+		const {user_id} = event.context;
+		if (CQData.getInst().getMember(user_id).baned) {
+			return false;
+		}
 		const text = onlyText(event);
 		const corpus: string[] = [];
 		for (const element of Plug.corpus) {
@@ -283,30 +260,39 @@ export class Corpus extends Logable implements ICorpus, JSONable {
 			return element.catch(event, reason);
 		}).finally(() => {
 			corpus.push(element.name);
-		}).catch(NOP);
+		}).catch((e) => {
+			this.logger.error(e);
+			element.isOpen = -1;
+		});
 	}
 
-	public readonly plugType: new() => Plug;
+	public readonly plug: T;
 	public readonly funcName: string;
+	public readonly regexp: RegExp;
 	public readonly name: string;
-	public regexp: RegExp;
 	public canGroup: boolean;
 	public canPrivate: boolean;
-	public forward: boolean;
-	public help: string | undefined = undefined;
+	public readonly forward: boolean;
+	public readonly needAdmin: boolean;
 	public isOpen: number;
-	public maxLength: number;
-	public minLength: number;
-	public needAdmin: boolean;
-	public weight: number;
-	public deleteMSG: number;
-	public then: CorpusCB<MessageId>;
-	public catch: CorpusCB<ErrorAPIResponse>;
+	public readonly help: string | undefined;
+	public readonly minLength: number;
+	public readonly maxLength: number;
+	public readonly weight: number;
+	public readonly deleteMSG: number;
+
+	public then(event: CQMessage, value: MessageId): void | Promise<void> {
+	}
+
+	public catch(event: CQMessage, value: ErrorAPIResponse): void | Promise<void> {
+		Corpus.logger.error(`${this}:${JSON.stringify(value)}`);
+	}
+
 	public func: Function | null = null;
 
-	constructor(plugType: new() => Plug, funcName: string, iCorpus: ICorpus) {
+	constructor(plugType: T, funcName: string, iCorpus: ICorpus) {
 		super();
-		this.plugType = plugType;
+		this.plug = plugType;
 		this.funcName = funcName;
 		this.name = iCorpus.name ?? this.toString();
 		// noinspection RegExpUnexpectedAnchor
@@ -321,8 +307,8 @@ export class Corpus extends Logable implements ICorpus, JSONable {
 		this.needAdmin = iCorpus.needAdmin ?? false;
 		this.weight = iCorpus.weight ?? 10;
 		this.deleteMSG = iCorpus.deleteMSG ?? 0;
-		this.then = iCorpus.then ?? (() => undefined);
-		this.catch = iCorpus.catch ?? ((e) => Corpus.logger.error(`${this}:${JSON.stringify(e)}`));
+		iCorpus.then != null && (this.then = iCorpus.then);
+		iCorpus.catch != null && (this.catch = iCorpus.catch);
 	}
 
 	public toString(): string {
@@ -370,31 +356,32 @@ export class Corpus extends Logable implements ICorpus, JSONable {
 			return [];
 		}
 		if (this.func == null) {
-			const plug: Plug | undefined = Plug.plugs.get(this.plugType);
-			if (plug == null) {
-				this.isOpen = -1;
-				return [CQ.text(`插件${this.plugName}不存在`)];
-			}
-			const func: canCallType = Reflect.get(plug, this.funcName);
+			const func: canCallType = Reflect.get(this.plug, this.funcName);
 			if (typeof func !== "function") {
 				this.isOpen = -1;
 				const text = `插件${this}不是方法`;
 				this.logger.error(text);
 				return [CQ.text(text)];
 			}
-			this.func = func.bind(plug);
+			this.func = func.bind(this.plug);
 		}
-		if (this.canPrivate && event.contextType === "message.private" ||
-				this.canGroup && event.contextType === "message.group") {
-			try {
-				return await this.func(event, exec);
-			} catch (e) {
-				this.logger.error("调用出错", e);
-				return [CQ.text(`调用出错:` + this.toString())];
+		try {
+			const {user_id} = event.context;
+			const data: CQData = CQData.getInst();
+			const member: Member = data.getMember(user_id);
+			if (this.canPrivate && event.contextType === "message.private") {
+				return await (<canCallPrivateFunc>this.func)(event, exec, member);
+			} else if (this.canGroup && event.contextType === "message.group") {
+				const {group_id} = event.context;
+				const group: Group = data.getGroup(group_id);
+				return await (<canCallGroupFunc>this.func)(event, exec, member, group);
+			} else {
+				this.logger.info(`不可调用[${this}]`);
+				return [CQ.text(`插件${this}方法不可在${event.contextType}环境下调用`)];
 			}
-		} else {
-			this.logger.info(`不可调用[${this}]`);
-			return [CQ.text(`插件${this}方法不可在${event.contextType}环境下调用`)];
+		} catch (e) {
+			this.logger.error("调用出错", e);
+			return [CQ.text(`调用出错:` + this.toString())];
 		}
 	}
 
@@ -417,18 +404,15 @@ export class Corpus extends Logable implements ICorpus, JSONable {
 	}
 
 	public get plugName() {
-		return this.plugType.name;
+		return this.plug.constructor.name;
 	}
 }
-
-type CorpusCB<T> = (this: Corpus, event: CQMessage, value: T) => void | Promise<void>
 
 export interface JSONable {
 	toJSON(): I.JSONObject;
 }
 
 module I {
-	export type CCB<T> = (this: void, event: T, tags: CQTag[], element: Corpus) => PromiseRes<MessageId>
 	export type sauceNAOResultsHeader = {
 		/** 库id */
 		index_id: number, /** 库名字 */

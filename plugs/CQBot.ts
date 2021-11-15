@@ -3,10 +3,9 @@ import {Status} from "go-cqwebsocket/out/Interfaces";
 import {CQWS} from "../config/config.json";
 import {Plug} from "../Plug.js";
 import {canCall} from "../utils/Annotation.js";
-import {Corpus, Group} from "../utils/Models.js";
+import {Corpus} from "../utils/Models.js";
 import {sendAdminGroup} from "../utils/Util";
 import {Counter} from "./Counter.js";
-import {CQData} from "./CQData.js";
 
 export class CQBot extends Plug {
 	public bot: CQWebSocket = new CQWebSocket(CQWS);
@@ -118,15 +117,6 @@ export class CQBot extends Plug {
 		this.bot.bind("on", {
 			"message.group": (event) => {
 				const time = process.hrtime();
-				const {group_id, user_id} = event.context;
-				const group: Group = CQData.getInst().getGroup(group_id);
-				group.exp++;
-				if (group.baned) {
-					return;
-				}
-				if (CQData.getInst().getMember(user_id).baned) {
-					return;
-				}
 				Corpus.sendGroupTags(event, time).then(b => {
 					b && Counter.getInst().record(event);
 				}, NOP);

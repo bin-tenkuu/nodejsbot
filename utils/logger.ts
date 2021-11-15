@@ -1,6 +1,6 @@
 import {
 	BaseLayout, ColoredLayout, Configuration, configure, ConsoleAppender, DateFileAppender, getLogger as getter, Logger,
-	LogLevelFilterAppender, SyncfileAppender,
+	LogLevelFilterAppender,
 } from "log4js";
 
 configure(<Configuration>{
@@ -24,11 +24,15 @@ configure(<Configuration>{
 				type: "basic",
 			},
 		},
-		"trace": <SyncfileAppender>{
-			type: "fileSync",
+		"trace": <DateFileAppender>{
+			type: "dateFile",
 			filename: "./logs/Trace.log",
-			backups: 5,
-			maxLogSize: 1024 * 10,
+			pattern: "yyyy-MM-dd",
+			encoding: "utf-8",
+			compress: false,
+			alwaysIncludePattern: true,
+			daysToKeep: 5,
+			keepFileExt: true,
 			layout: <BaseLayout>{
 				type: "basic",
 			},

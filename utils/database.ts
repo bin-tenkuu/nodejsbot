@@ -18,7 +18,7 @@ class SQLControl extends Logable {
 		});
 	}
 
-	public sync<T>(func: (db: Database) => T): T {
+	public sync<T>(func: (this: void, db: Database) => T): T {
 		return func(this.db);
 	}
 

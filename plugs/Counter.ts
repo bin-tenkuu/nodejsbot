@@ -20,6 +20,11 @@ export class Counter extends Plug {
 		this.description = "数据收集专用";
 	}
 
+	public async uninstall(): Promise<void> {
+		this.logger.info(this.info());
+		return;
+	}
+
 	public record(event: CQMessage): void {
 		if (event.contextType === "message.group") {
 			const {group_id, user_id} = event.context;
@@ -37,6 +42,10 @@ export class Counter extends Plug {
 		weight: 10,
 	})
 	protected logText(): CQText[] {
+		return [CQ.text(this.info())];
+	}
+
+	private info(): string {
 		let str = "";
 		if (this.group.size > 0) {
 			str += "群：\n" + [...Counter.map(this.group)].join("\n");
@@ -44,7 +53,7 @@ export class Counter extends Plug {
 		if (this.member.size > 0) {
 			str += "\n人：\n" + [...Counter.map(this.member)].join("\n");
 		}
-		return [CQ.text(str)];
+		return str;
 	}
 
 	private addGroup(g: number, u: number): void {
