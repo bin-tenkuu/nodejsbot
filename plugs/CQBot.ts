@@ -6,6 +6,7 @@ import {canCall} from "../utils/Annotation.js";
 import {Corpus} from "../utils/Models.js";
 import {sendAdminGroup} from "../utils/Util";
 import {Counter} from "./Counter.js";
+import {CQData} from "./CQData.js";
 
 export class CQBot extends Plug {
 	public bot: CQWebSocket = new CQWebSocket(CQWS);
@@ -117,13 +118,19 @@ export class CQBot extends Plug {
 		this.bot.bind("on", {
 			"message.group": (event) => {
 				const time = process.hrtime();
-				Corpus.sendGroupTags(event, time).then(b => {
+				const {group_id, user_id} = event.context;
+				const data: CQData = CQData.getInst();
+				const member = data.getMember(user_id);
+				const group = data.getGroup(group_id);
+				Corpus.sendGroupTags(event, time, member, group).then(b => {
 					b && Counter.getInst().record(event);
 				}, NOP);
 			},
 			"message.private": (event) => {
 				const time = process.hrtime();
-				Corpus.sendPrivateTags(event, time).then(b => {
+				const {user_id} = event.context;
+				const member = CQData.getInst().getMember(user_id);
+				Corpus.sendPrivateTags(event, time, member).then(b => {
 					b && Counter.getInst().record(event);
 				}, NOP);
 			},

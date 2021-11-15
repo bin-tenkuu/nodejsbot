@@ -1,4 +1,6 @@
 import "reflect-metadata";
+import {Plug} from "./Plug.js";
+console.log(Plug);
 import {Counter} from "./plugs/Counter.js";
 import {CQBot} from "./plugs/CQBot.js";
 import {CQBotCOC} from "./plugs/CQBotCOC.js";

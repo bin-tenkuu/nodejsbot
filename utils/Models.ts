@@ -1,7 +1,6 @@
 import {CQ, CQEvent, CQTag} from "go-cqwebsocket";
 import {ErrorAPIResponse, MessageId} from "go-cqwebsocket/out/Interfaces.js";
 import {Plug} from "../Plug.js";
-import {CQData} from "../plugs/CQData.js";
 import {canCallGroupFunc, canCallPrivateFunc, canCallType} from "./Annotation.js";
 import {Logable} from "./logger.js";
 import {CQMessage, deleteMsg, isAdmin, onlyText, sendGroup, sendPrivate} from "./Util.js";
@@ -184,12 +183,12 @@ export interface ICorpus {
 }
 
 export class Corpus<T extends Plug = Plug> extends Logable implements ICorpus, JSONable {
-	public static async sendGroupTags(event: CQEvent<"message.group">, hrtime: [number, number]): Promise<boolean> {
-		const {group_id, user_id} = event.context;
-		if (CQData.getInst().getGroup(group_id).baned) {
+	public static async sendGroupTags(event: CQEvent<"message.group">, hrtime: [number, number],
+			member: Member, group: Group): Promise<boolean> {
+		if (group.baned) {
 			return false;
 		}
-		if (CQData.getInst().getMember(user_id).baned) {
+		if (member.baned) {
 			return false;
 		}
 		const text = onlyText(event);
@@ -199,7 +198,7 @@ export class Corpus<T extends Plug = Plug> extends Logable implements ICorpus, J
 			if (exec == null) {
 				continue;
 			}
-			const msg = await element.run(event, exec);
+			const msg = await element.run(event, exec, member, group);
 			if (msg.length < 1) {
 				continue;
 			}
@@ -226,9 +225,9 @@ export class Corpus<T extends Plug = Plug> extends Logable implements ICorpus, J
 		return false;
 	}
 
-	public static async sendPrivateTags(event: CQEvent<"message.private">, hrtime: [number, number]): Promise<boolean> {
-		const {user_id} = event.context;
-		if (CQData.getInst().getMember(user_id).baned) {
+	public static async sendPrivateTags(event: CQEvent<"message.private">, hrtime: [number, number],
+			member: Member): Promise<boolean> {
+		if (member.baned) {
 			return false;
 		}
 		const text = onlyText(event);
@@ -238,7 +237,7 @@ export class Corpus<T extends Plug = Plug> extends Logable implements ICorpus, J
 			if (exec == null) {
 				continue;
 			}
-			const msg = await element.run(event, exec);
+			const msg = await element.run(event, exec, member);
 			if (msg.length < 1) {
 				continue;
 			}
@@ -351,7 +350,19 @@ export class Corpus<T extends Plug = Plug> extends Logable implements ICorpus, J
 		return this.regexp.exec(text);
 	}
 
-	public async run(event: CQMessage, exec: RegExpExecArray | null): Promise<CQTag[]> {
+	public toJSON() {
+		return {
+			name: this.name, regexp: this.regexp.toString(), canGroup: this.canGroup, canPrivate: this.canPrivate,
+			help: this.help, isOpen: this.isOpen, minLength: this.minLength, maxLength: this.maxLength,
+			needAdmin: this.needAdmin, weight: this.weight,
+		};
+	}
+
+	private async run(event: CQEvent<"message.private">, exec: RegExpExecArray | null,
+			member: Member): Promise<CQTag[]>;
+	private async run(event: CQEvent<"message.group">, exec: RegExpExecArray | null, member: Member,
+			group: Group): Promise<CQTag[]>;
+	private async run(event: CQMessage, exec: RegExpExecArray | null, member: Member, group?: Group): Promise<CQTag[]> {
 		if (exec == null) {
 			return [];
 		}
@@ -366,15 +377,10 @@ export class Corpus<T extends Plug = Plug> extends Logable implements ICorpus, J
 			this.func = func.bind(this.plug);
 		}
 		try {
-			const {user_id} = event.context;
-			const data: CQData = CQData.getInst();
-			const member: Member = data.getMember(user_id);
 			if (this.canPrivate && event.contextType === "message.private") {
 				return await (<canCallPrivateFunc>this.func)(event, exec, member);
 			} else if (this.canGroup && event.contextType === "message.group") {
-				const {group_id} = event.context;
-				const group: Group = data.getGroup(group_id);
-				return await (<canCallGroupFunc>this.func)(event, exec, member, group);
+				return await (<canCallGroupFunc>this.func)(event, exec, member, <Group>group);
 			} else {
 				this.logger.info(`不可调用[${this}]`);
 				return [CQ.text(`插件${this}方法不可在${event.contextType}环境下调用`)];
@@ -383,14 +389,6 @@ export class Corpus<T extends Plug = Plug> extends Logable implements ICorpus, J
 			this.logger.error("调用出错", e);
 			return [CQ.text(`调用出错:` + this.toString())];
 		}
-	}
-
-	public toJSON() {
-		return {
-			name: this.name, regexp: this.regexp.toString(), canGroup: this.canGroup, canPrivate: this.canPrivate,
-			help: this.help, isOpen: this.isOpen, minLength: this.minLength, maxLength: this.maxLength,
-			needAdmin: this.needAdmin, weight: this.weight,
-		};
 	}
 
 	private test(event: CQMessage, length: number): -1 | 0 | 1 {
