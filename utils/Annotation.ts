@@ -23,7 +23,7 @@ canCall.get = function (target: new() => Plug): Map<string, ICorpus> {
 	let metadata: Map<string, ICorpus> | undefined = Reflect.getMetadata(canCall.name, target);
 	if (metadata == null) {
 		metadata = new Map<string, ICorpus>();
-		Reflect.defineMetadata(canCall.name, metadata, target.constructor);
+		Reflect.defineMetadata(canCall.name, metadata, target);
 	}
 	return metadata;
 };
