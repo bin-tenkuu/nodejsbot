@@ -1,22 +1,27 @@
--- COCShortKey
-CREATE TABLE main.COCShortKey (
-	key VARCHAR(5) NOT NULL,
-	value VARCHAR(10) NOT NULL,
-	CONSTRAINT COCShortKey_pk
-		PRIMARY KEY (key)
+CREATE TABLE COCShortKey (
+	key VARCHAR(5) NOT NULL
+		CONSTRAINT COCShortKey_pk
+			PRIMARY KEY,
+	value VARCHAR(10) NOT NULL
 );
--- Members
-CREATE TABLE main.Members (
-	id UNSIGNED INTEGER(11) NOT NULL,
+CREATE TABLE Members (
+	id UNSIGNED INTEGER(11) NOT NULL
+		CONSTRAINT id
+			PRIMARY KEY,
 	name VARCHAR(7) DEFAULT NULL,
 	exp UNSIGNED INTEGER DEFAULT 0,
 	gmt_modified UNSIGNED INTEGER(14) DEFAULT 0,
 	is_baned UNSIGNED INTEGER(1) DEFAULT 0,
-	gmt_create UNSIGNED INTEGER(14) DEFAULT 0 NOT NULL,
-	CONSTRAINT id
-		PRIMARY KEY (id)
+	gmt_create UNSIGNED INTEGER(14) DEFAULT 0 NOT NULL
 );
--- auto-generated definition
+CREATE TABLE pokeGroup (
+	id INTEGER
+		CONSTRAINT pokeGroup_pk
+			PRIMARY KEY AUTOINCREMENT,
+	text VARCHAR(255) NOT NULL
+);
+CREATE UNIQUE INDEX pokeGroup_id_uindex
+	ON pokeGroup (id);
 CREATE TABLE tb_group (
 	id INTEGER(11) NOT NULL
 		CONSTRAINT pk_id
@@ -26,14 +31,4 @@ CREATE TABLE tb_group (
 	gmt_create UNSIGNED INTEGER(14) DEFAULT 0 NOT NULL,
 	is_baned UNSIGNED INTEGER(1) DEFAULT 0 NOT NULL
 );
-CREATE UNIQUE INDEX uk_id
-	ON tb_group (id);
--- pokeGroup
-CREATE TABLE main.pokeGroup (
-	id INTEGER,
-	text VARCHAR(255) NOT NULL,
-	CONSTRAINT pokeGroup_pk
-		PRIMARY KEY (id AUTOINCREMENT)
-);
-CREATE UNIQUE INDEX main.pokeGroup_id_uindex
-	ON main.pokeGroup (id);
+

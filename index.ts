@@ -1,17 +1,18 @@
-import {CQBot} from "@P/CQBot.js";
-import {CQBotEvent} from "@P/CQBotEvent.js";
-import {CQBotPicture} from "@P/CQBotPicture.js";
-import {CQBotPlugin} from "@P/CQBotPlugin.js";
+import "reflect-metadata";
+import "module-alias/register.js"
+import "./Plug.js";
 import {Counter} from "@S/Counter.js";
 import {CQBotCOC} from "@S/CQBotCOC.js";
 import {CQBotRepeat} from "@S/CQBotRepeat.js";
 import {CQBotSearch} from "@S/CQBotSearch.js";
 import {CQData} from "@S/CQData.js";
 import {DefaultMsg} from "@S/DefaultMsg.js";
-import {HttpOption} from "@S/httpOption.js";
 import {Logable, logger} from "@U/logger.js";
-import "reflect-metadata";
-import "./Plug.js";
+import {HttpOption} from "@S/httpOption.js";
+import {CQBot} from "@P/CQBot.js";
+import {CQBotEvent} from "@P/CQBotEvent.js";
+import {CQBotPicture} from "@P/CQBotPicture.js";
+import {CQBotPlugin} from "@P/CQBotPlugin.js";
 
 const time = process.hrtime();
 declare global {
