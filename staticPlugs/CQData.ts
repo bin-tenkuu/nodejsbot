@@ -1,10 +1,10 @@
 import {CQ, CQEvent, CQTag} from "go-cqwebsocket";
 import {Plug} from "../Plug.js";
-import {canCall} from "../utils/Annotation.js";
-import {db} from "../utils/database.js";
-import {Group, IGroup, IMember, Member} from "../utils/Models.js";
-import {CacheMap} from "../utils/repeat.js";
-import {CQMessage} from "../utils/Util.js";
+import {canCall} from "@U/Annotation.js";
+import {db} from "@U/database.js";
+import {Group, IGroup, IMember, Member} from "@U/Models.js";
+import {CacheMap} from "@U/repeat.js";
+import {CQMessage} from "@U/Util.js";
 
 export class CQData extends Plug {
 	private static loadMember(id: number): Member {

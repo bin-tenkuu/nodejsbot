@@ -44,6 +44,7 @@ export class Group extends Modified implements IGroup, JSONable {
 		} else {
 			this._id = obj.id;
 			this._exp = obj.exp;
+			this._is_baned = obj.is_baned;
 			this._gmt_modified = obj.gmt_modified;
 		}
 	}
@@ -92,13 +93,8 @@ export class Member extends Group implements IMember, JSONable {
 	}
 
 	public addExp(exp: number): boolean {
-		exp += this._exp;
-		if (exp < 0) {
-			return false;
-		} else {
-			this.exp = exp;
-			return true;
-		}
+		this.exp += exp;
+		return this.exp >= 0;
 	}
 
 	public toJSON(): IMember {
@@ -176,6 +172,10 @@ export interface ICorpus {
 	 * @default 0
 	 */
 	deleteMSG?: number,
+	/**
+	 * >=0 时启用单线程限速
+	 */
+	speedLimit?: number,
 	/**消息回调*/
 	then?(event: CQMessage, value: MessageId): void | Promise<void>,
 	/**消息错误回调*/
@@ -193,9 +193,15 @@ export class Corpus<T extends Plug = Plug> extends Logable implements ICorpus, J
 		}
 		const text = onlyText(event);
 		const corpus: string[] = [];
+		const {user_id, group_id} = event.context;
+		const txt = `\t来源：${group_id}.${user_id}`;
 		for (const element of Plug.corpus) {
 			const exec: RegExpExecArray | null = element.execGroup(event, text);
 			if (exec == null) {
+				continue;
+			}
+			if (element.isOpen === 0) {
+				this.logger.info(`禁用${this}：${txt}`);
 				continue;
 			}
 			const msg = await element.run(event, exec, member, group);
@@ -217,8 +223,6 @@ export class Corpus<T extends Plug = Plug> extends Logable implements ICorpus, J
 			}), element, event, corpus);
 		}
 		if (corpus.length > 0) {
-			const {user_id, group_id} = event.context;
-			const txt = `\t来源：${group_id ?? ""}.${user_id}`;
 			this.hrtime(hrtime, corpus.join(",") + txt);
 			return true;
 		}
@@ -232,9 +236,15 @@ export class Corpus<T extends Plug = Plug> extends Logable implements ICorpus, J
 		}
 		const text = onlyText(event);
 		const corpus: string[] = [];
+		const {user_id} = event.context;
+		const txt = `\t来源：${user_id}`;
 		for (const element of Plug.corpus) {
 			const exec: RegExpExecArray | null = element.execPrivate(event, text);
 			if (exec == null) {
+				continue;
+			}
+			if (element.isOpen === 0) {
+				this.logger.info(`禁用${this}：${txt}`);
 				continue;
 			}
 			const msg = await element.run(event, exec, member);
@@ -244,8 +254,6 @@ export class Corpus<T extends Plug = Plug> extends Logable implements ICorpus, J
 			await this.then(sendPrivate(event, msg), element, event, corpus);
 		}
 		if (corpus.length > 0) {
-			const {user_id} = event.context;
-			const txt = `\t来源：${user_id}`;
 			this.hrtime(hrtime, corpus.join(",") + txt);
 			return true;
 		}
@@ -319,7 +327,7 @@ export class Corpus<T extends Plug = Plug> extends Logable implements ICorpus, J
 		case -1:
 			return null;
 		case 0:
-			if (this.needAdmin || this.isOpen <= 0 || !this.canPrivate) {
+			if (this.needAdmin || this.isOpen < 0 || !this.canPrivate) {
 				return null;
 			}
 			break;
@@ -337,7 +345,7 @@ export class Corpus<T extends Plug = Plug> extends Logable implements ICorpus, J
 		case -1:
 			return null;
 		case 0:
-			if (this.needAdmin || this.isOpen <= 0 || !this.canGroup) {
+			if (this.needAdmin || this.isOpen < 0 || !this.canGroup) {
 				return null;
 			}
 			break;

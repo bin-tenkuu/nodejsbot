@@ -1,8 +1,8 @@
 import {CQ} from "go-cqwebsocket";
 import {CQText} from "go-cqwebsocket/out/tags";
 import {Plug} from "../Plug.js";
-import {canCall} from "../utils/Annotation.js";
-import {CQMessage} from "../utils/Util.js";
+import {canCall} from "@U/Annotation.js";
+import {CQMessage} from "@U/Util.js";
 
 export class Counter extends Plug {
 	private static* map(map: Map<number, number>): Generator<string, void, void> {

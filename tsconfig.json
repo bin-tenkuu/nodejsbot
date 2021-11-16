@@ -7,7 +7,7 @@
 		// "incremental": true,                   /* Enable incremental compilation */
 		"target": "ESNext",
 		"module": "CommonJS",
-		"lib": ["ES6", "ESNext"],
+		"lib": ["ES2020", "ESNext"],
 		/* Report errors in .js files. */
 		"rootDir": "./",
 		"resolveJsonModule": true,
@@ -19,17 +19,26 @@
 
 		/* Strict Type-Checking Options */
 		"strict": true,
+		"noImplicitAny": true,
+		"strictNullChecks": true,
+		"strictFunctionTypes": true,
+		"strictBindCallApply": true,
+		"strictPropertyInitialization": true,
+		"noImplicitThis": true,
+		"alwaysStrict": true,
 		/* Additional Checks */
-		// "noUnusedLocals": true,                /* Report errors on unused locals. */
-		// "noUnusedParameters": true,            /* Report errors on unused parameters. */
-		// "noImplicitReturns": true,             /* Report error when not all code paths in function return a value. */
+		"noImplicitReturns": true,
 		// "noFallthroughCasesInSwitch": true,    /* Report errors for fallthrough cases in switch statement. */
 		// "noUncheckedIndexedAccess": true,      /* Include 'undefined' in index signature results */
 
 		/* Module Resolution Options */
 		"moduleResolution": "node",
 		"baseUrl": "./",
-		// "paths": {},                           /* A series of entries which re-map imports to lookup locations relative to the 'baseUrl'. */
+		"paths": {
+			"@U/*": ["./utils/*"],
+			"@P/*": ["./plugs/*"],
+			"@S/*": ["./staticPlugs/*"]
+		},
 		// "typeRoots": [],                       /* List of folders to include type definitions from. */
 		// "types": [],                           /* Type declaration files to be included in compilation. */
 		"allowSyntheticDefaultImports": true,
@@ -43,7 +52,6 @@
 		"skipLibCheck": true,
 		"forceConsistentCasingInFileNames": true
 	},
-	"include": [
-		"./**/*.ts"
-	]
+	"include": ["./**/*.ts"],
+	"compileOnSave": true
 }

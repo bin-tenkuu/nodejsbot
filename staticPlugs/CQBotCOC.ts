@@ -1,10 +1,10 @@
 import {CQ, CQTag} from "go-cqwebsocket";
 import {Plug} from "../Plug.js";
-import {canCall} from "../utils/Annotation.js";
-import {dice, DiceResult, distribution} from "../utils/COCUtils.js";
-import {db} from "../utils/database.js";
-import {CacheMap} from "../utils/repeat.js";
-import {CQMessage} from "../utils/Util.js";
+import {canCall} from "@U/Annotation.js";
+import {dice, DiceResult, distribution} from "@U/COCUtils.js";
+import {db} from "@U/database.js";
+import {CacheMap} from "@U/repeat.js";
+import {CQMessage} from "@U/Util.js";
 
 export class CQBotCOC extends Plug {
 	private static castString(value: string, cheater: boolean): Calc {

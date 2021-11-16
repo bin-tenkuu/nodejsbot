@@ -2,9 +2,9 @@ import {CQ, CQEvent, CQTag} from "go-cqwebsocket";
 import {CQImage} from "go-cqwebsocket/out/tags";
 import {CQText} from "go-cqwebsocket/out/tags.js";
 import {Plug} from "../Plug.js";
-import {canCall} from "../utils/Annotation.js";
-import {CacheMap} from "../utils/repeat.js";
-import {isAtMe} from "../utils/Util.js";
+import {canCall} from "@U/Annotation.js";
+import {CacheMap} from "@U/repeat.js";
+import {isAtMe} from "@U/Util.js";
 
 export class CQBotRepeat extends Plug {
 	private static Random(...arr: string[]): string[] {

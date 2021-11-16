@@ -1,9 +1,9 @@
 import {CQ, CQEvent} from "go-cqwebsocket";
 import {CQImage, CQTag} from "go-cqwebsocket/out/tags";
 import {Plug} from "../Plug.js";
-import {canCall} from "../utils/Annotation.js";
-import {sauceNAOResult} from "../utils/Models.js";
-import {sauceNAO} from "../utils/Search.js";
+import {canCall} from "@U/Annotation.js";
+import {sauceNAOResult} from "@U/Models.js";
+import {sauceNAO} from "@U/Search.js";
 
 export class CQBotSearch extends Plug {
 

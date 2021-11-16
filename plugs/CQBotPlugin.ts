@@ -1,9 +1,9 @@
 import {CQ, CQTag, CQWebSocket} from "go-cqwebsocket";
 import {Plug} from "../Plug.js";
-import {canCall, canCallRet} from "../utils/Annotation.js";
-import {ElementAtOrNull} from "../utils/Generators.js";
-import {CQMessage, sendAdminQQ} from "../utils/Util.js";
-import {CQData} from "./CQData.js";
+import {canCall, canCallRet} from "@U/Annotation.js";
+import {ElementAtOrNull} from "@U/Generators.js";
+import {CQMessage, sendAdminQQ} from "@U/Util.js";
+import {CQData} from "@S/CQData.js";
 
 export class CQBotPlugin extends Plug {
 	private static method: Readonly<CQWebSocket> = CQWebSocket.prototype;

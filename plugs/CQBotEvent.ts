@@ -1,9 +1,9 @@
 import {CQ, CQTag} from "go-cqwebsocket";
 import {PartialSocketHandle} from "go-cqwebsocket/out/Interfaces";
 import {Plug} from "../Plug.js";
-import {canCall} from "../utils/Annotation.js";
-import {Corpus} from "../utils/Models.js";
-import {CQMessage, isAdmin, sendAdminQQ, sendGroup, sendPrivate} from "../utils/Util.js";
+import {canCall} from "@U/Annotation.js";
+import {Corpus} from "@U/Models.js";
+import {CQMessage, isAdmin, sendAdminQQ, sendGroup, sendPrivate} from "@U/Util.js";
 import {CQBot} from "./CQBot.js";
 
 export class CQBotEvent extends Plug {

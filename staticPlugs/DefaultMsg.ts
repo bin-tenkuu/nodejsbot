@@ -1,7 +1,7 @@
 import {CQ, CQTag} from "go-cqwebsocket";
 import {Plug} from "../Plug.js";
-import {canCall} from "../utils/Annotation.js";
-import {CQMessage, sendAdminQQ} from "../utils/Util.js";
+import {canCall} from "@U/Annotation.js";
+import {CQMessage, sendAdminQQ} from "@U/Util.js";
 
 export class DefaultMsg extends Plug {
 	constructor() {

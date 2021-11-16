@@ -1,9 +1,9 @@
 import {CQ, CQTag} from "go-cqwebsocket";
 import {Plug} from "../Plug.js";
-import {canCall} from "../utils/Annotation.js";
-import {lolicon, pixivCat} from "../utils/Search.js";
-import {CQMessage, sendAdminQQ} from "../utils/Util.js";
-import {CQData} from "./CQData.js";
+import {canCall} from "@U/Annotation.js";
+import {CQData} from "@S/CQData.js";
+import {lolicon, pixivCat} from "@U/Search.js";
+import {CQMessage, sendAdminQQ} from "@U/Util.js";
 
 export class CQBotPicture extends Plug {
 	private static code(code: number) {
@@ -101,9 +101,9 @@ export class CQBotPicture extends Plug {
 			this.logger.error(reason);
 			return [CQ.text("未知错误,或网络错误")];
 		} finally {
-			process.nextTick(() => {
+			setTimeout(() => {
 				this.usingSeTu = false;
-			});
+			}, 1000);
 		}
 	}
 
@@ -158,9 +158,9 @@ export class CQBotPicture extends Plug {
 			this.logger.error(e);
 			return [CQ.text("网络请求错误或内部错误")];
 		} finally {
-			process.nextTick(() => {
+			setTimeout(() => {
 				this.usingSearching = false;
-			});
+			}, 1000);
 		}
 	}
 
