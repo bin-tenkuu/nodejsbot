@@ -37,7 +37,6 @@
 		"log4js": "^6.3.0",
 		"node-cache": "^5.1.2",
 		"reflect-metadata": "^0.1.13",
-		"rsshub": "^1.0.0-master.53f6347",
 		"tsconfig-paths": "^3.11.0"
 	},
 	"private": true
