@@ -16,9 +16,9 @@
 	"type": "commonjs",
 	"scripts": {
 		"build": "tsc",
-		"test": "node --inspect",
+		"test": "node -r tsconfig-paths/register.js --inspect",
 		"stop": "curl http://127.0.0.1:40000/exit",
-		"start": "node index.js",
+		"start": "node -r tsconfig-paths/register.js index.js",
 		"ipsort": "node ipsort.js"
 	},
 	"keywords": [
@@ -35,15 +35,10 @@
 		"better-sqlite3": "^7.4.3",
 		"go-cqwebsocket": "^6.1.0",
 		"log4js": "^6.3.0",
-		"module-alias": "^2.2.2",
 		"node-cache": "^5.1.2",
 		"reflect-metadata": "^0.1.13",
-		"rsshub": "^1.0.0-master.53f6347"
+		"rsshub": "^1.0.0-master.53f6347",
+		"tsconfig-paths": "^3.11.0"
 	},
-	"private": true,
-	"_moduleAliases": {
-		"@U": "./utils",
-		"@P": "./plugs",
-		"@S": "./staticPlugs"
-	}
+	"private": true
 }

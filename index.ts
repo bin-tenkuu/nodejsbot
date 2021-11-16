@@ -1,5 +1,4 @@
 import "reflect-metadata";
-import "module-alias/register.js"
 import "./Plug.js";
 import {Counter} from "@S/Counter.js";
 import {CQBotCOC} from "@S/CQBotCOC.js";
@@ -17,11 +16,8 @@ import {CQBotPlugin} from "@P/CQBotPlugin.js";
 const time = process.hrtime();
 declare global {
 	function NOP(e: any): void;
-	function IsDebug(): boolean;
 }
-global.NOP = (e) => logger.debug(e);
-global.IsDebug = process.execArgv.includes("--inspect") ? () => true : () => false;
-
+global["NOP"] = (e) => logger.debug(e);
 //*
 Promise.resolve().then(async () => {
 	// 优先加载不依赖其他包的插件

@@ -10,7 +10,7 @@ function create(): Map<string, ServerHandle> {
 			res.end("开始退出\n");
 			Promise.all([...(Plug.plugs.values())].map((p) => p.uninstall())).then<void>(() => {
 				HttpOption.logger.info(">>>>>>>>>> 全部卸载完成 <<<<<<<<<<");
-				if (IsDebug()) {
+				if (process.execArgv.includes("--inspect")) {
 					return;
 				}
 				setTimeout(() => {
