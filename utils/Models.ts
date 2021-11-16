@@ -53,6 +53,10 @@ export class Group extends Modified implements IGroup, JSONable {
 		return {id: this._id, exp: this._exp, gmt_modified: this._gmt_modified, is_baned: this._is_baned};
 	}
 
+	public get id() {
+		return this._id;
+	}
+
 	public get exp(): number {
 		return this._exp;
 	}
@@ -60,10 +64,6 @@ export class Group extends Modified implements IGroup, JSONable {
 	public set exp(value: number) {
 		this._exp = value;
 		this.modified();
-	}
-
-	public get id() {
-		return this._id;
 	}
 
 	public get is_baned(): 0 | 1 {
@@ -414,8 +414,8 @@ export class Corpus<T extends Plug = Plug> extends Logable implements ICorpus, J
 	}
 }
 
-export interface JSONable {
-	toJSON(): I.JSONObject;
+export interface JSONable<T extends I.JSONObject = I.JSONObject> {
+	toJSON(): T;
 }
 
 module I {
@@ -428,7 +428,7 @@ module I {
 		thumbnail: string
 	};
 	export type JSONObject = {
-		[key: string]: string | number | boolean | JSONObject | JSONObject[] | null | undefined;
+		[key in string]?: string | number | boolean | JSONObject | JSONObject[] | null;
 	};
 	export type setu = {
 		/**作品 PID*/
