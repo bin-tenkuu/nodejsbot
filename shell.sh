@@ -1,3 +1,3 @@
 #!/bin/bash
-git fetch && npm i
+git pull && npm i
 exit 0
