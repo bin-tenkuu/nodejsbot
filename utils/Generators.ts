@@ -1,3 +1,5 @@
+// noinspection JSUnusedGlobalSymbols
+
 const Default = Symbol();
 
 /**
@@ -1079,7 +1081,7 @@ export function* Prepend<T>(source: Iterable<T>, ...elements: T[]): Generator<T,
 export function* Loop<T>(source: Iterable<T>): Generator<T, never, never> {
 	while (true) {
 		let hasItem = false;
-		for (let item of source) {
+		for (const item of source) {
 			yield item;
 			hasItem = true;
 		}

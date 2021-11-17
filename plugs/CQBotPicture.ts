@@ -20,8 +20,6 @@ export class CQBotPicture extends Plug {
 	}
 
 	public setuSet = new Set<string>();
-	private usingSeTu: boolean = false;
-	private usingSearching: boolean = false;
 
 	constructor() {
 		super(module);
@@ -42,13 +40,10 @@ export class CQBotPicture extends Plug {
 		minLength: 4,
 		weight: 5,
 		deleteMSG: 20,
+		speedLimit: 2000,
 	})
 	protected async getSeTu(event: CQMessage, exec: RegExpExecArray): Promise<CQTag[]> {
 		event.stopPropagation();
-		if (this.usingSeTu) {
-			return [];
-		}
-		this.usingSeTu = true;
 		try {
 			const groups = {
 				keyword: exec.groups?.keyword ?? "",
@@ -99,11 +94,7 @@ export class CQBotPicture extends Plug {
 		} catch (reason) {
 			sendAdminQQ(event.bot, "色图坏了").catch(NOP);
 			this.logger.error(reason);
-			return [CQ.text("未知错误,或网络错误")];
-		} finally {
-			setTimeout(() => {
-				this.usingSeTu = false;
-			}, 1000);
+			throw "未知错误,或网络错误";
 		}
 	}
 
@@ -116,13 +107,10 @@ export class CQBotPicture extends Plug {
 		weight: 5,
 		deleteMSG: 90,
 		isOpen: 0,
+		speedLimit: 2000,
 	})
 	protected async getPixiv(event: CQMessage, exec: RegExpExecArray): Promise<CQTag[]> {
 		event.stopPropagation();
-		if (this.usingSearching) {
-			return [];
-		}
-		this.usingSearching = true;
 		try {
 			const {pid, p} = (exec.groups as { pid?: string, p?: string }) ?? {};
 			this.logger.debug(`p站图片请求：pid:${pid},p:${p}`);
@@ -156,11 +144,7 @@ export class CQBotPicture extends Plug {
 		} catch (e) {
 			sendAdminQQ(event.bot, "p站图片加载出错").catch(NOP);
 			this.logger.error(e);
-			return [CQ.text("网络请求错误或内部错误")];
-		} finally {
-			setTimeout(() => {
-				this.usingSearching = false;
-			}, 1000);
+			throw "网络请求错误或内部错误";
 		}
 	}
 
@@ -171,7 +155,7 @@ export class CQBotPicture extends Plug {
 		needAdmin: true,
 		weight: 3,
 	})
-	protected getSetuSet(): CQTag[] {
+	protected get SetuSet(): CQTag[] {
 		return [CQ.text(["", ...this.setuSet].join("\n"))];
 	}
 }

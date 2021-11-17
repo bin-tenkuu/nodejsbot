@@ -11,7 +11,7 @@ import {CQData} from "@S/CQData.js";
 export class CQBot extends Plug {
 	public bot: CQWebSocket = new CQWebSocket(CQWS);
 	private needOpen: number = 0;
-	private stateCache = {
+	private stateCache: Status["stat"] = <Status["stat"]>{
 		packet_lost: 0, message_sent: 0, message_received: 0,
 	};
 
@@ -40,7 +40,11 @@ export class CQBot extends Plug {
 				},
 				"socket.close": () => reject(),
 			});
-			this.bot.once("meta_event.heartbeat", _ => this.getBotState());
+			this.bot.once("meta_event.heartbeat", ({bot}) => {
+				const state: Status["stat"] = bot.state.stat;
+				this.stateCache = {...state};
+				this.stateCache.message_sent++;
+			});
 			this.bot.connect();
 			process.on("beforeExit", () => {
 				this.bot.disconnect();
@@ -64,26 +68,6 @@ export class CQBot extends Plug {
 			});
 			this.bot.disconnect();
 		});
-	}
-
-	@canCall({
-		name: ".状态",
-		regexp: /^[.．。]状态$/,
-		needAdmin: true,
-		help: "获取当前状态",
-		weight: 2,
-	})
-	protected getBotState(): CQTag[] {
-		const state: Status["stat"] = this.bot.state.stat;
-		this.stateCache.packet_lost = state.packet_lost;
-		this.stateCache.message_received = state.message_received;
-		this.stateCache.message_sent = state.message_sent + 1;
-		return [
-			CQ.text(`数据包丢失总数:${state.packet_lost
-			}\n接受信息总数:${state.message_received
-			}\n发送信息总数:${state.message_sent
-			}\n账号掉线次数:${state.lost_times}`),
-		];
 	}
 
 	#init() {
@@ -155,5 +139,22 @@ export class CQBot extends Plug {
 		str.push(`发送信息变化:+${state.message_sent - this.stateCache.message_sent}`);
 		this.stateCache.message_sent = state.message_sent + 1;
 		return [CQ.text(str.join("\n"))];
+	}
+
+	@canCall({
+		name: ".状态",
+		regexp: /^[.．。]状态$/,
+		needAdmin: true,
+		help: "获取当前状态",
+		weight: 2,
+	})
+	protected get BotState(): CQTag[] {
+		const state: Status["stat"] = this.bot.state.stat;
+		return [
+			CQ.text(`数据包丢失总数:${state.packet_lost
+			}\n接受信息总数:${state.message_received
+			}\n发送信息总数:${state.message_sent
+			}\n账号掉线次数:${state.lost_times}`),
+		];
 	}
 }

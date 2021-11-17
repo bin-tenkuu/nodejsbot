@@ -1,21 +1,29 @@
+/// noinspection JSUnusedLocalSymbols
+
 import {CQEvent, CQTag} from "go-cqwebsocket";
 import {Plug} from "../Plug.js";
 import {Corpus, Group, ICorpus, Member} from "./Models.js";
 
-interface FunctionDecorator<T extends Function = Function, O extends Object = Object, Key extends PropertyKey = PropertyKey> {
-	<F extends T = T>(target: O, propertyKey: Key, descriptor: TypedPropertyDescriptor<F>): void;
+interface canCallDecorator<T extends Plug = Plug> {
+	<F extends canCallPrivateFunc = canCallPrivateFunc>(target: T, propertyKey: string,
+			descriptor: TypedPropertyDescriptor<F>): void;
+	<F extends canCallGroupFunc = canCallGroupFunc>(target: T, propertyKey: string,
+			descriptor: TypedPropertyDescriptor<F>): void;
+	(target: T, propertyKey: string): void;
 }
 
-export type canCallPrivateFunc<R extends CQTag[] = CQTag[]> =
-		(event: CQEvent<"message.private">, exec: RegExpExecArray, member: Member) => canCallRet<R>;
-export type canCallGroupFunc<R extends CQTag[] = CQTag[]> =
-		(event: CQEvent<"message.group">, exec: RegExpExecArray, member: Member, group: Group) => canCallRet<R>;
-export type canCallType = canCallPrivateFunc | canCallGroupFunc;
-export type canCallRet<R extends CQTag[] = CQTag[]> = R | Promise<R>;
+export type canCallPrivateFunc =
+		(event: CQEvent<"message.private">, exec: RegExpExecArray, member: Member) => canCallRet;
+export type canCallGroupFunc =
+		(event: CQEvent<"message.group">, exec: RegExpExecArray, member: Member, group: Group) => canCallRet;
+export type canCallRet = CQTag[] | Promise<CQTag[]>;
 
-export function canCall<T extends Plug>(corpus: ICorpus): FunctionDecorator<canCallType, T, string> {
-	return (target, propertyKey) => {
-		const corpuses: Map<string, ICorpus> = canCall.get(<any>target.constructor);
+/**
+ * 可以标注在 `对象属性`，`getter`，{@link canCallGroupFunc} / {@link canCallPrivateFunc} 方法上
+ */
+export function canCall<T extends Plug>(corpus: ICorpus): canCallDecorator<T> {
+	return (target: { constructor: any; }, propertyKey: string) => {
+		const corpuses: Map<string, ICorpus> = canCall.get(target.constructor);
 		corpuses.set(propertyKey, corpus);
 	};
 }
@@ -27,7 +35,7 @@ canCall.get = function (target: new() => Plug): Map<string, ICorpus> {
 	}
 	return metadata;
 };
-canCall.merge = function <T extends Plug>(target: T) {
+canCall.merge = function (target: Plug) {
 	for (const [key, corpus] of canCall.get(<any>target.constructor)) {
 		const index: number = Plug.corpus.findIndex(value => value.weight > corpus.weight);
 		if (index === -1) {
@@ -37,7 +45,7 @@ canCall.merge = function <T extends Plug>(target: T) {
 		}
 	}
 };
-canCall.separate = function <T extends Plug>(target: T) {
+canCall.separate = function (target: Plug) {
 	for (let i = Plug.corpus.length - 1; i >= 0; i--) {
 		if (Plug.corpus[i].plug === target) {
 			Plug.corpus.splice(i, 1);

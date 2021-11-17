@@ -3,15 +3,17 @@
 	"version": "1.0.0",
 	"description": "demo",
 	"engines": {
-		"node": ">=14"
+		"node": ">=16"
 	},
 	"main": "index.js",
 	"files": [
 		"config/*.json",
 		"plugs/*.js",
+		"staticPlugs/*.js",
 		"utils/*.js",
 		"index.js",
-		"Plug.js"
+		"Plug.js",
+		"tsconfig.json"
 	],
 	"type": "commonjs",
 	"scripts": {

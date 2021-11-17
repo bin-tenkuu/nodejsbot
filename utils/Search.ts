@@ -1,3 +1,5 @@
+// noinspection JSUnusedGlobalSymbols
+
 import _axios from "axios";
 import {SauceNAOkey} from "../config/config.json";
 import {

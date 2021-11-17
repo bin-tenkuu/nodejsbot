@@ -35,16 +35,6 @@ export class Counter extends Plug {
 		}
 	}
 
-	@canCall({
-		name: "日志",
-		regexp: /[.．。]日志/,
-		needAdmin: true,
-		weight: 10,
-	})
-	protected logText(): CQText[] {
-		return [CQ.text(this.info())];
-	}
-
 	private info(): string {
 		let str = "";
 		if (this.group.size > 0) {
@@ -65,5 +55,15 @@ export class Counter extends Plug {
 	private addMember(u: number): void {
 		const exp: number = this.member.get(u) ?? 0;
 		this.member.set(u, exp + 1);
+	}
+
+	@canCall({
+		name: "日志",
+		regexp: /[.．。]日志/,
+		needAdmin: true,
+		weight: 10,
+	})
+	protected get logText(): CQText[] {
+		return [CQ.text(this.info())];
 	}
 }

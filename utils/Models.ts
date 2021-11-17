@@ -1,7 +1,7 @@
 import {CQ, CQEvent, CQTag} from "go-cqwebsocket";
 import {ErrorAPIResponse, MessageId} from "go-cqwebsocket/out/Interfaces.js";
 import {Plug} from "../Plug.js";
-import {canCallGroupFunc, canCallPrivateFunc, canCallType} from "./Annotation.js";
+import {canCallGroupFunc, canCallPrivateFunc} from "./Annotation.js";
 import {Logable} from "./logger.js";
 import {CQMessage, deleteMsg, isAdmin, onlyText, sendGroup, sendPrivate} from "./Util.js";
 
@@ -173,7 +173,8 @@ export interface ICorpus {
 	 */
 	deleteMSG?: number,
 	/**
-	 * >=0 时启用单线程限速
+	 * \>0 时启用调用限速
+	 * @default 0
 	 */
 	speedLimit?: number,
 	/**消息回调*/
@@ -182,7 +183,7 @@ export interface ICorpus {
 	catch?(event: CQMessage, value: ErrorAPIResponse): void | Promise<void>,
 }
 
-export class Corpus<T extends Plug = Plug> extends Logable implements ICorpus, JSONable {
+export class Corpus extends Logable implements ICorpus, JSONable {
 	public static async sendGroupTags(event: CQEvent<"message.group">, hrtime: [number, number],
 			member: Member, group: Group): Promise<boolean> {
 		if (group.baned) {
@@ -273,7 +274,7 @@ export class Corpus<T extends Plug = Plug> extends Logable implements ICorpus, J
 		});
 	}
 
-	public readonly plug: T;
+	public readonly plug: Plug;
 	public readonly funcName: string;
 	public readonly regexp: RegExp;
 	public readonly name: string;
@@ -287,6 +288,7 @@ export class Corpus<T extends Plug = Plug> extends Logable implements ICorpus, J
 	public readonly maxLength: number;
 	public readonly weight: number;
 	public readonly deleteMSG: number;
+	public readonly speedLimit: number;
 
 	public then(event: CQMessage, value: MessageId): void | Promise<void> {
 	}
@@ -295,11 +297,11 @@ export class Corpus<T extends Plug = Plug> extends Logable implements ICorpus, J
 		Corpus.logger.error(`${this}:${JSON.stringify(value)}`);
 	}
 
-	public func: Function | null = null;
+	public func: unknown | null = null;
 
-	constructor(plugType: T, funcName: string, iCorpus: ICorpus) {
+	constructor(plug: Plug, funcName: string, iCorpus: ICorpus) {
 		super();
-		this.plug = plugType;
+		this.plug = plug;
 		this.funcName = funcName;
 		this.name = iCorpus.name ?? this.toString();
 		// noinspection RegExpUnexpectedAnchor
@@ -314,6 +316,7 @@ export class Corpus<T extends Plug = Plug> extends Logable implements ICorpus, J
 		this.needAdmin = iCorpus.needAdmin ?? false;
 		this.weight = iCorpus.weight ?? 10;
 		this.deleteMSG = iCorpus.deleteMSG ?? 0;
+		this.speedLimit = iCorpus.speedLimit ?? 0;
 		iCorpus.then != null && (this.then = iCorpus.then);
 		iCorpus.catch != null && (this.catch = iCorpus.catch);
 	}
@@ -367,34 +370,66 @@ export class Corpus<T extends Plug = Plug> extends Logable implements ICorpus, J
 	}
 
 	private async run(event: CQEvent<"message.private">, exec: RegExpExecArray | null,
-			member: Member): Promise<CQTag[]>;
-	private async run(event: CQEvent<"message.group">, exec: RegExpExecArray | null, member: Member,
-			group: Group): Promise<CQTag[]>;
+			member: Member, group?: undefined): Promise<CQTag[]>;
+	private async run(event: CQEvent<"message.group">, exec: RegExpExecArray | null,
+			member: Member, group: Group): Promise<CQTag[]>;
 	private async run(event: CQMessage, exec: RegExpExecArray | null, member: Member, group?: Group): Promise<CQTag[]> {
 		if (exec == null) {
 			return [];
 		}
 		if (this.func == null) {
-			const func: canCallType = Reflect.get(this.plug, this.funcName);
-			if (typeof func !== "function") {
+			const obj: unknown = Reflect.get(this.plug, this.funcName);
+			if (obj == null) {
 				this.isOpen = -1;
-				const text = `插件${this}不是方法`;
+				const text = `插件${this}没有任何值`;
 				this.logger.error(text);
 				return [CQ.text(text)];
 			}
-			this.func = func.bind(this.plug);
+			this.func = typeof obj === "function" ? (<Function>obj).bind(this.plug) : obj;
 		}
 		try {
-			if (this.canPrivate && event.contextType === "message.private") {
-				return await (<canCallPrivateFunc>this.func)(event, exec, member);
+			if (this.speedLimit > 0) {
+				this.isOpen = 0;
+			}
+			let result: unknown;
+			if (typeof this.func !== "function") {
+				event.stopPropagation();
+				result = this.func;
+			} else if (this.canPrivate && event.contextType === "message.private") {
+				result = await (<canCallPrivateFunc>this.func)(event, exec, member);
 			} else if (this.canGroup && event.contextType === "message.group") {
-				return await (<canCallGroupFunc>this.func)(event, exec, member, <Group>group);
+				result = await (<canCallGroupFunc>this.func)(event, exec, member, <Group>group);
 			} else {
 				this.logger.info(`不可调用[${this}]`);
-				return [CQ.text(`插件${this}方法不可在${event.contextType}环境下调用`)];
+				result = [CQ.text(`插件${this}方法不可在${event.contextType}环境下调用`)];
 			}
+			if (this.isOpen >= 0 && this.speedLimit > 0) {
+				setTimeout(() => {
+					this.isOpen = 1;
+				}, this.speedLimit);
+			}
+			if (result == null) {
+				return [];
+			} else if (Array.isArray(result)) {
+				if (result.length > 0) {
+					if (result[0] instanceof CQTag) {
+						return result;
+					} else {
+						return [CQ.text(`插件${this}返回的数组不是CQTag类型`)];
+					}
+				}
+				return result;
+			} else if (typeof result === "string" || typeof result === "number" || typeof result === "bigint" ||
+					typeof result === "boolean" || typeof result === "symbol") {
+				return [CQ.text(result.toString())];
+			}
+			this.isOpen = -1;
+			const text = `插件${this}未知的返回值类型`;
+			this.logger.error(text);
+			return [CQ.text(text)];
 		} catch (e) {
-			this.logger.error("调用出错", e);
+			this.isOpen = -1;
+			this.logger.error("调用出错:", e);
 			return [CQ.text(`调用出错:` + this.toString())];
 		}
 	}
