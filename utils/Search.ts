@@ -1,10 +1,11 @@
 // noinspection JSUnusedGlobalSymbols
 
 import _axios from "axios";
-import {SauceNAOkey} from "../config/config.json";
 import {
 	DMXKType, loliconDate, loliconPost, paulzzhTouHouType, pixivCatType, sauceNAOResult, toubiecType, YHType,
 } from "./Models.js";
+
+const {SauceNAOkey} = require("../config/config.json");
 
 export const axios = _axios.create({
 	timeout: 20000,

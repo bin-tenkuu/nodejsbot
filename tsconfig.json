@@ -52,6 +52,6 @@
 		"skipLibCheck": true,
 		"forceConsistentCasingInFileNames": true
 	},
-	"include": ["./**/*.ts","./config/*.json"],
+	"include": ["./**/*.ts"],
 	"compileOnSave": true
 }
