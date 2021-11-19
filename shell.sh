@@ -1,2 +1,6 @@
 #!/bin/bash
-git pull && npm i && tsc
+git pull
+npm i
+tsc
+npm stop
+screen -x bot
