@@ -1,5 +1,5 @@
 #!/bin/bash
-git pull
+git pull -f
 npm i
 tsc
 npm stop
