@@ -2,9 +2,9 @@ import {CQ, CQTag} from "go-cqwebsocket";
 import {PartialSocketHandle} from "go-cqwebsocket/out/Interfaces";
 import {Plug} from "../Plug.js";
 import {canCall} from "@U/Annotation.js";
-import {Corpus} from "@U/Models.js";
-import {CQMessage, isAdmin, sendAdminQQ, sendGroup, sendPrivate} from "@U/Util.js";
+import {CQMessage, isAdmin, sendAdminGroup, sendAdminQQ, sendGroup, sendPrivate} from "@U/Util.js";
 import {CQBot} from "./CQBot.js";
+import {Corpus} from "@U/Corpus.js";
 
 export class CQBotEvent extends Plug {
 	private header: PartialSocketHandle = {};
@@ -51,13 +51,13 @@ export class CQBotEvent extends Plug {
 			"request.friend": (event) => {
 				event.stopPropagation();
 				const {user_id, flag} = event.context;
-				sendAdminQQ(event.bot, `${user_id}请求加好友`);
+				sendAdminGroup(event.bot, `${user_id}请求加好友`);
 				event.bot.set_friend_add_request(flag, true).catch(NOP);
 			},
 			"request.group": (event) => {
 				event.stopPropagation();
 				const {flag, sub_type, group_id} = event.context;
-				sendAdminQQ(event.bot, `${group_id}请求入群`);
+				sendAdminGroup(event.bot, `${group_id}请求入群`);
 				event.bot.set_group_add_request(flag, sub_type, true).catch(NOP);
 			},
 			"notice.offline_file": (event) => {
@@ -72,7 +72,7 @@ export class CQBotEvent extends Plug {
 			},
 			"notice.client_status": (event) => {
 				const {client: {device_name, device_kind}, online} = event.context;
-				sendAdminQQ(event.bot, `其他客户端(${online ? "上线" : "下线"}):\n设备名称:${device_name
+				sendAdminGroup(event.bot, `其他客户端(${online ? "上线" : "下线"}):\n设备名称:${device_name
 				}\n设备类型:${device_kind}`);
 			},
 		});

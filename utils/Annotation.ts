@@ -2,14 +2,15 @@
 
 import {CQEvent, CQTag} from "go-cqwebsocket";
 import {Plug} from "../Plug.js";
-import {Corpus, Group, ICorpus, Member} from "./Models.js";
+import {Group, Member} from "./Models.js";
+import {Corpus, ICorpus} from "./Corpus.js";
 
-interface canCallDecorator<T extends Plug = Plug> {
-	<F extends canCallPrivateFunc = canCallPrivateFunc>(target: T, propertyKey: string,
+interface canCallDecorator {
+	<F extends canCallPrivateFunc = canCallPrivateFunc>(target: Plug, propertyKey: string,
 			descriptor: TypedPropertyDescriptor<F>): void;
-	<F extends canCallGroupFunc = canCallGroupFunc>(target: T, propertyKey: string,
+	<F extends canCallGroupFunc = canCallGroupFunc>(target: Plug, propertyKey: string,
 			descriptor: TypedPropertyDescriptor<F>): void;
-	(target: T, propertyKey: string): void;
+	(target: Plug, propertyKey: string): void;
 }
 
 export type canCallPrivateFunc =
@@ -21,7 +22,7 @@ export type canCallRet = CQTag[] | Promise<CQTag[]>;
 /**
  * 可以标注在 `对象属性`，`getter`，{@link canCallGroupFunc} / {@link canCallPrivateFunc} 方法上
  */
-export function canCall<T extends Plug>(corpus: ICorpus): canCallDecorator<T> {
+export function canCall(corpus: ICorpus): canCallDecorator {
 	return (target: { constructor: any; }, propertyKey: string) => {
 		const corpuses: Map<string, ICorpus> = canCall.get(target.constructor);
 		corpuses.set(propertyKey, corpus);
@@ -35,20 +36,20 @@ canCall.get = function (target: new() => Plug): Map<string, ICorpus> {
 	}
 	return metadata;
 };
-canCall.merge = function (target: Plug) {
+canCall.merge = function (target: Plug, corpuses: Corpus[]) {
 	for (const [key, corpus] of canCall.get(<any>target.constructor)) {
-		const index: number = Plug.corpus.findIndex(value => value.weight > corpus.weight);
+		const index: number = corpuses.findIndex(value => value.weight > corpus.weight);
 		if (index === -1) {
-			Plug.corpus.push(new Corpus(target, key, corpus));
+			corpuses.push(new Corpus(target, key, corpus));
 		} else {
-			Plug.corpus.splice(index, 0, new Corpus(target, key, corpus));
+			corpuses.splice(index, 0, new Corpus(target, key, corpus));
 		}
 	}
 };
-canCall.separate = function (target: Plug) {
-	for (let i = Plug.corpus.length - 1; i >= 0; i--) {
-		if (Plug.corpus[i].plug === target) {
-			Plug.corpus.splice(i, 1);
+canCall.separate = function (target: Plug, corpuses: Corpus[]) {
+	for (let i = corpuses.length - 1; i >= 0; i--) {
+		if (corpuses[i].plug === target) {
+			corpuses.splice(i, 1);
 		}
 	}
 };

@@ -18,6 +18,7 @@ declare global {
 	function NOP(e: any): void;
 }
 global["NOP"] = (e) => logger.debug(e);
+
 //*
 Promise.resolve().then(async () => {
 	// 优先加载不依赖其他包的插件

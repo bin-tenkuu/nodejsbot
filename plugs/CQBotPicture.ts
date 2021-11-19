@@ -3,7 +3,7 @@ import {Plug} from "../Plug.js";
 import {canCall} from "@U/Annotation.js";
 import {CQData} from "@S/CQData.js";
 import {lolicon, pixivCat} from "@U/Search.js";
-import {CQMessage, sendAdminQQ} from "@U/Util.js";
+import {CQMessage, sendAdminGroup} from "@U/Util.js";
 
 export class CQBotPicture extends Plug {
 	private static code(code: number) {
@@ -92,7 +92,7 @@ export class CQBotPicture extends Plug {
 			// }
 			return [CQ.image(first.url), CQ.text(dataMSG)];
 		} catch (reason) {
-			sendAdminQQ(event.bot, "色图坏了").catch(NOP);
+			sendAdminGroup(event.bot, "色图坏了").catch(NOP);
 			this.logger.error(reason);
 			throw "未知错误,或网络错误";
 		}
@@ -142,7 +142,7 @@ export class CQBotPicture extends Plug {
 				return [CQ.image((data.original_url_proxy))];
 			}
 		} catch (e) {
-			sendAdminQQ(event.bot, "p站图片加载出错").catch(NOP);
+			sendAdminGroup(event.bot, "p站图片加载出错").catch(NOP);
 			this.logger.error(e);
 			throw "网络请求错误或内部错误";
 		}

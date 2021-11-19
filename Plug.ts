@@ -1,6 +1,7 @@
 import {canCall} from "@U/Annotation.js";
 import {Logable} from "@U/logger.js";
-import {Corpus, JSONable} from "@U/Models.js";
+import {JSONable} from "@U/Models.js";
+import {Corpus} from "@U/Corpus.js";
 
 const State = {
 	create: 0,
@@ -61,7 +62,7 @@ export abstract class Plug extends Logable implements JSONable {
 				}
 				await this.__proto__.install.call(this);
 				this.#state = State.installed;
-				canCall.merge(this);
+				canCall.merge(this, Plug.corpus);
 				this.logger.info("已启动\t" + this.toString());
 			} catch (e) {
 				this.error = e;
@@ -77,7 +78,7 @@ export abstract class Plug extends Logable implements JSONable {
 					return;
 				}
 				this.#state = State.uninstalled;
-				canCall.separate(this);
+				canCall.separate(this, Plug.corpus);
 				this.logger.info("已停止\t" + this.toString());
 			} catch (e) {
 				this.error = e;

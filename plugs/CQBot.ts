@@ -2,10 +2,10 @@ import {CQ, CQTag, CQWebSocket} from "go-cqwebsocket";
 import {Status} from "go-cqwebsocket/out/Interfaces";
 import {Plug} from "../Plug.js";
 import {canCall} from "@U/Annotation.js";
-import {Corpus} from "@U/Models.js";
 import {sendAdminGroup} from "@U/Util.js";
 import {Counter} from "@S/Counter.js";
 import {CQData} from "@S/CQData.js";
+import {Corpus} from "@U/Corpus.js";
 
 const {CQWS} = require("../config/config.json");
 

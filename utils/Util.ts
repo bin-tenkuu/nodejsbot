@@ -44,7 +44,7 @@ export function isAdminGroup({context}: CQEvent<any>): boolean {
 	return context["group_id"] === adminGroup;
 }
 
-export function sendAdminQQ<T>(bot: CQWebSocket, message: CQTag[] | string): Promise<void> {
+export function sendAdminQQ(bot: CQWebSocket, message: CQTag[] | string): Promise<void> {
 	if (typeof message === "string") {
 		message = [CQ.text(message)];
 	}
@@ -53,7 +53,7 @@ export function sendAdminQQ<T>(bot: CQWebSocket, message: CQTag[] | string): Pro
 	});
 }
 
-export function sendAdminGroup<T>(bot: CQWebSocket, message: CQTag[] | string): Promise<void> {
+export function sendAdminGroup(bot: CQWebSocket, message: CQTag[] | string): Promise<void> {
 	if (typeof message === "string") {
 		message = [CQ.text(message)];
 	}
