@@ -1,5 +1,6 @@
 #!/bin/bash
-git pull -f
+git reset --hard HEAD
+git pull
 npm i
 tsc
 npm stop
