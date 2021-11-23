@@ -2,9 +2,9 @@ import {Logable} from "./logger.js";
 import {CQ, CQEvent, CQTag} from "go-cqwebsocket";
 import {CQMessage, deleteMsg, isAdmin, onlyText, sendGroup, sendPrivate} from "./Util.js";
 import {Plug} from "../Plug.js";
-import {ErrorAPIResponse, MessageId} from "go-cqwebsocket/out/Interfaces.js";
-import {canCallGroupFunc, canCallPrivateFunc} from "./Annotation.js";
-import {Any, Group, JSONable, Member} from "./Models.js";
+import type {ErrorAPIResponse, MessageId} from "go-cqwebsocket/out/Interfaces.js";
+import type {canCallGroupFunc, canCallPrivateFunc} from "./Annotation.js";
+import type {Any, Group, JSONable, Member} from "./Models.js";
 
 export interface ICorpus {
 	/**
@@ -87,14 +87,14 @@ export class Corpus extends Logable implements ICorpus, JSONable {
 		const text = onlyText(event);
 		const corpus: string[] = [];
 		const {user_id, group_id} = event.context;
-		const txt = `\t来源：${group_id}.${user_id}`;
+		const txt = `\t来源：${group_id}.${user_id}：${text}`;
 		for (const element of Plug.corpus) {
 			const exec: RegExpExecArray | null = element.execGroup(event, text);
 			if (exec == null) {
 				continue;
 			}
 			if (element.isOpen === 0) {
-				this.logger.info(`禁用${this}：${txt}`);
+				this.logger.info(`禁用${this.toString()}：${txt}`);
 				continue;
 			}
 			const msg = await element.run(event, exec, member, group);
@@ -130,14 +130,14 @@ export class Corpus extends Logable implements ICorpus, JSONable {
 		const text = onlyText(event);
 		const corpus: string[] = [];
 		const {user_id} = event.context;
-		const txt = `\t来源：${user_id}`;
+		const txt = `\t来源：${user_id}：${text}`;
 		for (const element of Plug.corpus) {
 			const exec: RegExpExecArray | null = element.execPrivate(event, text);
 			if (exec == null) {
 				continue;
 			}
 			if (element.isOpen === 0) {
-				this.logger.info(`禁用${this}：${txt}`);
+				this.logger.info(`禁用${this.toString()}：${txt}`);
 				continue;
 			}
 			const msg = await element.run(event, exec, member);
@@ -187,7 +187,7 @@ export class Corpus extends Logable implements ICorpus, JSONable {
 	}
 
 	public catch(event: CQMessage, value: ErrorAPIResponse): void | Promise<void> {
-		Corpus.logger.error(`${this}:${JSON.stringify(value)}`);
+		Corpus.logger.error(`${this.toString()}:${JSON.stringify(value)}`);
 	}
 
 	#func: Any = undefined;
@@ -215,7 +215,7 @@ export class Corpus extends Logable implements ICorpus, JSONable {
 	}
 
 	public toString(): string {
-		return `${this.plugName}.${this.funcName}`;
+		return `${this.plug.constructor.name}.${this.funcName}`;
 	}
 
 	public execPrivate(event: CQEvent<"message.private">, text: string): RegExpExecArray | null {
@@ -274,7 +274,7 @@ export class Corpus extends Logable implements ICorpus, JSONable {
 			const obj: unknown = Reflect.get(this.plug, this.funcName);
 			if (obj == null) {
 				this.isOpen = -1;
-				const text = `插件${this}没有任何值`;
+				const text = `插件${this.toString()}没有任何值`;
 				this.logger.error(text);
 				return [CQ.text(text)];
 			}
@@ -293,8 +293,8 @@ export class Corpus extends Logable implements ICorpus, JSONable {
 			} else if (this.canGroup && event.contextType === "message.group") {
 				result = await (<canCallGroupFunc>this.#func)(event, exec, member, <Group>group);
 			} else {
-				this.logger.info(`不可调用[${this}]`);
-				result = [CQ.text(`插件${this}方法不可在${event.contextType}环境下调用`)];
+				this.logger.info(`不可调用[${this.toString()}]`);
+				result = [CQ.text(`插件${this.toString()}方法不可在${event.contextType}环境下调用`)];
 			}
 			if (result == null) {
 				return [];
@@ -304,7 +304,7 @@ export class Corpus extends Logable implements ICorpus, JSONable {
 						if (result[0] instanceof CQTag) {
 							return result;
 						} else {
-							return [CQ.text(`插件${this}返回的数组不是CQTag类型`)];
+							return [CQ.text(`插件${this.toString()}返回的数组不是CQTag类型`)];
 						}
 					}
 					return [];
@@ -336,9 +336,5 @@ export class Corpus extends Logable implements ICorpus, JSONable {
 				this.isOpen = 1;
 			}, this.speedLimit);
 		}
-	}
-
-	public get plugName() {
-		return this.plug.constructor.name;
 	}
 }

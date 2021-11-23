@@ -6,13 +6,14 @@ import {CQBotRepeat} from "@S/CQBotRepeat.js";
 import {CQBotSearch} from "@S/CQBotSearch.js";
 import {CQData} from "@S/CQData.js";
 import {DefaultMsg} from "@S/DefaultMsg.js";
-import {Logable, logger} from "@U/logger.js";
+import {getLogger, Logable} from "@U/logger.js";
 import {HttpOption} from "@S/httpOption.js";
 import {CQBot} from "@P/CQBot.js";
 import {CQBotEvent} from "@P/CQBotEvent.js";
 import {CQBotPicture} from "@P/CQBotPicture.js";
 import {CQBotPlugin} from "@P/CQBotPlugin.js";
 
+const logger = getLogger();
 const time = process.hrtime();
 declare global {
 	function NOP(e: any): void;

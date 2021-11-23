@@ -1,15 +1,11 @@
 /// noinspection JSUnusedLocalSymbols
 
-import {CQEvent, CQTag} from "go-cqwebsocket";
-import {Plug} from "../Plug.js";
-import {Group, Member} from "./Models.js";
+import type {CQEvent, CQTag} from "go-cqwebsocket";
+import type {Plug} from "../Plug.js";
+import type {Group, Member} from "./Models.js";
 import {Corpus, ICorpus} from "./Corpus.js";
 
-interface canCallDecorator {
-	<F extends canCallPrivateFunc = canCallPrivateFunc>(target: Plug, propertyKey: string,
-			descriptor: TypedPropertyDescriptor<F>): void;
-	<F extends canCallGroupFunc = canCallGroupFunc>(target: Plug, propertyKey: string,
-			descriptor: TypedPropertyDescriptor<F>): void;
+interface PlugDecorator {
 	(target: Plug, propertyKey: string): void;
 }
 
@@ -22,7 +18,7 @@ export type canCallRet = CQTag[] | Promise<CQTag[]>;
 /**
  * 可以标注在 `对象属性`，`getter`，{@link canCallGroupFunc} / {@link canCallPrivateFunc} 方法上
  */
-export function canCall(corpus: ICorpus): canCallDecorator {
+export function canCall(corpus: ICorpus): PlugDecorator {
 	return (target: { constructor: any; }, propertyKey: string) => {
 		const corpuses: Map<string, ICorpus> = canCall.get(target.constructor);
 		corpuses.set(propertyKey, corpus);
@@ -52,4 +48,37 @@ canCall.separate = function (target: Plug, corpuses: Corpus[]) {
 			corpuses.splice(i, 1);
 		}
 	}
+};
+
+const AutoInjectMap: Map<string, unknown> = new Map<string, unknown>();
+export function AutoWired<T>(key?: string): PlugDecorator {
+	return (target, propertyKey) => {
+		return <PropertyDescriptor>{
+			configurable: true,
+			enumerable: false,
+			get: AutoWired.define.bind(null, target, propertyKey, key),
+		};
+	};
+}
+AutoWired.set = function <T>(key: string, value: T) {
+	AutoInjectMap.set(key, value);
+};
+AutoWired.define = function <T>(target: object, propertyKey: string, key?: string) {
+	if (!AutoWired.has(key ?? propertyKey)) {
+		return undefined;
+	}
+	const value = AutoWired.get(key ?? propertyKey);
+	Reflect.defineProperty(target, propertyKey, {
+		configurable: true,
+		enumerable: false,
+		writable: false,
+		value: value,
+	});
+	return value;
+};
+AutoWired.get = function <T>(key: string): T | undefined {
+	return AutoInjectMap.get(key) as T | undefined;
+};
+AutoWired.has = function <T>(key: string): boolean {
+	return AutoInjectMap.has(key);
 };

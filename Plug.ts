@@ -1,7 +1,7 @@
 import {canCall} from "@U/Annotation.js";
 import {Logable} from "@U/logger.js";
-import {JSONable} from "@U/Models.js";
-import {Corpus} from "@U/Corpus.js";
+import type {JSONable} from "@U/Models.js";
+import type {Corpus} from "@U/Corpus.js";
 
 const State = {
 	create: 0,

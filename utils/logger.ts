@@ -61,56 +61,49 @@ configure(<Configuration>{
 	pm2InstanceVar: undefined,
 	disableClustering: false,
 });
-export const logger = getLogger("default");
+const loggerMap: Map<string, Logger> = new Map<string, Logger>();
+export function getLogger(name: string = "default") {
+	let logger: Logger | undefined = loggerMap.get(name);
+	if (logger == null) {
+		logger = getter(name + "\t");
+		loggerMap.set(name, logger);
+	}
+	return logger;
+}
 
-export function getLogger(name?: string) {
-	return getter(name + "\t");
+function defineLogger(target: Function): Logger {
+	const logger: Logger = getLogger(target.name);
+	Reflect.defineProperty(target, "logger", <PropertyDescriptor>{
+		writable: false,
+		enumerable: false,
+		configurable: true,
+		value: logger,
+	});
+	Reflect.defineProperty(target.prototype, "logger", <PropertyDescriptor>{
+		writable: false,
+		enumerable: false,
+		configurable: true,
+		value: logger,
+	});
+	return logger;
 }
 
 export class Logable {
-	private static readonly _logger: Logger = logger;
-
-	public static new<T, P extends any[]>(this: new(...arg: P) => T, ...arg: P): T {
-		return new this(...arg);
-	}
-
-	public static hrtime(time: [number, number], msg: string = "本次请求"): void {
+	public static hrtime(time: [number, number], msg: string = "本次请求"): string {
 		let [s, ns] = process.hrtime(time);
 		ns /= 1e3;
 		if (ns < 1e3) {
-			return this.logger.info(`耗时 ${s} 秒 ${ns} 微秒:\t${msg}`);
+			return `耗时 ${s} 秒 ${ns} 微秒:\t${msg}`;
 		}
 		ns = (ns | 0) / 1e3;
-		return this.logger.info(`耗时 ${s} 秒 ${ns} 毫秒:\t${msg}`);
+		return `耗时 ${s} 秒 ${ns} 毫秒:\t${msg}`;
 	}
 
 	public static get logger(): Logger {
-		function LoggerGetter(this: typeof Logable): Logger {
-			return this._logger;
-		}
-
-		if (this !== Logable) {
-			Reflect.defineProperty(this, "_logger", <TypedPropertyDescriptor<Logger>>{
-				configurable: true,
-				enumerable: false,
-				value: getLogger(this.name),
-			});
-			Reflect.defineProperty(this, "logger", <TypedPropertyDescriptor<Logger>>{
-				configurable: true,
-				enumerable: false,
-				get: LoggerGetter,
-				set: undefined,
-			});
-		}
-		return this._logger;
+		return defineLogger(this);
 	}
 
 	public get logger(): Logger {
-		// @ts-ignore
-		return this.constructor.logger;
-	}
-
-	private get [Symbol.toStringTag]() {
-		return this.constructor.name;
+		return defineLogger(this.constructor);
 	}
 }

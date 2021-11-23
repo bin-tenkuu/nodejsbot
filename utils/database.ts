@@ -1,13 +1,14 @@
 import BDb3, {Database} from "better-sqlite3";
 import {existsSync, openSync} from "fs";
-import {Logable} from "./logger.js";
+import {Logger} from "log4js";
 
-class SQLControl extends Logable {
+class SQLControl {
+	declare private static logger: Logger;
+	declare private logger: Logger;
 	private readonly filename: string;
 	private _db: Database;
 
 	constructor(filename = "./db.db") {
-		super();
 		this.filename = filename;
 		if (!existsSync(filename)) {
 			openSync(filename, "w");
