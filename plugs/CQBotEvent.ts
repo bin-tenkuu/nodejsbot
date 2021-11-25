@@ -1,4 +1,4 @@
-import {CQ, CQTag} from "go-cqwebsocket";
+import {CQ} from "go-cqwebsocket";
 import {PartialSocketHandle} from "go-cqwebsocket/out/Interfaces";
 import {Plug} from "../Plug.js";
 import {AutoWired, canCall} from "@U/Annotation.js";
@@ -92,7 +92,7 @@ export class CQBotEvent extends Plug {
 		minLength: 3,
 		maxLength: 10,
 	})
-	protected getHelp({event, execArray}: CorpusData): CQTag[] {
+	protected getHelp({event, execArray}: CorpusData): string {
 		const {num} = execArray.groups as { num: string } ?? {};
 		const predicate: (c: Corpus) => boolean = isAdmin(event) ?
 				c => c.help != null :
@@ -101,11 +101,10 @@ export class CQBotEvent extends Plug {
 		if (+num > 0) {
 			const corpus: Corpus | undefined = corpuses[+num];
 			if (corpus != null) {
-				return [CQ.text(`${corpus.name}${corpus.help}`)];
+				return `${corpus.name}${corpus.help}`;
 			}
 		}
-		const s: string = corpuses.map<string>((c, i) => `${i} :${c.name}`).join("\n");
-		return [CQ.text(s)];
+		return corpuses.map<string>((c, i) => `${i} :${c.name}`).join("\n");
 	}
 
 }

@@ -5,7 +5,7 @@ import {canCall} from "@U/Annotation.js";
 import {sendAdminGroup} from "@U/Util.js";
 import {Counter} from "@S/Counter.js";
 import {CQData} from "@S/CQData.js";
-import {Corpus} from "@U/Corpus.js";
+import {sendGroupTags, sendPrivateTags} from "@U/Corpus.js";
 
 const {CQWS} = require("../config/config.json");
 
@@ -100,7 +100,7 @@ export class CQBot extends Plug {
 				const data: CQData = CQData.getInst();
 				const member = data.getMember(user_id);
 				const group = data.getGroup(group_id);
-				Corpus.sendGroupTags({
+				sendGroupTags({
 					event: event, hrtime: time,
 					member: member, group: group,
 					corpuses: Plug.corpuses,
@@ -112,7 +112,7 @@ export class CQBot extends Plug {
 				const time = process.hrtime();
 				const {user_id} = event.context;
 				const member = CQData.getInst().getMember(user_id);
-				Corpus.sendPrivateTags({
+				sendPrivateTags({
 					event: event, hrtime: time,
 					member: member,
 					corpuses: Plug.corpuses,
@@ -161,13 +161,11 @@ export class CQBot extends Plug {
 		help: "获取当前状态",
 		weight: 2,
 	})
-	protected get BotState(): CQTag[] {
+	protected get BotState(): string {
 		const state: Status["stat"] = this.bot.state.stat;
-		return [
-			CQ.text(`数据包丢失总数:${state.packet_lost
-			}\n接受信息总数:${state.message_received
-			}\n发送信息总数:${state.message_sent
-			}\n账号掉线次数:${state.lost_times}`),
-		];
+		return `数据包丢失总数:${state.packet_lost
+		}\n接受信息总数:${state.message_received
+		}\n发送信息总数:${state.message_sent
+		}\n账号掉线次数:${state.lost_times}`;
 	}
 }

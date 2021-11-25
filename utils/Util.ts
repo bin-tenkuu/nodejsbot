@@ -1,6 +1,6 @@
 // noinspection JSUnusedGlobalSymbols
 
-import {CQ, CQEvent, CQTag, CQWebSocket, messageNode} from "go-cqwebsocket";
+import {CQ, CQEvent, CQTag, CQWebSocket} from "go-cqwebsocket";
 import {MessageId, PromiseRes} from "go-cqwebsocket/out/Interfaces";
 import {CQAt, CQText} from "go-cqwebsocket/out/tags";
 import {getLogger} from "./logger.js";
@@ -89,7 +89,7 @@ export function sendGroup<T>({bot, context: {group_id = adminGroup}}: hasGroup<T
 		return bot.send_group_msg(group_id, "群消息发送失败");
 	});
 }
-
+/*合并转发
 export function sendForward<T>({bot, context: {group_id = adminGroup}}: hasGroup<T>,
 		message: messageNode): PromiseRes<MessageId> {
 	return bot.send_group_forward_msg(group_id, message as messageNode).catch(() => {
@@ -108,7 +108,7 @@ export function sendForwardQuick<T>({bot, context: {group_id = adminGroup, sende
 		return bot.send_group_msg(group_id, "合并转发消息发送失败");
 	});
 }
-
+//*/
 /**
  * 定时撤回消息
  * @param bot {CQWebSocket} 消息

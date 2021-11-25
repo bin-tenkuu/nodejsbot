@@ -1,6 +1,6 @@
 import {CQ, CQTag, CQWebSocket} from "go-cqwebsocket";
 import {Plug} from "../Plug.js";
-import {canCall, canCallRet} from "@U/Annotation.js";
+import {canCall} from "@U/Annotation.js";
 import {ElementAtOrNull} from "@U/Generators.js";
 import {sendAdminQQ} from "@U/Util.js";
 import {CQData} from "@S/CQData.js";
@@ -22,33 +22,31 @@ export class CQBotPlugin extends Plug {
 		forward: true,
 		weight: 4,
 	})
-	protected getter({event, execArray}: CorpusData): canCallRet {
+	protected async getter({event, execArray}: CorpusData): Promise<string | void> {
 		event.stopPropagation();
 		const {type} = execArray.groups as { type?: string } ?? {};
 		if (type == null) {
-			return [];
+			return;
 		}
 		switch (type) {
 		case "群":
 			return event.bot.get_group_list().then(list => {
-				const s = list.map(group => `(${group.group_id})${group.group_name}`).join("\n");
-				return [CQ.text(s)];
+				return list.map(group => `(${group.group_id})${group.group_name}`).join("\n");
 			});
 		case "好友":
 			return event.bot.get_friend_list().then(list => {
-				const s = list.map(friend => `(${friend.user_id})${friend.nickname}:(${friend.remark})`).join("\n");
-				return [CQ.text(s)];
+				return list.map(friend => `(${friend.user_id})${friend.nickname}:(${friend.remark})`).join("\n");
 			});
 		case "ban":
 			const data: CQData = CQData.getInst();
 			const groupBan: number[] = [...data.getGroups()].filter(v => v.baned).map(v => v.id);
 			const banList: number[] = [...data.getMembers()].filter(v => v.baned).map(v => v.id);
-			return [CQ.text(`群：\n${groupBan.join("\n")}\n人：\n${banList.join("\n")}`)];
+			return `群：\n${groupBan.join("\n")}\n人：\n${banList.join("\n")}`;
 				// case "poke":
 				// 	let uin = event.context.self_id;
 				// 	return CQData.pokeGroup.map(v => CQ.node(String(v.id), uin, v.text));
 		default:
-			return [];
+			return;
 		}
 	}
 
@@ -63,9 +61,7 @@ export class CQBotPlugin extends Plug {
 	})
 	protected corpusList({event}: CorpusData): CQTag[] {
 		event.stopPropagation();
-		return Plug.corpuses.map((msg, index) => {
-			return {name: msg.name, isOpen: msg.isOpen, index};
-		}).map(({name, index, isOpen}) => {
+		return Plug.corpuses.map(({name, isOpen}, index) => {
 			return CQ.text(`${index} (${isOpen}):${name}\n`);
 		});
 	}
@@ -77,11 +73,11 @@ export class CQBotPlugin extends Plug {
 		help: "设置语料库状态",
 		weight: 4,
 	})
-	protected corpusStat({event, execArray}: CorpusData): CQTag[] {
+	protected corpusStat({event, execArray}: CorpusData): string | void {
 		event.stopPropagation();
 		const {open, nums} = execArray.groups as { open?: "开" | "关", nums?: string } ?? {};
 		if (nums == null) {
-			return [];
+			return;
 		}
 		const number = +nums;
 		let s: 0 | 1;
@@ -90,14 +86,14 @@ export class CQBotPlugin extends Plug {
 		} else if (open === "关") {
 			s = 0;
 		} else {
-			return [];
+			return;
 		}
 		const element = Plug.corpuses[number];
 		if (element == null) {
-			return [];
+			return "未知插件ID";
 		}
 		element.isOpen = s;
-		return [CQ.text("回复变动id:" + number)];
+		return "语料库变动:" + element.name;
 	}
 
 	@canCall({
@@ -107,18 +103,17 @@ export class CQBotPlugin extends Plug {
 		help: "查看语料库详情",
 		weight: 4,
 	})
-	protected corpusInfo({event, execArray}: CorpusData): CQTag[] {
+	protected corpusInfo({event, execArray}: CorpusData): string | void {
 		event.stopPropagation();
 		const {nums} = execArray.groups as { nums?: string } ?? {};
 		if (nums == null) {
-			return [];
+			return;
 		}
 		const element = Plug.corpuses[+nums];
 		if (element == null) {
-			return [];
+			return "未知插件ID";
 		}
-		const stringify = JSON.stringify(element, undefined, 1);
-		return [CQ.text(stringify)];
+		return JSON.stringify(element, undefined, 1);
 	}
 
 	@canCall({
@@ -129,25 +124,23 @@ export class CQBotPlugin extends Plug {
 		help: "查看插件信息",
 		weight: 4,
 	})
-	protected pluginInfo({event, execArray}: CorpusData): CQTag[] {
+	protected pluginInfo({event, execArray}: CorpusData): string | void {
 		event.stopPropagation();
 		const {id} = execArray.groups as { id?: string } ?? {};
 		if (id == null) {
-			return [];
+			return;
 		}
 		if (id === "") {
-			const str = [...Plug.plugs.values()].map(({name}, i) => `${i}. ${name}`).join("\n");
-			return [CQ.text(str)];
+			return [...Plug.plugs.values()].map(({name}, i) => `${i}. ${name}`).join("\n");
 		}
 		const plugin: Plug | null = ElementAtOrNull(Plug.plugs.values(), +id);
 		if (plugin == null) {
-			return [CQ.text("未知插件ID")];
+			return "未知插件ID";
 		}
-		const str = JSON.stringify({
+		return JSON.stringify({
 			...plugin.toJSON(),
 			"croups": plugin.corpus,
 		}, undefined, 1);
-		return [CQ.text(str)];
 	}
 
 	@canCall({
@@ -158,7 +151,7 @@ export class CQBotPlugin extends Plug {
 		canPrivate: true,
 		weight: 4,
 	})
-	protected setAllCorpusstate({event, execArray}: CorpusData): CQTag[] {
+	protected setAllCorpusstate({event, execArray}: CorpusData): void {
 		event.stopPropagation();
 		const {type} = execArray.groups as { type?: string } ?? {};
 		switch (type) {
@@ -168,8 +161,10 @@ export class CQBotPlugin extends Plug {
 		case "正常":
 			event.bot.send_group_msg = CQBotPlugin.method.send_group_msg;
 			break;
+		default:
+			return;
 		}
 		sendAdminQQ(event.bot, String(type)).catch(NOP);
-		return [];
+		return;
 	}
 }

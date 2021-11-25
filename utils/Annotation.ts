@@ -8,8 +8,8 @@ interface PlugDecorator {
 	(target: Plug, propertyKey: string): void;
 }
 
-export type canCallFunc = (data: CorpusData) => canCallRet;
-export type canCallRet = CQTag[] | Promise<CQTag[]>;
+export type canCallFunc = (data: CorpusData) => canCallRet<CQTag[] | string | number | bigint | boolean | symbol>;
+export type canCallRet<T> = T | Promise<T>;
 
 /**
  * 可以标注在 `对象属性`，`getter`，{@link canCallFunc} 方法上
