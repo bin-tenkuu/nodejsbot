@@ -90,12 +90,12 @@ export class CQData extends Plug {
 		this.description = "用于连接go-cqhttp服务的bot";
 	}
 
-	public async install() {
+	public override async install() {
 		this.autoSave();
 		this.#init();
 	}
 
-	public async uninstall() {
+	public override async uninstall() {
 		return this.save();
 	}
 

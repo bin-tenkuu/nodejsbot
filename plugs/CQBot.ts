@@ -23,21 +23,14 @@ export class CQBot extends Plug {
 		this.#init();
 	}
 
-	async install() {
+	override async install() {
 		return new Promise<void>((resolve, reject) => {
 			this.bot.bind("onceAll", {
 				"socket.open": (event) => {
 					this.logger.info("连接");
 					sendAdminGroup(event.bot, "已上线");
+					this.sendStateInterval();
 					resolve();
-					const sendStateInterval = setInterval(() => {
-						const message: CQTag[] = this.sendState();
-						if (message.length > 0) {
-							sendAdminGroup(this.bot, message).catch(() => {
-								clearInterval(sendStateInterval);
-							});
-						}
-					}, 1000 * 60 * 60 * 2);
 				},
 				"socket.close": () => reject(),
 			});
@@ -53,7 +46,7 @@ export class CQBot extends Plug {
 		});
 	}
 
-	async uninstall() {
+	override async uninstall() {
 		this.needOpen = -1;
 		await sendAdminGroup(this.bot, "即将下线");
 		return new Promise<void>((resolve) => {
@@ -140,6 +133,17 @@ export class CQBot extends Plug {
 		str.push(`发送信息变化:+${state.message_sent - this.stateCache.message_sent}`);
 		this.stateCache.message_sent = state.message_sent + 1;
 		return [CQ.text(str.join("\n"))];
+	}
+
+	private sendStateInterval() {
+		const sendStateInterval = setInterval(() => {
+			const message: CQTag[] = this.sendState();
+			if (message.length > 0) {
+				sendAdminGroup(this.bot, message).catch(() => {
+					clearInterval(sendStateInterval);
+				});
+			}
+		}, 1000 * 60 * 60 * 2);
 	}
 
 	@canCall({

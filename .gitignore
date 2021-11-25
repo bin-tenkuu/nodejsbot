@@ -10,7 +10,6 @@
 /config/config.json
 /db.db
 *.js
-/*.json
 /*.xml
 /.pnpm-debug.log
 /pnpm-lock.yaml

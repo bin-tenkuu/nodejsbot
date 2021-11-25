@@ -40,14 +40,14 @@ export class HttpOption extends Plug {
 		// this.generator = endlessGen(jpgUrls);
 	}
 
-	async install() {
+	override async install() {
 		this.header = http.createServer(
 				this.handle.bind(this),
 		).listen(40000, "127.0.0.1");
 		this.logger.info("快速结束已启动,点击 http://127.0.0.1:40000");
 	}
 
-	async uninstall() {
+	override async uninstall() {
 		this.header?.close();
 	}
 

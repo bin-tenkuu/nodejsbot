@@ -91,7 +91,7 @@ export class Member extends Group implements IMember, JSONable {
 		return this.exp >= 0;
 	}
 
-	public toJSON(): IMember {
+	public override toJSON(): IMember {
 		return {
 			id: this._id, exp: this._exp, name: this._name, gmt_modified: this._gmt_modified, is_baned: this._is_baned,
 		};

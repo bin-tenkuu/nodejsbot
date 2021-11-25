@@ -214,7 +214,7 @@ export class Corpus extends Logable implements ICorpus, JSONable {
 		iCorpus.catch != null && (this.catch = iCorpus.catch);
 	}
 
-	public toString(): string {
+	public override toString(): string {
 		return `${this.plug.constructor.name}.${this.funcName}`;
 	}
 

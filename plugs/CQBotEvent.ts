@@ -15,7 +15,7 @@ export class CQBotEvent extends Plug {
 		this.description = "QQ的各种事件，非群聊";
 	}
 
-	async install() {
+	public override async install() {
 		this.header = CQBot.getInst().bot.bind("on", {
 			"notice.group_increase": (event) => {
 				event.stopPropagation();
@@ -78,7 +78,7 @@ export class CQBotEvent extends Plug {
 		});
 	}
 
-	async uninstall() {
+	public override async uninstall() {
 		CQBot.getInst().bot.unbind(this.header);
 	}
 
@@ -97,8 +97,10 @@ export class CQBotEvent extends Plug {
 				c => c.isOpen > 0 && !c.needAdmin && c.help != null;
 		const corpuses: Corpus[] = Plug.corpus.filter(predicate);
 		if (+num > 0) {
-			const corpus: Corpus = corpuses[+num];
-			return [CQ.text(`${corpus.name}${corpus.help}`)];
+			const corpus: Corpus | undefined = corpuses[+num];
+			if (corpus != null) {
+				return [CQ.text(`${corpus.name}${corpus.help}`)];
+			}
 		}
 		const s: string = corpuses.map<string>((c, i) => `${i} :${c.name}`).join("\n");
 		return [CQ.text(s)];

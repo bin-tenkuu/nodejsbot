@@ -43,6 +43,9 @@ export class CQBotSearch extends Plug {
 	}
 
 	private static toTag(result: sauceNAOResult["results"][number]): CQTag[] {
+		if (result == null) {
+			return [];
+		}
 		return [
 			CQ.image(result.header.thumbnail),
 			CQ.text(`相似度: ${result.header.similarity}%\n`),

@@ -18,7 +18,8 @@ const time = process.hrtime();
 declare global {
 	function NOP(e: any): void;
 }
-global["NOP"] = (e) => logger.debug(e);
+// noinspection JSUnusedGlobalSymbols
+global.NOP = (e) => logger.debug(e);
 
 //*
 Promise.resolve().then(async () => {

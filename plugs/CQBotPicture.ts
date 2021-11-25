@@ -27,7 +27,7 @@ export class CQBotPicture extends Plug {
 		this.description = "QQ群聊发送各种图片";
 	}
 
-	public async uninstall(): Promise<void> {
+	public override async uninstall(): Promise<void> {
 		this.logger.info([...this.setuSet].join(" | "));
 		return super.uninstall();
 	}
@@ -73,11 +73,11 @@ export class CQBotPicture extends Plug {
 				member.addExp(4);
 				return [CQ.text(message)];
 			}
-			if (data.count < 1) {
+			const first = data.data[0];
+			if (data.count < 1 || first == null) {
 				this.logger.warn(`开始色图异常：色图数量不足(${data.count})`);
 				return [CQ.text("色图数量不足")];
 			}
-			const first = data.data[0];
 			const dataMSG: string = `作者：${first.author}\n原图p${first.p}：${first.pid}`;
 			// if (event.contextType === "message.group") {
 			// 	const {
@@ -135,7 +135,9 @@ export class CQBotPicture extends Plug {
 				ps = ps >= length ? length - 1 : ps < 1 ? 1 : ps;
 				return [
 					CQ.text(`总共${length}张图片,这是第${ps},${ps + 1}张`),
+					// @ts-ignore
 					CQ.image((urlsProxy[ps - 1])),
+					// @ts-ignore
 					CQ.image((urlsProxy[ps])),
 				];
 			} else {

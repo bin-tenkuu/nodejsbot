@@ -20,9 +20,8 @@ export class Counter extends Plug {
 		this.description = "数据收集专用";
 	}
 
-	public async uninstall(): Promise<void> {
+	public override async uninstall(): Promise<void> {
 		this.logger.info(this.info());
-		return;
 	}
 
 	public record(event: CQMessage): void {

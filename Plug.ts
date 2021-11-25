@@ -43,7 +43,7 @@ export abstract class Plug extends Logable implements JSONable {
 	public async uninstall(): Promise<void> {
 	}
 
-	public toString() {
+	public override toString() {
 		return `${this.constructor.name} {name: ${this.name}, State: ${this.#state}}`;
 	}
 
