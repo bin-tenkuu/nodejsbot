@@ -1,10 +1,11 @@
-import {CQ, CQEvent, CQTag} from "go-cqwebsocket";
+import {CQ, CQTag} from "go-cqwebsocket";
 import {CQImage} from "go-cqwebsocket/out/tags";
 import {CQText} from "go-cqwebsocket/out/tags.js";
 import {Plug} from "../Plug.js";
 import {canCall} from "@U/Annotation.js";
 import {CacheMap} from "@U/repeat.js";
 import {isAtMe} from "@U/Util.js";
+import {GroupCorpusData} from "@U/Corpus.js";
 
 export class CQBotRepeat extends Plug {
 	private static Random(...arr: string[]): string[] {
@@ -32,7 +33,7 @@ export class CQBotRepeat extends Plug {
 		maxLength: 50,
 		weight: 90,
 	})
-	protected getRepeat(event: CQEvent<"message.group">): CQTag[] {
+	protected getRepeat({event}: GroupCorpusData): CQTag[] {
 		const {group_id, user_id, raw_message} = event.context;
 		const node = this.repeatCache.get(group_id, new RepeatCache(raw_message));
 		if (node.addUser(user_id)) {
@@ -71,20 +72,20 @@ export class CQBotRepeat extends Plug {
 		maxLength: 50,
 		weight: 91,
 	})
-	protected MemeAI(event: CQEvent<"message.group">, execArray: RegExpExecArray): CQTag[] {
+	protected MemeAI({event, execArray}: GroupCorpusData): CQTag[] {
 		if (!isAtMe(event)) {
 			return [];
 		}
 		event.stopPropagation();
 		const {message_id, user_id} = event.context;
 		const cqTags = execArray.input.replace(/吗/g, "")
-				.replace(/(?<!\\)不/g, "\\很")
-				.replace(/(?<!\\)你/g, "\\我")
-				.replace(/(?<!\\)我/g, "\\你")
-				.replace(/(?<![没\\])有/g, "\\没有")
-				.replace(/(?<!\\)没有/g, "\\有")
-				.replace(/[？?]/g, "!")
-				.replace(/\\/g, "");
+		.replace(/(?<!\\)不/g, "\\很")
+		.replace(/(?<!\\)你/g, "\\我")
+		.replace(/(?<!\\)我/g, "\\你")
+		.replace(/(?<![没\\])有/g, "\\没有")
+		.replace(/(?<!\\)没有/g, "\\有")
+		.replace(/[？?]/g, "!")
+		.replace(/\\/g, "");
 		return [
 			CQ.reply(message_id),
 			CQ.at(user_id),

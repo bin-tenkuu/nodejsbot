@@ -10,7 +10,7 @@ import {getLogger, Logable} from "@U/logger.js";
 import {HttpOption} from "@S/httpOption.js";
 import {CQBot} from "@P/CQBot.js";
 import {CQBotEvent} from "@P/CQBotEvent.js";
-import {CQBotPicture} from "@P/CQBotPicture.js";
+import {CQBotPicture} from "@S/CQBotPicture.js";
 import {CQBotPlugin} from "@P/CQBotPlugin.js";
 
 const logger = getLogger();

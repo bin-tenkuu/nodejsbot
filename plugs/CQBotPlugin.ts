@@ -2,8 +2,9 @@ import {CQ, CQTag, CQWebSocket} from "go-cqwebsocket";
 import {Plug} from "../Plug.js";
 import {canCall, canCallRet} from "@U/Annotation.js";
 import {ElementAtOrNull} from "@U/Generators.js";
-import {CQMessage, sendAdminQQ} from "@U/Util.js";
+import {sendAdminQQ} from "@U/Util.js";
 import {CQData} from "@S/CQData.js";
+import {CorpusData} from "@U/Corpus.js";
 
 export class CQBotPlugin extends Plug {
 	private static method: Readonly<CQWebSocket> = CQWebSocket.prototype;
@@ -21,7 +22,7 @@ export class CQBotPlugin extends Plug {
 		forward: true,
 		weight: 4,
 	})
-	protected getter(event: CQMessage, execArray: RegExpExecArray): canCallRet {
+	protected getter({event, execArray}: CorpusData): canCallRet {
 		event.stopPropagation();
 		const {type} = execArray.groups as { type?: string } ?? {};
 		if (type == null) {
@@ -52,34 +53,6 @@ export class CQBotPlugin extends Plug {
 	}
 
 	@canCall({
-		name: ".设置[群][un]ban <other>",
-		regexp: /^[.．。]设置(?<group>群)?(?<type>un)?ban (?<other>.+)$/,
-		needAdmin: true,
-		help: "设置群聊、私聊的ban状态",
-		weight: 4,
-	})
-	protected setter(event: CQMessage, execArray: RegExpExecArray): CQTag[] {
-		event.stopPropagation();
-		const {group, type, other = ""} = execArray.groups as { type?: "un", other?: string, group?: "群" } ?? {};
-		const isBan: 0 | 1 = type == null ? 1 : 0;
-		const cqData: CQData = CQData.getInst();
-		const matches = other.match(/\d+/g) ?? [];
-		const cqTexts = [CQ.text(matches.join("\n"))];
-		if (group == null) {
-			for (const value of matches) {
-				cqData.setBaned(+value, isBan);
-			}
-			cqTexts.unshift(CQ.text(`已${type ?? ""}banQQ：\n`));
-		} else {
-			for (const value of matches) {
-				cqData.setGroupBaned(+value, isBan);
-			}
-			cqTexts.unshift(CQ.text(`已${type ?? ""}ban群：\n`));
-		}
-		return cqTexts;
-	}
-
-	@canCall({
 		name: ".语料库",
 		regexp: /^[.．。]语料库$/,
 		needAdmin: true,
@@ -88,9 +61,9 @@ export class CQBotPlugin extends Plug {
 		help: "查看全部语料库状态",
 		weight: 4,
 	})
-	protected corpusList(event: CQMessage): CQTag[] {
+	protected corpusList({event}: CorpusData): CQTag[] {
 		event.stopPropagation();
-		return Plug.corpus.map((msg, index) => {
+		return Plug.corpuses.map((msg, index) => {
 			return {name: msg.name, isOpen: msg.isOpen, index};
 		}).map(({name, index, isOpen}) => {
 			return CQ.text(`${index} (${isOpen}):${name}\n`);
@@ -104,7 +77,7 @@ export class CQBotPlugin extends Plug {
 		help: "设置语料库状态",
 		weight: 4,
 	})
-	protected corpusStat(event: CQMessage, execArray: RegExpExecArray): CQTag[] {
+	protected corpusStat({event, execArray}: CorpusData): CQTag[] {
 		event.stopPropagation();
 		const {open, nums} = execArray.groups as { open?: "开" | "关", nums?: string } ?? {};
 		if (nums == null) {
@@ -119,7 +92,7 @@ export class CQBotPlugin extends Plug {
 		} else {
 			return [];
 		}
-		const element = Plug.corpus[number];
+		const element = Plug.corpuses[number];
 		if (element == null) {
 			return [];
 		}
@@ -134,13 +107,13 @@ export class CQBotPlugin extends Plug {
 		help: "查看语料库详情",
 		weight: 4,
 	})
-	protected corpusInfo(event: CQMessage, execArray: RegExpExecArray): CQTag[] {
+	protected corpusInfo({event, execArray}: CorpusData): CQTag[] {
 		event.stopPropagation();
 		const {nums} = execArray.groups as { nums?: string } ?? {};
 		if (nums == null) {
 			return [];
 		}
-		const element = Plug.corpus[+nums];
+		const element = Plug.corpuses[+nums];
 		if (element == null) {
 			return [];
 		}
@@ -156,7 +129,7 @@ export class CQBotPlugin extends Plug {
 		help: "查看插件信息",
 		weight: 4,
 	})
-	protected pluginInfo(event: CQMessage, execArray: RegExpExecArray): CQTag[] {
+	protected pluginInfo({event, execArray}: CorpusData): CQTag[] {
 		event.stopPropagation();
 		const {id} = execArray.groups as { id?: string } ?? {};
 		if (id == null) {
@@ -185,7 +158,7 @@ export class CQBotPlugin extends Plug {
 		canPrivate: true,
 		weight: 4,
 	})
-	protected setAllCorpusstate(event: CQMessage, execArray: RegExpExecArray): CQTag[] {
+	protected setAllCorpusstate({event, execArray}: CorpusData): CQTag[] {
 		event.stopPropagation();
 		const {type} = execArray.groups as { type?: string } ?? {};
 		switch (type) {

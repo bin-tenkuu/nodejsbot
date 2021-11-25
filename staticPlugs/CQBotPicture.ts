@@ -1,9 +1,9 @@
 import {CQ, CQTag} from "go-cqwebsocket";
 import {Plug} from "../Plug.js";
 import {canCall} from "@U/Annotation.js";
-import {CQData} from "@S/CQData.js";
 import {lolicon, pixivCat} from "@U/Search.js";
-import {CQMessage, sendAdminGroup} from "@U/Util.js";
+import {sendAdminGroup} from "@U/Util.js";
+import {CorpusData} from "@U/Corpus.js";
 
 export class CQBotPicture extends Plug {
 	private static code(code: number) {
@@ -42,15 +42,13 @@ export class CQBotPicture extends Plug {
 		deleteMSG: 20,
 		speedLimit: 2000,
 	})
-	protected async getSeTu(event: CQMessage, exec: RegExpExecArray): Promise<CQTag[]> {
+	protected async getSeTu({event, execArray, member}: CorpusData): Promise<CQTag[]> {
 		event.stopPropagation();
 		try {
 			const groups = {
-				keyword: exec.groups?.keyword ?? "",
-				r18: exec.groups?.r18 != null,
+				keyword: execArray.groups?.keyword ?? "",
+				r18: execArray.groups?.r18 != null,
 			};
-			const userId: number = event.context.user_id;
-			const member = CQData.getInst().getMember(userId);
 			if (!member.addExp(-5)) {
 				// return [CQ.text("不够活跃")];
 			}
@@ -109,16 +107,14 @@ export class CQBotPicture extends Plug {
 		isOpen: 0,
 		speedLimit: 2000,
 	})
-	protected async getPixiv(event: CQMessage, exec: RegExpExecArray): Promise<CQTag[]> {
+	protected async getPixiv({event, execArray, member}: CorpusData): Promise<CQTag[]> {
 		event.stopPropagation();
 		try {
-			const {pid, p} = (exec.groups as { pid?: string, p?: string }) ?? {};
+			const {pid, p} = (execArray.groups as { pid?: string, p?: string }) ?? {};
 			this.logger.debug(`p站图片请求：pid:${pid},p:${p}`);
 			if (pid == null) {
 				return [CQ.text("pid获取失败")];
 			}
-			const userId: number = event.context.user_id;
-			const member = CQData.getInst().getMember(userId);
 			if (!member.addExp(-5)) {
 				// return [CQ.text("不够活跃")];
 			}

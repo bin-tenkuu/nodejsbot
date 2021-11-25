@@ -1,22 +1,18 @@
 /// noinspection JSUnusedLocalSymbols
 
-import type {CQEvent, CQTag} from "go-cqwebsocket";
+import type {CQTag} from "go-cqwebsocket";
 import type {Plug} from "../Plug.js";
-import type {Group, Member} from "./Models.js";
-import {Corpus, ICorpus} from "./Corpus.js";
+import {Corpus, CorpusData, ICorpus} from "./Corpus.js";
 
 interface PlugDecorator {
 	(target: Plug, propertyKey: string): void;
 }
 
-export type canCallPrivateFunc =
-		(event: CQEvent<"message.private">, exec: RegExpExecArray, member: Member) => canCallRet;
-export type canCallGroupFunc =
-		(event: CQEvent<"message.group">, exec: RegExpExecArray, member: Member, group: Group) => canCallRet;
+export type canCallFunc = (data: CorpusData) => canCallRet;
 export type canCallRet = CQTag[] | Promise<CQTag[]>;
 
 /**
- * 可以标注在 `对象属性`，`getter`，{@link canCallGroupFunc} / {@link canCallPrivateFunc} 方法上
+ * 可以标注在 `对象属性`，`getter`，{@link canCallFunc} 方法上
  */
 export function canCall(corpus: ICorpus): PlugDecorator {
 	return (target: { constructor: any; }, propertyKey: string) => {
@@ -51,23 +47,29 @@ canCall.separate = function (target: Plug, corpuses: Corpus[]) {
 };
 
 const AutoInjectMap: Map<string, unknown> = new Map<string, unknown>();
+/**
+ * 使用 `private declare <TYPE>: <TYPE>;` 定义值
+ * @param {string} key
+ * @return {PlugDecorator}
+ * @constructor
+ */
 export function AutoWired<T>(key?: string): PlugDecorator {
 	return (target, propertyKey) => {
 		return <PropertyDescriptor>{
 			configurable: true,
 			enumerable: false,
-			get: AutoWired.define.bind(null, target, propertyKey, key),
+			get: AutoWired.define.bind(null, target, propertyKey, key ?? propertyKey),
 		};
 	};
 }
-AutoWired.set = function <T>(key: string, value: T) {
+AutoWired.set = <T>(key: string, value: T) => {
 	AutoInjectMap.set(key, value);
 };
-AutoWired.define = function <T>(target: object, propertyKey: string, key?: string) {
-	if (!AutoWired.has(key ?? propertyKey)) {
+AutoWired.define = <T>(target: object, propertyKey: string, key: string) => {
+	if (!AutoWired.has(key)) {
 		return undefined;
 	}
-	const value = AutoWired.get(key ?? propertyKey);
+	const value = AutoWired.get(key);
 	Reflect.defineProperty(target, propertyKey, {
 		configurable: true,
 		enumerable: false,
@@ -76,9 +78,9 @@ AutoWired.define = function <T>(target: object, propertyKey: string, key?: strin
 	});
 	return value;
 };
-AutoWired.get = function <T>(key: string): T | undefined {
+AutoWired.get = <T>(key: string): T | undefined => {
 	return AutoInjectMap.get(key) as T | undefined;
 };
-AutoWired.has = function <T>(key: string): boolean {
+AutoWired.has = <T>(key: string): boolean => {
 	return AutoInjectMap.has(key);
 };

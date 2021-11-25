@@ -1,4 +1,4 @@
-import {canCall} from "@U/Annotation.js";
+import {AutoWired, canCall} from "@U/Annotation.js";
 import {Logable} from "@U/logger.js";
 import type {JSONable} from "@U/Models.js";
 import type {Corpus} from "@U/Corpus.js";
@@ -12,7 +12,7 @@ const State = {
 
 export abstract class Plug extends Logable implements JSONable {
 	public static readonly plugs: Map<new() => Plug, Plug> = new Map();
-	public static readonly corpus: Corpus[] = [];
+	public static readonly corpuses: Corpus[] = [];
 
 	/**获取当前类的实例*/
 	public static getInst<T extends Plug>(this: new() => T): T {
@@ -20,6 +20,7 @@ export abstract class Plug extends Logable implements JSONable {
 		if (!(instance instanceof this)) {
 			instance = new this();
 			Plug.plugs.set(this, instance);
+			AutoWired.set(this.name, instance);
 		}
 		return <T>instance;
 	}
@@ -62,7 +63,7 @@ export abstract class Plug extends Logable implements JSONable {
 				}
 				await this.__proto__.install.call(this);
 				this.#state = State.installed;
-				canCall.merge(this, Plug.corpus);
+				canCall.merge(this, Plug.corpuses);
 				this.logger.info("已启动\t" + this.toString());
 			} catch (e) {
 				this.error = e;
@@ -78,7 +79,7 @@ export abstract class Plug extends Logable implements JSONable {
 					return;
 				}
 				this.#state = State.uninstalled;
-				canCall.separate(this, Plug.corpus);
+				canCall.separate(this, Plug.corpuses);
 				this.logger.info("已停止\t" + this.toString());
 			} catch (e) {
 				this.error = e;
@@ -103,6 +104,6 @@ export abstract class Plug extends Logable implements JSONable {
 	}
 
 	public get corpus(): Corpus[] {
-		return Plug.corpus.filter(v => v.plug === this);
+		return Plug.corpuses.filter(v => v.plug === this);
 	}
 }

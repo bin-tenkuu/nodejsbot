@@ -1,12 +1,14 @@
 import {CQ, CQTag} from "go-cqwebsocket";
 import {PartialSocketHandle} from "go-cqwebsocket/out/Interfaces";
 import {Plug} from "../Plug.js";
-import {canCall} from "@U/Annotation.js";
-import {CQMessage, isAdmin, sendAdminGroup, sendAdminQQ, sendGroup, sendPrivate} from "@U/Util.js";
+import {AutoWired, canCall} from "@U/Annotation.js";
+import {isAdmin, sendAdminGroup, sendAdminQQ, sendGroup, sendPrivate} from "@U/Util.js";
 import {CQBot} from "./CQBot.js";
-import {Corpus} from "@U/Corpus.js";
+import {Corpus, CorpusData} from "@U/Corpus.js";
 
 export class CQBotEvent extends Plug {
+	@AutoWired()
+	private declare CQBot: CQBot;
 	private header: PartialSocketHandle = {};
 
 	constructor() {
@@ -16,7 +18,7 @@ export class CQBotEvent extends Plug {
 	}
 
 	public override async install() {
-		this.header = CQBot.getInst().bot.bind("on", {
+		this.header = this.CQBot.bot.bind("on", {
 			"notice.group_increase": (event) => {
 				event.stopPropagation();
 				const {operator_id, user_id, sub_type} = event.context;
@@ -79,7 +81,7 @@ export class CQBotEvent extends Plug {
 	}
 
 	public override async uninstall() {
-		CQBot.getInst().bot.unbind(this.header);
+		this.CQBot.bot.unbind(this.header);
 	}
 
 	@canCall({
@@ -90,12 +92,12 @@ export class CQBotEvent extends Plug {
 		minLength: 3,
 		maxLength: 10,
 	})
-	protected getHelp(event: CQMessage, regExpExecArray: RegExpExecArray): CQTag[] {
-		const {num} = regExpExecArray.groups as { num: string } ?? {};
+	protected getHelp({event, execArray}: CorpusData): CQTag[] {
+		const {num} = execArray.groups as { num: string } ?? {};
 		const predicate: (c: Corpus) => boolean = isAdmin(event) ?
 				c => c.help != null :
 				c => c.isOpen > 0 && !c.needAdmin && c.help != null;
-		const corpuses: Corpus[] = Plug.corpus.filter(predicate);
+		const corpuses: Corpus[] = Plug.corpuses.filter(predicate);
 		if (+num > 0) {
 			const corpus: Corpus | undefined = corpuses[+num];
 			if (corpus != null) {

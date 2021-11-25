@@ -1,9 +1,10 @@
-import {CQ, CQEvent} from "go-cqwebsocket";
+import {CQ} from "go-cqwebsocket";
 import {CQImage, CQTag} from "go-cqwebsocket/out/tags";
 import {Plug} from "../Plug.js";
 import {canCall} from "@U/Annotation.js";
 import {sauceNAOResult} from "@U/Models.js";
 import {sauceNAO} from "@U/Search.js";
+import {GroupCorpusData} from "@U/Corpus.js";
 
 export class CQBotSearch extends Plug {
 
@@ -68,7 +69,7 @@ export class CQBotSearch extends Plug {
 		isOpen: 0,
 		deleteMSG: 60,
 	})
-	protected async getSauceNAO(event: CQEvent<"message.group">): Promise<CQTag[]> {
+	protected async getSauceNAO({event}: GroupCorpusData): Promise<CQTag[]> {
 		// @ts-ignore
 		const tag: CQImage | undefined = event.cqTags.find<CQImage>(tag => tag instanceof CQImage);
 		if (tag == null) {

@@ -8,13 +8,17 @@ export type DMXKType = I.DMXKType;
 export type YHType = I.YHType;
 export type Any = object | string | number | bigint | boolean | symbol | undefined | null;
 
-class Modified {
+class Modified implements JSONable {
 	public is_modified: boolean = false;
 	protected _gmt_modified: number = 0;
 
 	public modified() {
 		this._gmt_modified = Date.now();
 		this.is_modified = true;
+	}
+
+	public toJSON(): { gmt_modified: number } {
+		return {gmt_modified: this._gmt_modified};
 	}
 
 // noinspection JSUnusedGlobalSymbols
@@ -43,8 +47,8 @@ export class Group extends Modified implements IGroup, JSONable {
 		}
 	}
 
-	public toJSON(): IGroup {
-		return {id: this._id, exp: this._exp, gmt_modified: this._gmt_modified, is_baned: this._is_baned};
+	public override toJSON(): IGroup {
+		return {id: this._id, exp: this._exp, ...super.toJSON(), is_baned: this._is_baned};
 	}
 
 	public get id() {
@@ -93,7 +97,8 @@ export class Member extends Group implements IMember, JSONable {
 
 	public override toJSON(): IMember {
 		return {
-			id: this._id, exp: this._exp, name: this._name, gmt_modified: this._gmt_modified, is_baned: this._is_baned,
+			name: this._name,
+			...super.toJSON(),
 		};
 	}
 

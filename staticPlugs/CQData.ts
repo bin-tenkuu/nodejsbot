@@ -1,10 +1,10 @@
-import {CQ, CQEvent, CQTag} from "go-cqwebsocket";
+import {CQ, CQTag} from "go-cqwebsocket";
 import {Plug} from "../Plug.js";
 import {canCall} from "@U/Annotation.js";
 import {db} from "@U/database.js";
 import {Group, IGroup, IMember, Member} from "@U/Models.js";
 import {CacheMap} from "@U/repeat.js";
-import {CQMessage} from "@U/Util.js";
+import {CorpusData, GroupCorpusData} from "@U/Corpus.js";
 
 export class CQData extends Plug {
 	private static loadMember(id: number): Member {
@@ -139,7 +139,7 @@ export class CQData extends Plug {
 		help: "查看自己/<qq>的信息",
 		weight: 6,
 	})
-	protected getState(event: CQMessage, execArray: RegExpExecArray): CQTag[] {
+	protected getState({event, execArray}: CorpusData): CQTag[] {
 		const qq: number = event.context.user_id;
 		if (event.contextType === "message.group") {
 			if (this.cache.has(qq)) {
@@ -160,10 +160,37 @@ export class CQData extends Plug {
 		minLength: 0,
 		weight: Infinity,
 	})
-	protected addEXP(event: CQEvent<"message.group">): CQTag[] {
+	protected addEXP({event}: GroupCorpusData): CQTag[] {
 		event.stopPropagation();
 		this.getMember(event.context.user_id).addExp(1);
 		return [];
+	}
+
+	@canCall({
+		name: ".设置[群][un]ban <other>",
+		regexp: /^[.．。]设置(?<group>群)?(?<type>un)?ban (?<other>.+)$/,
+		needAdmin: true,
+		help: "设置群聊、私聊的ban状态",
+		weight: 4,
+	})
+	protected setter({event, execArray}: CorpusData): CQTag[] {
+		event.stopPropagation();
+		const {group, type, other = ""} = execArray.groups as { type?: "un", other?: string, group?: "群" } ?? {};
+		const isBan: 0 | 1 = type == null ? 1 : 0;
+		const matches = other.match(/\d+/g) ?? [];
+		const cqTexts = [CQ.text(matches.join("\n"))];
+		if (group == null) {
+			for (const value of matches) {
+				this.setBaned(+value, isBan);
+			}
+			cqTexts.unshift(CQ.text(`已${type ?? ""}banQQ：\n`));
+		} else {
+			for (const value of matches) {
+				this.setGroupBaned(+value, isBan);
+			}
+			cqTexts.unshift(CQ.text(`已${type ?? ""}ban群：\n`));
+		}
+		return cqTexts;
 	}
 
 	#init(): void {

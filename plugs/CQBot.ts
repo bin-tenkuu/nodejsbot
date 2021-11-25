@@ -100,7 +100,11 @@ export class CQBot extends Plug {
 				const data: CQData = CQData.getInst();
 				const member = data.getMember(user_id);
 				const group = data.getGroup(group_id);
-				Corpus.sendGroupTags(event, time, member, group).then(b => {
+				Corpus.sendGroupTags({
+					event: event, hrtime: time,
+					member: member, group: group,
+					corpuses: Plug.corpuses,
+				}).then(b => {
 					b && Counter.getInst().record(event);
 				}, NOP);
 			},
@@ -108,7 +112,11 @@ export class CQBot extends Plug {
 				const time = process.hrtime();
 				const {user_id} = event.context;
 				const member = CQData.getInst().getMember(user_id);
-				Corpus.sendPrivateTags(event, time, member).then(b => {
+				Corpus.sendPrivateTags({
+					event: event, hrtime: time,
+					member: member,
+					corpuses: Plug.corpuses,
+				}).then(b => {
 					b && Counter.getInst().record(event);
 				}, NOP);
 			},

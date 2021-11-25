@@ -4,7 +4,7 @@ import {canCall} from "@U/Annotation.js";
 import {dice, DiceResult, distribution} from "@U/COCUtils.js";
 import {db} from "@U/database.js";
 import {CacheMap} from "@U/repeat.js";
-import {CQMessage} from "@U/Util.js";
+import {CorpusData} from "@U/Corpus.js";
 
 export class CQBotCOC extends Plug {
 	private static castString(value: string, cheater: boolean): Calc {
@@ -66,11 +66,11 @@ export class CQBotCOC extends Plug {
 		}, [0, 1])[0];
 	}
 
-	private shortKey = new Map<string, string>();
-	private cheater: boolean = false;
 	private readonly cache = new CacheMap<number, DiceCache>(undefined,
 			(l, r) => l.max === r.max,
 	);
+	private shortKey = new Map<string, string>();
+	private cheater: boolean = false;
 	private specialEffects: string = "bug";
 
 	constructor() {
@@ -88,7 +88,7 @@ export class CQBotCOC extends Plug {
 		maxLength: 7,
 		weight: 1,
 	})
-	protected getDiceStat(event: CQMessage): CQTag[] {
+	protected getDiceStat({event}: CorpusData): CQTag[] {
 		event.stopPropagation();
 		let str = "";
 		this.shortKey.forEach((value, key) => {
@@ -108,7 +108,7 @@ export class CQBotCOC extends Plug {
 		maxLength: 100,
 		weight: 1,
 	})
-	protected getDiceSet(event: CQMessage, execArray: RegExpExecArray): CQTag[] {
+	protected getDiceSet({event, execArray}: CorpusData): CQTag[] {
 		event.stopPropagation();
 		const {key, value} = execArray.groups as { key?: string, value?: string } ?? {};
 		if (key == null || key.length > 5) {
@@ -139,7 +139,7 @@ export class CQBotCOC extends Plug {
 		minLength: 4,
 		maxLength: 500,
 	})
-	protected getDice(event: CQMessage, execArray: RegExpExecArray): CQTag[] {
+	protected getDice({event, execArray}: CorpusData): CQTag[] {
 		event.stopPropagation();
 		let {times = "1", dice} = execArray.groups as { times: string, dice: string } ?? {};
 		if (dice == null) {
@@ -160,7 +160,7 @@ export class CQBotCOC extends Plug {
 		isOpen: -1,
 		weight: 10,
 	})
-	protected getRandom(event: CQMessage, execArray: RegExpExecArray): CQTag[] {
+	protected getRandom({event, execArray}: CorpusData): CQTag[] {
 		event.stopPropagation();
 		const {num, times = 2} = execArray.groups as { num?: string, times?: string } ?? {};
 		if (num == null) {
@@ -177,7 +177,7 @@ export class CQBotCOC extends Plug {
 		minLength: 5,
 		maxLength: 10,
 	})
-	protected setCheater(event: CQMessage): CQTag[] {
+	protected setCheater({event}: CorpusData): CQTag[] {
 		event.stopPropagation();
 		this.cheater = !this.cheater;
 		return [CQ.text("全1" + (this.cheater ? "开" : "关"))];
@@ -190,7 +190,7 @@ export class CQBotCOC extends Plug {
 		minLength: 2,
 		maxLength: 10,
 	})
-	protected setDiceType(event: CQMessage, execArray: RegExpExecArray): CQTag[] {
+	protected setDiceType({event, execArray}: CorpusData): CQTag[] {
 		const {operator} = execArray.groups as { operator: string } ?? {};
 		if (operator == null) {
 			return [];
@@ -215,7 +215,7 @@ export class CQBotCOC extends Plug {
 		maxLength: 10,
 		weight: 1,
 	})
-	protected getAddedRandom(event: CQMessage, execArray: RegExpExecArray): CQTag[] {
+	protected getAddedRandom({event, execArray}: CorpusData): CQTag[] {
 		event.stopPropagation();
 		const {num: numStr} = execArray.groups as {
 			num?: string

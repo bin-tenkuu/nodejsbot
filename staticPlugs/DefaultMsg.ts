@@ -1,7 +1,8 @@
 import {CQ, CQTag} from "go-cqwebsocket";
 import {Plug} from "../Plug.js";
 import {canCall} from "@U/Annotation.js";
-import {CQMessage, sendAdminQQ} from "@U/Util.js";
+import {sendAdminQQ} from "@U/Util.js";
+import {CorpusData} from "@U/Corpus.js";
 
 export class DefaultMsg extends Plug {
 	@canCall({
@@ -40,7 +41,7 @@ export class DefaultMsg extends Plug {
 		weight: 6,
 		deleteMSG: 10,
 	})
-	protected sendReport(event: CQMessage, execArray: RegExpExecArray): CQTag[] {
+	protected sendReport({event, execArray}: CorpusData): CQTag[] {
 		const {txt}: { txt?: string } = execArray.groups as { txt?: string } ?? {};
 		event.stopPropagation();
 		const {nickname, user_id} = event.context.sender;
