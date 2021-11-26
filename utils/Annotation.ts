@@ -8,11 +8,13 @@ interface PlugDecorator {
 	(target: Plug, propertyKey: string): void;
 }
 
-export type canCallFunc = (data: CorpusData) => canCallRet<CQTag[] | string | number | bigint | boolean | symbol>;
-export type canCallRet<T> = T | Promise<T>;
+export type canCallFunc = (data: CorpusData) => canCallRet;
+export type canCallType = CQTag | string | number | bigint | boolean | symbol | canCallType[];
+export type canCallRet = canCallType | void | Promise<canCallType | void>;
 
 /**
- * 可以标注在 `对象属性`，`getter`，{@link canCallFunc} 方法上
+ * 可以标注在 `对象属性`，`getter`，{@link canCallFunc} 方法上<br/>
+ * **注：**当目标**不是**方法时，将会自动停止冒泡
  */
 export function canCall(corpus: ICorpus): PlugDecorator {
 	return (target: { constructor: any; }, propertyKey: string) => {

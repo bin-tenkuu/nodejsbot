@@ -1077,7 +1077,6 @@ export function* Prepend<T>(source: Iterable<T>, ...elements: T[]): Generator<T,
 	yield* AsGenerator(source);
 }
 
-
 export function* Loop<T>(source: Iterable<T>): Generator<T, never, never> {
 	while (true) {
 		let hasItem = false;

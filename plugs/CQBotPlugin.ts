@@ -1,4 +1,4 @@
-import {CQ, CQTag, CQWebSocket} from "go-cqwebsocket";
+import {CQWebSocket} from "go-cqwebsocket";
 import {Plug} from "../Plug.js";
 import {canCall} from "@U/Annotation.js";
 import {ElementAtOrNull} from "@U/Generators.js";
@@ -48,22 +48,6 @@ export class CQBotPlugin extends Plug {
 		default:
 			return;
 		}
-	}
-
-	@canCall({
-		name: ".语料库",
-		regexp: /^[.．。]语料库$/,
-		needAdmin: true,
-		forward: true,
-		maxLength: 10,
-		help: "查看全部语料库状态",
-		weight: 4,
-	})
-	protected corpusList({event}: CorpusData): CQTag[] {
-		event.stopPropagation();
-		return Plug.corpuses.map(({name, isOpen}, index) => {
-			return CQ.text(`${index} (${isOpen}):${name}\n`);
-		});
 	}
 
 	@canCall({
@@ -166,5 +150,20 @@ export class CQBotPlugin extends Plug {
 		}
 		sendAdminQQ(event.bot, String(type)).catch(NOP);
 		return;
+	}
+
+	@canCall({
+		name: ".语料库",
+		regexp: /^[.．。]语料库$/,
+		needAdmin: true,
+		forward: true,
+		maxLength: 10,
+		help: "查看全部语料库状态",
+		weight: 4,
+	})
+	protected get corpusList(): string {
+		return Plug.corpuses.map(({name, isOpen}, index) => {
+			return `${index} (${isOpen}):${name}\n`;
+		}).join("\n");
 	}
 }

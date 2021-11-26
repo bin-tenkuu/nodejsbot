@@ -201,25 +201,17 @@ export class Corpus extends Logable implements ICorpus, JSONable {
 	public readonly funcName: string;
 	public readonly regexp: RegExp;
 	public readonly name: string;
-	public canGroup: boolean;
-	public canPrivate: boolean;
 	public readonly forward: boolean;
 	public readonly needAdmin: boolean;
-	public isOpen: number;
 	public readonly help: string | undefined;
 	public readonly minLength: number;
 	public readonly maxLength: number;
 	public readonly weight: number;
 	public readonly deleteMSG: number;
 	public readonly speedLimit: number;
-
-	public then(event: CQMessage, value: MessageId): void | Promise<void> {
-	}
-
-	public catch(event: CQMessage, value: ErrorAPIResponse): void | Promise<void> {
-		Corpus.logger.error(`${this.toString()}:${JSON.stringify(value)}`);
-	}
-
+	public canGroup: boolean;
+	public canPrivate: boolean;
+	public isOpen: number;
 	#func: Any = undefined;
 
 	constructor(plug: Plug, funcName: string, iCorpus: ICorpus) {
@@ -242,6 +234,13 @@ export class Corpus extends Logable implements ICorpus, JSONable {
 		this.speedLimit = iCorpus.speedLimit ?? 0;
 		iCorpus.then != null && (this.then = iCorpus.then);
 		iCorpus.catch != null && (this.catch = iCorpus.catch);
+	}
+
+	public then(event: CQMessage, value: MessageId): void | Promise<void> {
+	}
+
+	public catch(event: CQMessage, value: ErrorAPIResponse): void | Promise<void> {
+		Corpus.logger.error(`${this.toString()}:${JSON.stringify(value)}`);
 	}
 
 	public override toString(): string {
