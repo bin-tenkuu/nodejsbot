@@ -4,19 +4,25 @@ import {canCall} from "@U/Annotation.js";
 import {lolicon, pixivCat} from "@U/Search.js";
 import {sendAdminGroup} from "@U/Util.js";
 import {CorpusData} from "@U/Corpus.js";
+import {db} from "@U/database.js";
 
 export class CQBotPicture extends Plug {
-	private static code(code: number) {
-		switch (code) {
-		case -1  :
-			return "内部错误";// 请向 i@loli.best 反馈
-		case 0   :
-			return "成功";
-		case 404 :
-			return "找不到符合关键字的色图";
-		default:
-			return "未知的返回码";
-		}
+	private static savePic(pic: PixivPic): void {
+		db.sync(db => {
+			db.prepare(`INSERT INTO PixivPic(pid, p, uid, r18, url)
+            VALUES ($pid, $p, $uid, $r18, $url)
+            ON CONFLICT DO NOTHING;`).run(pic);
+		});
+	}
+
+	private static getRandomPic(r18: 0 | 1): PixivPic {
+		return db.sync(db => {
+			return <PixivPic>db.prepare<[number]>(`SELECT pid, p, uid, r18, url
+            FROM PixivPic
+            WHERE r18 = ?
+            ORDER BY RANDOM()
+            LIMIT 1;`).get(r18);
+		});
 	}
 
 	public setuSet = new Set<string>();
@@ -32,12 +38,36 @@ export class CQBotPicture extends Plug {
 		return super.uninstall();
 	}
 
+	/**获取库中随机色图*/
+	@canCall({
+		name: "来点[<r18>]色图",
+		regexp: /^[来來发發给給l][张張个個幅点點份d](?<r18>r18的?)?[涩色瑟铯s][图圖t]$/i,
+		minLength: 4,
+		maxLength: 15,
+		weight: 5 + 0.1,
+		deleteMSG: 20,
+		speedLimit: 500,
+	})
+	protected getRandomSeTu({event, execArray, member}: CorpusData): CQTag[] {
+		event.stopPropagation();
+		const {r18} = execArray.groups as { r18?: string } ?? {};
+		if (!member.addExp(-3)) {
+			// return [CQ.text("不够活跃")];
+		}
+		const pic: PixivPic = CQBotPicture.getRandomPic(r18 == null ? 0 : 1);
+		const {author, p, pid, url} = pic;
+		const dataMSG: string = `作者：${author}\n原图p${p}：${pid}`;
+
+		return [CQ.image(url), CQ.text(dataMSG)];
+	}
+
 	/**获取随机色图*/
 	@canCall({
 		name: "来点[<r18>][<key>]色图",
 		regexp: /^[来來发發给給l][张張个個幅点點份d](?<r18>r18的?)?(?<keyword>.*)?[涩色瑟铯s][图圖t]$/i,
 		help: "来点色图，可选参数：r18，key",
 		minLength: 4,
+		maxLength: 20,
 		weight: 5,
 		deleteMSG: 20,
 		speedLimit: 2000,
@@ -57,26 +87,20 @@ export class CQBotPicture extends Plug {
 			}
 			this.logger.info("开始色图", groups);
 			const data = await lolicon({
-				size1200: true,
 				keyword: groups.keyword,
 				r18: +groups.r18,
-				num: 1,
 			});
-			if (data.code !== 0) {
-				const message = CQBotPicture.code(data.code);
-				this.logger.warn(`开始色图异常：异常返回码(${data.code})：${message}`);
-				if (data.code === 404) {
-					this.setuSet.add(groups.keyword);
-				}
-				member.addExp(4);
-				return [CQ.text(message)];
-			}
 			const first = data.data[0];
-			if (data.count < 1 || first == null) {
-				this.logger.warn(`开始色图异常：色图数量不足(${data.count})`);
-				return [CQ.text("色图数量不足")];
+			if (data.data.length <= 0 || first == null) {
+				this.logger.warn(`开始色图异常：找不到符合关键字的色图`);
+				this.setuSet.add(groups.keyword);
+				return [CQ.text("找不到符合关键字的色图")];
 			}
-			const dataMSG: string = `作者：${first.author}\n原图p${first.p}：${first.pid}`;
+			const {author, p, pid, r18, urls: {regular: url}, uid} = first;
+			const dataMSG: string = `作者：${author}\n原图p${p}：${pid}`;
+			CQBotPicture.savePic({
+				pid, r18: <0 | 1>+r18, uid, p, url, author,
+			});
 			// if (event.contextType === "message.group") {
 			// 	const {
 			// 		message_id: messageId,
@@ -88,7 +112,7 @@ export class CQBotPicture extends Plug {
 			// 		CQ.node(nickname, userId, CQ.escape(first.tags.join("\n"))),
 			// 	]).catch(NOP);
 			// }
-			return [CQ.image(first.url), CQ.text(dataMSG)];
+			return [CQ.image(url), CQ.text(dataMSG)];
 		} catch (reason) {
 			sendAdminGroup(event.bot, "色图坏了").catch(NOP);
 			this.logger.error(reason);
@@ -156,4 +180,8 @@ export class CQBotPicture extends Plug {
 	protected get SetuSet(): CQTag[] {
 		return [CQ.text(["", ...this.setuSet].join("\n"))];
 	}
+}
+
+type PixivPic = {
+	pid: number, p: number, uid: number, author: string, r18: 0 | 1, url: string
 }

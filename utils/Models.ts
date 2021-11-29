@@ -1,12 +1,13 @@
 export type sauceNAOResult = I.sauceNAOResult;
 export type paulzzhTouHouType = I.paulzzhTouHouType;
 export type loliconPost = I.loliconPost;
+export type setu = I.setu;
 export type loliconDate = I.loliconDate;
 export type toubiecType = I.toubiecType;
 export type pixivCatType = I.pixivCatType;
 export type DMXKType = I.DMXKType;
 export type YHType = I.YHType;
-export type Any = object | string | number | bigint | boolean | symbol | undefined | null;
+export type Any = object | string | number | bigint | boolean | symbol | undefined | null | void;
 
 class Modified implements JSONable {
 	public is_modified: boolean = false;
@@ -140,8 +141,6 @@ module I {
 		title: string
 		/**作者名（入库时，并过滤掉 @ 及其后内容）*/
 		author: string
-		/**图片链接（可能存在有些作品因修改或删除而导致 404 的情况）*/
-		url: string
 		/**是否 R18（在色图库中的分类，并非作者标识的 R18）*/
 		r18: boolean
 		/**原图宽度 px*/
@@ -150,6 +149,12 @@ module I {
 		height: number
 		/**作品标签，包含标签的中文翻译（有的话）*/
 		tags: string[]
+		/**图片扩展名*/
+		ext: string
+		/**作品上传日期；时间戳，单位为毫秒*/
+		uploadDate: number
+		/**包含了所有指定size的图片地址*/
+		urls: { [key in loliconSize]: string }
 	};
 	export type sauceNAOResult = {
 		header: {
@@ -197,34 +202,44 @@ module I {
 		original_url: string
 		original_url_proxy: string
 	}));
+	type loliconSize = "original" | "regular" | "small" | "thumb" | "mini"
 	export type loliconPost = {
 		/**
 		 * 0为非 R18，1为 R18，2为混合（在库中的分类，不等同于作品本身的 R18 标识）
 		 * @default 0
 		 */
 		r18?: number
-		/**返回从标题、作者、标签中按指定关键字模糊匹配的结果，大小写不敏感，性能和准度较差且功能单一，建议使用tag代替*/
-		keyword?: string
 		/**
 		 * 一次返回的结果数量，范围为1到100；在指定关键字或标签的情况下，结果数量可能会不足指定的数量
 		 * @default 1
 		 */
 		num?: number
 		/**
-		 * 是否使用 master_1200 缩略图
+		 * 返回指定uid作者的作品，最多20个
+		 */
+		uid?: number[]
+		/**返回从标题、作者、标签中按指定关键字模糊匹配的结果，大小写不敏感，性能和准度较差且功能单一，建议使用tag代替*/
+		keyword?: string
+		/**
+		 * 返回匹配指定标签的作品，详见下文
+		 */
+		tag?: string[]
+		/**
+		 * 返回指定图片规格的地址，详见下文
 		 * @default ["original"]
 		 */
-		size1200?: boolean
+		size?: loliconSize[]
+		/**
+		 * 设置图片地址所使用的在线反代服务，详见下文
+		 * @default "i.pixiv.cat"
+		 */
+		proxy?: string
 	};
 	export type loliconDate = {
-		/**返回码，可能值详见后续部分*/
-		code: number
-		/**错误信息之类的*/
-		msg: string
-		/**结果数*/
-		count: number
+		/**错误信息*/
+		error: string
 		/**色图数组*/
-		data: I.setu[]
+		data: setu[]
 	};
 	export type toubiecType = {
 		id: string

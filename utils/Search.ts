@@ -54,8 +54,14 @@ export function paulzzhTouHou(): Promise<paulzzhTouHouType> {
  * lolicon API
  */
 export function lolicon(data: loliconPost = {}): Promise<loliconDate> {
-	return axios.get<loliconDate>("https://api.lolicon.app/setu/v1", {
-		params: data,
+	return axios.post<loliconDate>("https://api.lolicon.app/setu/v2", <loliconPost>{
+		...data,
+		size: ["regular"],
+		num: 1,
+	}, {
+		headers: {
+			"Content-Type": "application/json",
+		},
 	}).then<loliconDate>((r) => r.data);
 }
 

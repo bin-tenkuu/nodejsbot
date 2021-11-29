@@ -24,7 +24,9 @@ export function isAtMe({context: {self_id}, cqTags}: CQEvent<"message.group">): 
 	}
 	return cqTags.some((tag: CQTag) => tag instanceof CQAt && +tag.qq === self_id);
 }
-
+export function isMe(bot: CQWebSocket, qq: number): boolean {
+	return bot.qq === qq;
+}
 export function onlyText({context: {raw_message}}: CQMessage): string {
 	if (raw_message != null) {
 		return CQ.unescape(raw_message.replace(/\[[^\]]+]/g, "").trim());

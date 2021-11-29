@@ -2,13 +2,16 @@ import {CQ} from "go-cqwebsocket";
 import {PartialSocketHandle} from "go-cqwebsocket/out/Interfaces";
 import {Plug} from "../Plug.js";
 import {AutoWired, canCall} from "@U/Annotation.js";
-import {isAdmin, sendAdminGroup, sendAdminQQ, sendGroup, sendPrivate} from "@U/Util.js";
-import {CQBot} from "./CQBot.js";
+import {isAdmin, sendAdminGroup, sendGroup, sendPrivate} from "@U/Util.js";
+import type {CQBot} from "@P/CQBot.js";
 import {Corpus, CorpusData} from "@U/Corpus.js";
+import {CQData} from "@S/CQData.js";
 
 export class CQBotEvent extends Plug {
 	@AutoWired()
 	private declare CQBot: CQBot;
+	@AutoWired()
+	private declare CQData: CQData;
 	private header: PartialSocketHandle = {};
 
 	constructor() {
@@ -34,7 +37,7 @@ export class CQBotEvent extends Plug {
 				event.stopPropagation();
 				const {sub_type, group_id, user_id, operator_id} = event.context;
 				if (sub_type === "kick_me") {
-					sendAdminQQ(event.bot, `群 ${group_id} 被踢出`);
+					sendAdminGroup(event.bot, `群 ${group_id} 被踢出`);
 					return;
 				}
 				let str: string;
@@ -47,7 +50,7 @@ export class CQBotEvent extends Plug {
 					str = `@${info.nickname}(${info.user_id})${str}`;
 					return sendGroup(event, [CQ.text(str)]);
 				}).catch(() => {
-					return sendAdminQQ(event.bot, [CQ.text(`来自群：${group_id}\n${str}`)]);
+					return sendAdminGroup(event.bot, [CQ.text(`来自群：${group_id}\n${str}`)]);
 				});
 			},
 			"request.friend": (event) => {
@@ -76,6 +79,12 @@ export class CQBotEvent extends Plug {
 				const {client: {device_name, device_kind}, online} = event.context;
 				sendAdminGroup(event.bot, `其他客户端(${online ? "上线" : "下线"}):\n设备名称:${device_name
 				}\n设备类型:${device_kind}`);
+			},
+			"notice.group_ban": (event) => {
+				const {bot: {qq}, context: {sub_type, user_id, group_id}} = event;
+				if (sub_type === "ban" && user_id === qq) {
+					this.CQData.setGroupBaned(group_id, 1);
+				}
 			},
 		});
 	}

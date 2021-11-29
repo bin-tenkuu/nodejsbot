@@ -3,6 +3,9 @@
 import type {CQTag} from "go-cqwebsocket";
 import type {Plug} from "../Plug.js";
 import {Corpus, CorpusData, ICorpus} from "./Corpus.js";
+import {getLogger} from "@U/logger.js";
+
+const logger = getLogger("Annotation");
 
 interface PlugDecorator {
 	(target: Plug, propertyKey: string): void;
@@ -52,7 +55,6 @@ const AutoInjectMap: Map<string, unknown> = new Map<string, unknown>();
 /**
  * 使用 `private declare <TYPE>: <TYPE>;` 定义值
  * @param {string} key
- * @return {PlugDecorator}
  * @constructor
  */
 export function AutoWired<T>(key?: string): PlugDecorator {
@@ -69,7 +71,9 @@ AutoWired.set = <T>(key: string, value: T) => {
 };
 AutoWired.define = <T>(target: object, propertyKey: string, key: string) => {
 	if (!AutoWired.has(key)) {
-		return undefined;
+		const message: string = `AutoWired Not Found: ${key}`;
+		logger.error(message);
+		throw message;
 	}
 	const value = AutoWired.get(key);
 	Reflect.defineProperty(target, propertyKey, {
