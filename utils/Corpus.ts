@@ -181,19 +181,21 @@ function* cast2Tag(result: Any): Generator<CQTag, void, void> {
 		return;
 	}
 	if (typeof result !== "object") {
-		yield CQ.text(result.toString());
-	} else if (result instanceof CQTag) {
-		yield result;
-	} else if (Array.isArray(result)) {
+		return yield CQ.text(result.toString());
+	}
+	if (result instanceof CQTag) {
+		return yield result;
+	}
+	if (Array.isArray(result)) {
 		if (result.length <= 0) {
 			return;
 		}
 		for (const v of result) {
 			yield* cast2Tag(v);
 		}
-	} else {
-		yield CQ.text(result.toString());
+		return;
 	}
+	return yield CQ.text(result.toString());
 }
 
 export class Corpus extends Logable implements ICorpus, JSONable {
