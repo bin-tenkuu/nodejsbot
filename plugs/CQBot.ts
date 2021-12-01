@@ -106,7 +106,7 @@ export class CQBot extends Plug {
 					corpuses: Plug.corpuses,
 				}).then(b => {
 					b && Counter.getInst().record(event);
-				}, NOP);
+				}, global.NOP);
 			},
 			"message.private": (event) => {
 				const time = process.hrtime();
@@ -118,7 +118,7 @@ export class CQBot extends Plug {
 					corpuses: Plug.corpuses,
 				}).then(b => {
 					b && Counter.getInst().record(event);
-				}, NOP);
+				}, global.NOP);
 			},
 		});
 	}

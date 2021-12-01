@@ -1,5 +1,3 @@
-import {CQ} from "go-cqwebsocket";
-import {CQText} from "go-cqwebsocket/out/tags";
 import {Plug} from "../Plug.js";
 import {canCall} from "@U/Annotation.js";
 import {CQMessage} from "@U/Util.js";
@@ -62,7 +60,7 @@ export class Counter extends Plug {
 		needAdmin: true,
 		weight: 10,
 	})
-	protected get logText(): CQText[] {
-		return [CQ.text(this.info())];
+	protected get logText(): string {
+		return this.info();
 	}
 }

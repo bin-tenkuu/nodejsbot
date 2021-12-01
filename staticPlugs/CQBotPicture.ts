@@ -110,11 +110,11 @@ export class CQBotPicture extends Plug {
 			// 		CQ.nodeId(messageId),
 			// 		CQ.node(nickname, userId, dataMSG),
 			// 		CQ.node(nickname, userId, CQ.escape(first.tags.join("\n"))),
-			// 	]).catch(NOP);
+			// 	]).catch(global.NOP);
 			// }
 			return [CQ.image(url), CQ.text(dataMSG)];
 		} catch (reason) {
-			sendAdminGroup(event.bot, "色图坏了").catch(NOP);
+			sendAdminGroup(event.bot, "色图坏了").catch(global.NOP);
 			this.logger.error(reason);
 			throw "未知错误,或网络错误";
 		}
@@ -164,7 +164,7 @@ export class CQBotPicture extends Plug {
 				return [CQ.image((data.original_url_proxy))];
 			}
 		} catch (e) {
-			sendAdminGroup(event.bot, "p站图片加载出错").catch(NOP);
+			sendAdminGroup(event.bot, "p站图片加载出错").catch(global.NOP);
 			this.logger.error(e);
 			throw "网络请求错误或内部错误";
 		}

@@ -33,21 +33,15 @@ export class CQBotRepeat extends Plug {
 		maxLength: 50,
 		weight: 90,
 	})
-	protected getRepeat({event}: GroupCorpusData): CQTag[] {
+	protected getRepeat({event}: GroupCorpusData): string | void {
 		const {group_id, user_id, raw_message} = event.context;
 		const node = this.repeatCache.get(group_id, new RepeatCache(raw_message));
-		if (node.addUser(user_id)) {
-			return [];
+		if (node.addUser(user_id) || node.times !== 4) {
+			return;
 		}
-		if (node.times !== 4) {
-			return [];
-		}
-		if (event.cqTags.some(tag => !(tag instanceof CQText))) {
-			return [];
-		}
-		const find = event.cqTags.find((tag) => (tag instanceof CQText)) as CQText | undefined;
+		const find = event.cqTags.find((tag) => tag.tagName === "text") as CQText | undefined;
 		if (find == null || /^[-+$*.]/.test(find.text)) {
-			return [];
+			return;
 		}
 		const msg = CQBotRepeat.Random(...event.cqTags.map<string>(tag => {
 			if (tag instanceof CQText) {
@@ -60,9 +54,9 @@ export class CQBotRepeat extends Plug {
 		})).join("");
 		event.stopPropagation();
 		if (msg.length < 4) {
-			return [CQ.text(msg)];
+			return msg;
 		}
-		return [CQ.text(CQBotRepeat.Random(...msg).join(""))];
+		return CQBotRepeat.Random(...msg).join("");
 	}
 
 	@canCall({
@@ -79,13 +73,13 @@ export class CQBotRepeat extends Plug {
 		event.stopPropagation();
 		const {message_id, user_id} = event.context;
 		const cqTags = execArray.input.replace(/吗/g, "")
-		.replace(/(?<!\\)不/g, "\\很")
-		.replace(/(?<!\\)你/g, "\\我")
-		.replace(/(?<!\\)我/g, "\\你")
-		.replace(/(?<![没\\])有/g, "\\没有")
-		.replace(/(?<!\\)没有/g, "\\有")
-		.replace(/[？?]/g, "!")
-		.replace(/\\/g, "");
+				.replace(/(?<!\\)不/g, "\\很")
+				.replace(/(?<!\\)你/g, "\\我")
+				.replace(/(?<!\\)我/g, "\\你")
+				.replace(/(?<![没\\])有/g, "\\没有")
+				.replace(/(?<!\\)没有/g, "\\有")
+				.replace(/[？?]/g, "!")
+				.replace(/\\/g, "");
 		return [
 			CQ.reply(message_id),
 			CQ.at(user_id),

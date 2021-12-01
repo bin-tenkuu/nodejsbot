@@ -1,6 +1,6 @@
 // noinspection JSUnusedGlobalSymbols
 
-import {Logable} from "./logger.js";
+import {hrtime, Logable} from "./logger.js";
 import {CQ, CQEvent, CQTag} from "go-cqwebsocket";
 import {CQMessage, deleteMsg, isAdmin, onlyText, sendGroup, sendPrivate} from "./Util.js";
 import type {Plug} from "../Plug.js";
@@ -82,7 +82,7 @@ export interface ICorpus {
  * @return {Promise<boolean>} 是否发送
  */
 export async function sendGroupTags(data: SendGroupData): Promise<boolean> {
-	const {event, hrtime, member, group, corpuses} = data;
+	const {event, hrtime: time, member, group, corpuses} = data;
 	if (group.baned) {
 		return false;
 	}
@@ -121,7 +121,7 @@ export async function sendGroupTags(data: SendGroupData): Promise<boolean> {
 		}), element, event, corpusName);
 	}
 	if (corpusName.length > 0) {
-		Corpus.hrtime(hrtime, corpusName.join(",") + txt);
+		Corpus.logger.info(hrtime(time, corpusName.join(",") + txt));
 		return true;
 	}
 	return false;
@@ -132,7 +132,7 @@ export async function sendGroupTags(data: SendGroupData): Promise<boolean> {
  * @return {Promise<boolean>} 是否发送
  */
 export async function sendPrivateTags(data: SendPrivateData): Promise<boolean> {
-	const {event, hrtime, member, corpuses} = data;
+	const {event, hrtime: time, member, corpuses} = data;
 	if (member.baned) {
 		return false;
 	}
@@ -156,7 +156,7 @@ export async function sendPrivateTags(data: SendPrivateData): Promise<boolean> {
 		await CorpusThen(sendPrivate(event, msg), element, event, corpusName);
 	}
 	if (corpusName.length > 0) {
-		Corpus.hrtime(hrtime, corpusName.join(",") + txt);
+		Corpus.logger.info(hrtime(time, corpusName.join(",") + txt));
 		return true;
 	}
 	return false;

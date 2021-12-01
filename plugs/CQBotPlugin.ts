@@ -1,13 +1,16 @@
 import {CQWebSocket} from "go-cqwebsocket";
 import {Plug} from "../Plug.js";
-import {canCall} from "@U/Annotation.js";
+import {LazyRequire, canCall} from "@U/Annotation.js";
 import {ElementAtOrNull} from "@U/Generators.js";
 import {sendAdminQQ} from "@U/Util.js";
-import {CQData} from "@S/CQData.js";
+import type {CQData} from "@S/CQData.js";
 import {CorpusData} from "@U/Corpus.js";
 
 export class CQBotPlugin extends Plug {
 	private static method: Readonly<CQWebSocket> = CQWebSocket.prototype;
+	// @AutoWired()
+	@LazyRequire("@S/CQData.js", "CQData")
+	private declare CQData: typeof CQData;
 
 	constructor() {
 		super(module);
@@ -38,7 +41,7 @@ export class CQBotPlugin extends Plug {
 				return list.map(friend => `(${friend.user_id})${friend.nickname}:(${friend.remark})`).join("\n");
 			});
 		case "ban":
-			const data: CQData = CQData.getInst();
+			const data = this.CQData.getInst();
 			const groupBan: number[] = [...data.getGroups()].filter(v => v.baned).map(v => v.id);
 			const banList: number[] = [...data.getMembers()].filter(v => v.baned).map(v => v.id);
 			return `群：\n${groupBan.join("\n")}\n人：\n${banList.join("\n")}`;
@@ -148,7 +151,7 @@ export class CQBotPlugin extends Plug {
 		default:
 			return;
 		}
-		sendAdminQQ(event.bot, String(type)).catch(NOP);
+		sendAdminQQ(event.bot, String(type)).catch(global.NOP);
 		return;
 	}
 

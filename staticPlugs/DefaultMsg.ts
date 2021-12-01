@@ -1,4 +1,3 @@
-import {CQ, CQTag} from "go-cqwebsocket";
 import {Plug} from "../Plug.js";
 import {canCall} from "@U/Annotation.js";
 import {sendAdminQQ} from "@U/Util.js";
@@ -13,7 +12,7 @@ export class DefaultMsg extends Plug {
 		help: "测试bot是否连接正常",
 		weight: 0,
 	})
-	private ping = [CQ.text(".pong!")];
+	private ping = ".pong!";
 
 	@canCall({
 		name: ".data",
@@ -22,11 +21,9 @@ export class DefaultMsg extends Plug {
 		weight: 10,
 		deleteMSG: 90,
 	})
-	private sendReportInfo2 = [
-		CQ.text("开发者QQ：2938137849\n"),
-		CQ.text("项目地址github：2938137849/nodejsbot\n"),
-		CQ.text("轮子github：Mrs4s/go-cqhttp"),
-	];
+	private sendReportInfo2 = "开发者QQ：2938137849\n" +
+			"项目地址github：2938137849/nodejsbot\n" +
+			"轮子github：Mrs4s/go-cqhttp";
 
 	constructor() {
 		super(module);
@@ -41,12 +38,12 @@ export class DefaultMsg extends Plug {
 		weight: 6,
 		deleteMSG: 10,
 	})
-	protected sendReport({event, execArray}: CorpusData): CQTag[] {
+	protected sendReport({event, execArray}: CorpusData): string {
 		const {txt}: { txt?: string } = execArray.groups as { txt?: string } ?? {};
 		event.stopPropagation();
 		const {nickname, user_id} = event.context.sender;
-		sendAdminQQ(event.bot, `来自 ${nickname} (${user_id}):\n${txt}`).catch(NOP);
-		return [CQ.text("收到")];
+		sendAdminQQ(event.bot, `来自 ${nickname} (${user_id}):\n${txt}`).catch(global.NOP);
+		return "收到";
 	}
 
 }

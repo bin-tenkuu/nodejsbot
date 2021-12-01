@@ -1,12 +1,12 @@
 import "reflect-metadata";
 import "./Plug.js";
+import {getLogger, hrtime} from "@U/logger.js";
 import {Counter} from "@S/Counter.js";
 import {CQBotCOC} from "@S/CQBotCOC.js";
 import {CQBotRepeat} from "@S/CQBotRepeat.js";
 import {CQBotSearch} from "@S/CQBotSearch.js";
 import {CQData} from "@S/CQData.js";
 import {DefaultMsg} from "@S/DefaultMsg.js";
-import {getLogger, Logable} from "@U/logger.js";
 import {HttpOption} from "@S/httpOption.js";
 import {CQBot} from "@P/CQBot.js";
 import {CQBotEvent} from "@P/CQBotEvent.js";
@@ -15,11 +15,8 @@ import {CQBotPlugin} from "@P/CQBotPlugin.js";
 
 const logger = getLogger();
 const time = process.hrtime();
-declare global {
-	function NOP(e: any): void;
-}
-// noinspection JSUnusedGlobalSymbols
 global.NOP = (e) => logger.debug(e);
+global.require = require;
 
 //*
 Promise.resolve().then(async () => {
@@ -38,5 +35,5 @@ Promise.resolve().then(async () => {
 	await CQBotPlugin.getInst().install();
 }).then(() => {
 	logger.info("启动完成");
-	Logable.hrtime(time, "初始化");
+	hrtime(time, "初始化");
 });//*/

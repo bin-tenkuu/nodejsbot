@@ -31,7 +31,7 @@ export class CQBotEvent extends Plug {
 				} else {
 					str = `@${user_id} 被管理员{@${operator_id}} ${sub_type === "approve" ? "同意" : "邀请"}入群`;
 				}
-				sendGroup(event, [CQ.text(str)]).catch(NOP);
+				sendGroup(event, [CQ.text(str)]).catch(global.NOP);
 			},
 			"notice.group_decrease": (event) => {
 				event.stopPropagation();
@@ -57,13 +57,13 @@ export class CQBotEvent extends Plug {
 				event.stopPropagation();
 				const {user_id, flag} = event.context;
 				sendAdminGroup(event.bot, `${user_id}请求加好友`);
-				event.bot.set_friend_add_request(flag, true).catch(NOP);
+				event.bot.set_friend_add_request(flag, true).catch(global.NOP);
 			},
 			"request.group": (event) => {
 				event.stopPropagation();
 				const {flag, sub_type, group_id} = event.context;
 				sendAdminGroup(event.bot, `${group_id}请求入群`);
-				event.bot.set_group_add_request(flag, sub_type, true).catch(NOP);
+				event.bot.set_group_add_request(flag, sub_type, true).catch(global.NOP);
 			},
 			"notice.offline_file": (event) => {
 				event.stopPropagation();
@@ -81,9 +81,10 @@ export class CQBotEvent extends Plug {
 				}\n设备类型:${device_kind}`);
 			},
 			"notice.group_ban": (event) => {
-				const {bot: {qq}, context: {sub_type, user_id, group_id}} = event;
-				if (sub_type === "ban" && user_id === qq) {
+				const {bot, context: {sub_type, user_id, group_id}} = event;
+				if (sub_type === "ban" && user_id === bot.qq) {
 					this.CQData.setGroupBaned(group_id, 1);
+					sendAdminGroup(bot, `群${group_id}被禁言，已ban`);
 				}
 			},
 		});

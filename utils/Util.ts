@@ -66,9 +66,9 @@ export function sendAdminGroup(bot: CQWebSocket, message: CQTag[] | string): Pro
 
 export function sendAuto(event: CQMessage, message: CQTag[] | string): void {
 	if (event.contextType === "message.group") {
-		sendGroup(event, message).catch(NOP);
+		sendGroup(event, message).catch(global.NOP);
 	} else if (event.contextType === "message.private") {
-		sendPrivate(event, message).catch(NOP);
+		sendPrivate(event, message).catch(global.NOP);
 	}
 }
 
@@ -122,7 +122,7 @@ export function deleteMsg(bot: CQWebSocket, id: number, delay: number = 0): Node
 		delay = 0;
 	}
 	return setTimeout(() => {
-		bot.delete_msg(id).catch(NOP);
+		bot.delete_msg(id).catch(global.NOP);
 	}, delay * 1000);
 }
 

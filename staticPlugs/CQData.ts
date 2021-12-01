@@ -160,10 +160,9 @@ export class CQData extends Plug {
 		minLength: 0,
 		weight: Infinity,
 	})
-	protected addEXP({event}: GroupCorpusData): CQTag[] {
+	protected addEXP({event, member}: GroupCorpusData): void {
 		event.stopPropagation();
-		this.getMember(event.context.user_id).addExp(1);
-		return [];
+		member.addExp(1);
 	}
 
 	@canCall({

@@ -88,17 +88,17 @@ function defineLogger(target: Function): Logger {
 	return logger;
 }
 
-export class Logable {
-	public static hrtime(time: [number, number], msg: string = "本次请求"): string {
-		let [s, ns] = process.hrtime(time);
-		ns /= 1e3;
-		if (ns < 1e3) {
-			return `耗时 ${s} 秒 ${ns} 微秒:\t${msg}`;
-		}
-		ns = (ns | 0) / 1e3;
-		return `耗时 ${s} 秒 ${ns} 毫秒:\t${msg}`;
+export function hrtime(time: [number, number], msg: string = "本次请求"): string {
+	let [s, ns] = process.hrtime(time);
+	ns /= 1e3;
+	if (ns < 1e3) {
+		return `耗时 ${s} 秒 ${ns} 微秒:\t${msg}`;
 	}
+	ns = (ns | 0) / 1e3;
+	return `耗时 ${s} 秒 ${ns} 毫秒:\t${msg}`;
+}
 
+export class Logable {
 	public static get logger(): Logger {
 		return defineLogger(this);
 	}

@@ -11,6 +11,10 @@ interface PlugDecorator {
 	(target: Plug, propertyKey: string): void;
 }
 
+interface FuncDecorator {
+	(target: object, propertyKey: string | symbol): void;
+}
+
 export type canCallFunc = (data: CorpusData) => canCallRet;
 export type canCallType = CQTag | string | number | bigint | boolean | symbol | canCallType[];
 export type canCallRet = canCallType | void | Promise<canCallType | void>;
@@ -89,4 +93,26 @@ AutoWired.get = <T>(key: string): T | undefined => {
 };
 AutoWired.has = <T>(key: string): boolean => {
 	return AutoInjectMap.has(key);
+};
+export function LazyRequire(path: string, path2: string): FuncDecorator {
+	return (target, propertyKey) => {
+		return <PropertyDescriptor>{
+			configurable: true,
+			enumerable: false,
+			get: LazyRequire.define.bind(null, target, propertyKey, path, path2),
+		};
+	};
+}
+LazyRequire.define = <T>(target: object, propertyKey: string | symbol, path: string, path2: string) => {
+	const value = LazyRequire.get(path, path2);
+	Reflect.defineProperty(target, propertyKey, {
+		configurable: true,
+		enumerable: false,
+		writable: false,
+		value: value,
+	});
+	return value;
+};
+LazyRequire.get = (path: string, path2: string) => {
+	return global.require(path)[path2];
 };
