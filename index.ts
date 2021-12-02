@@ -35,5 +35,5 @@ Promise.resolve().then(async () => {
 	await CQBotPlugin.getInst().install();
 }).then(() => {
 	logger.info("启动完成");
-	hrtime(time, "初始化");
+	logger.info(hrtime(time, "初始化"));
 });//*/
