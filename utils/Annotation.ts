@@ -19,11 +19,17 @@ export type canCallFunc = (data: CorpusData) => canCallRet;
 export type canCallType = CQTag | string | number | bigint | boolean | symbol | canCallType[];
 export type canCallRet = canCallType | void | Promise<canCallType | void>;
 
+interface canCall {
+	(corpus: ICorpus): PlugDecorator;
+	get(target: Plug, corpuses: Corpus[]): void;
+	separate(target: Plug, corpuses: Corpus[]): void;
+}
+
 /**
  * 可以标注在 `对象属性`，`getter`，{@link canCallFunc} 方法上<br/>
  * **注：**当目标**不是**方法时，将会自动停止冒泡
  */
-export function canCall(corpus: ICorpus): PlugDecorator {
+function canCall(corpus: ICorpus): PlugDecorator {
 	return (target: { constructor: any; }, propertyKey: string) => {
 		const corpuses: Map<string, ICorpus> = canCall.get(target.constructor);
 		corpuses.set(propertyKey, corpus);
@@ -37,7 +43,7 @@ canCall.get = function (target: new() => Plug): Map<string, ICorpus> {
 	}
 	return metadata;
 };
-canCall.merge = function (target: Plug, corpuses: Corpus[]) {
+canCall.merge = function (target: Plug, corpuses: Corpus[]): void {
 	for (const [key, corpus] of canCall.get(<any>target.constructor)) {
 		const index: number = corpuses.findIndex(value => value.weight > corpus.weight);
 		if (index === -1) {
@@ -47,7 +53,7 @@ canCall.merge = function (target: Plug, corpuses: Corpus[]) {
 		}
 	}
 };
-canCall.separate = function (target: Plug, corpuses: Corpus[]) {
+canCall.separate = function (target: Plug, corpuses: Corpus[]): void {
 	for (let i = corpuses.length - 1; i >= 0; i--) {
 		if (corpuses[i].plug === target) {
 			corpuses.splice(i, 1);
@@ -61,7 +67,7 @@ const AutoInjectMap: Map<string, unknown> = new Map<string, unknown>();
  * @param {string} key
  * @constructor
  */
-export function AutoWired<T>(key?: string): PlugDecorator {
+function AutoWired<T>(key?: string): PlugDecorator {
 	return (target, propertyKey) => {
 		return <PropertyDescriptor>{
 			configurable: true,
@@ -94,7 +100,8 @@ AutoWired.get = <T>(key: string): T | undefined => {
 AutoWired.has = <T>(key: string): boolean => {
 	return AutoInjectMap.has(key);
 };
-export function LazyRequire(path: string, path2: string): FuncDecorator {
+
+function LazyRequire(path: string, path2: string): FuncDecorator {
 	return (target, propertyKey) => {
 		return <PropertyDescriptor>{
 			configurable: true,
@@ -115,4 +122,8 @@ LazyRequire.define = <T>(target: object, propertyKey: string | symbol, path: str
 };
 LazyRequire.get = (path: string, path2: string) => {
 	return global.require(path)[path2];
+};
+
+export {
+	canCall, AutoWired, LazyRequire,
 };

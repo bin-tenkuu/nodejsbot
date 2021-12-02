@@ -1,3 +1,4 @@
+const time = process.hrtime();
 import "reflect-metadata";
 import "./Plug.js";
 import {getLogger, hrtime} from "@U/logger.js";
@@ -8,13 +9,12 @@ import {CQBotSearch} from "@S/CQBotSearch.js";
 import {CQData} from "@S/CQData.js";
 import {DefaultMsg} from "@S/DefaultMsg.js";
 import {HttpOption} from "@S/httpOption.js";
+import {CQBotPicture} from "@S/CQBotPicture.js";
 import {CQBot} from "@P/CQBot.js";
 import {CQBotEvent} from "@P/CQBotEvent.js";
-import {CQBotPicture} from "@S/CQBotPicture.js";
 import {CQBotPlugin} from "@P/CQBotPlugin.js";
 
 const logger = getLogger();
-const time = process.hrtime();
 global.NOP = (e) => logger.debug(e);
 global.require = require;
 
