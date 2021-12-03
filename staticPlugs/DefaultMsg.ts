@@ -1,7 +1,7 @@
 import {Plug} from "../Plug.js";
 import {canCall} from "@U/Annotation.js";
-import {sendAdminQQ} from "@U/Util.js";
-import {CorpusData} from "@U/Corpus.js";
+import {isAdmin, sendAdminQQ} from "@U/Util.js";
+import {Corpus, CorpusData} from "@U/Corpus.js";
 
 export class DefaultMsg extends Plug {
 	@canCall({
@@ -12,8 +12,7 @@ export class DefaultMsg extends Plug {
 		help: "测试bot是否连接正常",
 		weight: 0,
 	})
-	private ping = ".pong!";
-
+	protected ping = ".pong!";
 	@canCall({
 		name: ".data",
 		regexp: /^[.．。]data$/,
@@ -21,9 +20,15 @@ export class DefaultMsg extends Plug {
 		weight: 10,
 		deleteMSG: 90,
 	})
-	private sendReportInfo2 = "开发者QQ：2938137849\n" +
-			"项目地址github：2938137849/nodejsbot\n" +
-			"轮子github：Mrs4s/go-cqhttp";
+	protected sendReportInfo2 = "开发者QQ：2938137849\n项目地址github：2938137849/nodejsbot\n轮子github：Mrs4s/go-cqhttp";
+	@canCall({
+		name: ".ding",
+		regexp: /^[.．。]ding$/i,
+		minLength: 4,
+		maxLength: 6,
+		weight: 0,
+	})
+	protected ding = ".dong!";
 
 	constructor() {
 		super(module);
@@ -46,6 +51,28 @@ export class DefaultMsg extends Plug {
 		return "收到";
 	}
 
+	@canCall({
+		name: ".(help|帮助)<id>",
+		regexp: /^[.．。](?:help|帮助)(?<num> *\d*)$/,
+		forward: true,
+		weight: 2,
+		minLength: 3,
+		maxLength: 10,
+	})
+	protected getHelp({event, execArray}: CorpusData): string {
+		const {num} = execArray.groups as { num: string } ?? {};
+		const predicate: (c: Corpus) => boolean = isAdmin(event) ?
+				c => c.help != null :
+				c => c.isOpen > 0 && !c.needAdmin && c.help != null;
+		const corpuses: Corpus[] = Plug.corpuses.filter(predicate);
+		if (+num > 0) {
+			const corpus: Corpus | undefined = corpuses[+num];
+			if (corpus != null) {
+				return `${corpus.name}${corpus.help}`;
+			}
+		}
+		return corpuses.map<string>((c, i) => `${i} :${c.name}`).join("\n");
+	}
 }
 
 /*

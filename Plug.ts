@@ -25,6 +25,19 @@ export abstract class Plug extends Logable implements JSONable {
 		return <T>instance;
 	}
 
+	public static exitAll(): Promise<void> {
+		return Promise.all([...this.plugs.values()].map((p) => p.uninstall())).then(_ => {
+			this.logger.info(">>>>>>>>>> 全部卸载完成 <<<<<<<<<<");
+			if (process.execArgv.includes("--inspect")) {
+				return;
+			}
+			setTimeout(() => {
+				this.logger.info("退出");
+				process.exit(0);
+			}, 500);
+		});
+	}
+
 	public readonly module: NodeModule;
 	public declare readonly __proto__: Readonly<this>;
 	public description: string = "这个插件没有描述";

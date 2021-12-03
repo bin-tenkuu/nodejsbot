@@ -14,7 +14,7 @@ import {CQBot} from "@P/CQBot.js";
 import {CQBotEvent} from "@P/CQBotEvent.js";
 import {CQBotPlugin} from "@P/CQBotPlugin.js";
 
-const logger = getLogger();
+const logger = getLogger("index");
 global.NOP = (e) => logger.debug(e);
 global.require = require;
 

@@ -102,7 +102,7 @@ export async function sendGroupTags(data: SendGroupData): Promise<boolean> {
 			Corpus.logger.info(`禁用${element.toString()}：${txt}`);
 			continue;
 		}
-		const msg = await element.run(event, exec, member, group);
+		const msg = await element.run({event, execArray: exec, hrtime: time, member, group});
 		if (msg.length < 1) {
 			continue;
 		}
@@ -149,7 +149,7 @@ export async function sendPrivateTags(data: SendPrivateData): Promise<boolean> {
 			Corpus.logger.info(`禁用${element.toString()}：${txt}`);
 			continue;
 		}
-		const msg = await element.run(event, exec, member);
+		const msg = await element.run({event, execArray: exec, hrtime: time, member});
 		if (msg.length < 1) {
 			continue;
 		}
@@ -293,14 +293,8 @@ export class Corpus extends Logable implements ICorpus, JSONable {
 		return this.regexp.exec(text);
 	}
 
-	public async run(event: CQEvent<"message.private">, execArray: RegExpExecArray | null,
-			member: Member, group?: undefined): Promise<CQTag[]>;
-
-	public async run(event: CQEvent<"message.group">, execArray: RegExpExecArray | null,
-			member: Member, group: Group): Promise<CQTag[]>;
-
-	public async run(event: CQMessage, execArray: RegExpExecArray | null, member: Member,
-			group?: Group): Promise<CQTag[]> {
+	public async run(data: CorpusData): Promise<CQTag[]> {
+		const {event, execArray} = data;
 		if (execArray == null) {
 			return [];
 		}
@@ -323,9 +317,9 @@ export class Corpus extends Logable implements ICorpus, JSONable {
 				event.stopPropagation();
 				result = this.#func;
 			} else if (this.canPrivate && event.contextType === "message.private") {
-				result = await (<canCallFunc>this.#func)({event, execArray, member});
+				result = await (<canCallFunc>this.#func)(data);
 			} else if (this.canGroup && event.contextType === "message.group") {
-				result = await (<canCallFunc>this.#func)({event, execArray, member, group});
+				result = await (<canCallFunc>this.#func)(data);
 			} else {
 				this.logger.info(`不可调用[${this.toString()}]`);
 				result = `插件${this.toString()}方法不可在${event.contextType}环境下调用`;
@@ -374,6 +368,7 @@ interface SendGroupData {
 
 export interface CorpusData {
 	event: CQMessage;
+	hrtime: [number, number];
 	execArray: RegExpExecArray;
 	member: Member;
 	group?: Group | undefined;
@@ -381,6 +376,7 @@ export interface CorpusData {
 
 export interface PrivateCorpusData {
 	event: CQEvent<"message.private">;
+	hrtime: [number, number];
 	execArray: RegExpExecArray;
 	member: Member;
 	group?: Group | undefined;
@@ -388,6 +384,7 @@ export interface PrivateCorpusData {
 
 export interface GroupCorpusData {
 	event: CQEvent<"message.group">;
+	hrtime: [number, number];
 	execArray: RegExpExecArray;
 	member: Member;
 	group: Group;

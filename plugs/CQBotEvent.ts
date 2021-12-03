@@ -1,10 +1,9 @@
 import {CQ} from "go-cqwebsocket";
 import {PartialSocketHandle} from "go-cqwebsocket/out/Interfaces";
 import {Plug} from "../Plug.js";
-import {AutoWired, canCall} from "@U/Annotation.js";
-import {isAdmin, sendAdminGroup, sendGroup, sendPrivate} from "@U/Util.js";
+import {AutoWired} from "@U/Annotation.js";
+import {sendAdminGroup, sendGroup, sendPrivate} from "@U/Util.js";
 import type {CQBot} from "@P/CQBot.js";
-import {Corpus, CorpusData} from "@U/Corpus.js";
 import {CQData} from "@S/CQData.js";
 
 export class CQBotEvent extends Plug {
@@ -93,28 +92,4 @@ export class CQBotEvent extends Plug {
 	public override async uninstall() {
 		this.CQBot.bot.unbind(this.header);
 	}
-
-	@canCall({
-		name: ".(help|帮助)<id>",
-		regexp: /^[.．。](?:help|帮助)(?<num> *\d*)$/,
-		forward: true,
-		weight: 2,
-		minLength: 3,
-		maxLength: 10,
-	})
-	protected getHelp({event, execArray}: CorpusData): string {
-		const {num} = execArray.groups as { num: string } ?? {};
-		const predicate: (c: Corpus) => boolean = isAdmin(event) ?
-				c => c.help != null :
-				c => c.isOpen > 0 && !c.needAdmin && c.help != null;
-		const corpuses: Corpus[] = Plug.corpuses.filter(predicate);
-		if (+num > 0) {
-			const corpus: Corpus | undefined = corpuses[+num];
-			if (corpus != null) {
-				return `${corpus.name}${corpus.help}`;
-			}
-		}
-		return corpuses.map<string>((c, i) => `${i} :${c.name}`).join("\n");
-	}
-
 }

@@ -4,20 +4,11 @@ import {Plug} from "../Plug.js";
 type ServerHandle = (req: IncomingMessage, res: ServerResponse) => void;
 
 function create(): Map<string, ServerHandle> {
-	return new Map<string, ServerHandle>(Object.entries<ServerHandle>({
+	return new Map<string, ServerHandle>(Object.entries(<{ [p: string]: ServerHandle }>{
 		"/exit": (req, res) => {
 			res.setHeader("Content-type", "text/html; charset=utf-8");
 			res.end("开始退出\n");
-			Promise.all([...(Plug.plugs.values())].map((p) => p.uninstall())).then<void>(() => {
-				HttpOption.logger.info(">>>>>>>>>> 全部卸载完成 <<<<<<<<<<");
-				if (process.execArgv.includes("--inspect")) {
-					return;
-				}
-				setTimeout(() => {
-					HttpOption.logger.log("退出");
-					process.exit(0);
-				}, 500);
-			});
+			Plug.exitAll().catch(global.NOP);
 		},
 		"404": (req, res) => {
 			res.writeHead(404);
