@@ -14,3 +14,4 @@
 /.pnpm-debug.log
 /pnpm-lock.yaml
 /package-lock.json
+!/ecosystem.config.js
