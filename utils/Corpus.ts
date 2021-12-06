@@ -2,9 +2,8 @@
 
 import {hrtime, Logable} from "./logger.js";
 import {CQ, CQEvent, CQTag} from "go-cqwebsocket";
-import {CQMessage, deleteMsg, isAdmin, onlyText, sendGroup, sendPrivate} from "@U/Util.js";
+import {CQMessage, deleteMsg, isAdmin, onlyText, sendAdminQQ, sendGroup, sendPrivate} from "@U/Util.js";
 import type {Plug, PlugDecorator} from "../Plug.js";
-import type {MessageId} from "go-cqwebsocket/out/Interfaces.js";
 import type {Any, Group, JSONable, Member} from "@U/Models.js";
 
 export interface ICorpus {
@@ -86,15 +85,10 @@ export async function sendGroupTags(data: SendGroupData): Promise<boolean> {
 	}
 	const text = onlyText(event);
 	const corpusName: string[] = [];
-	const {user_id, group_id} = event.context;
-	const txt = `\t来源：${group_id}.${user_id}：${text}`;
+	const txt = `\t来源：${group.id}.${member.id}：${text}`;
 	for (const element of corpuses) {
 		const exec: RegExpExecArray | null = element.execGroup(event, text);
 		if (exec == null) {
-			continue;
-		}
-		if (element.isOpen === 0) {
-			Corpus.logger.info(`禁用${element.toString()}：${txt}`);
 			continue;
 		}
 		const msg = await element.run({event, execArray: exec, hrtime: time, member, group});
@@ -108,12 +102,18 @@ export async function sendGroupTags(data: SendGroupData): Promise<boolean> {
 		// } else {
 		// 	return sendForwardQuick(event, tags);
 		// }
-		await CorpusThen(sendGroup(event, msg).then((msg) => {
+		await sendGroup(event, msg).then((msg) => {
 			if (element.deleteMSG > 0) {
 				deleteMsg(event.bot, msg.message_id, element.deleteMSG);
 			}
-			return msg;
-		}), element, event, corpusName);
+			element.laterOpen();
+		}).finally(() => {
+			corpusName.push(element.name);
+		}).catch((e) => {
+			Corpus.logger.error(e);
+			element.canGroup = false;
+			return sendAdminQQ(event.bot, `群聊消息发送失败：${element.toString()}`);
+		}).catch(global.NOP);
 	}
 	if (corpusName.length > 0) {
 		Corpus.logger.info(hrtime(time, corpusName.join(",") + txt));
@@ -133,39 +133,31 @@ export async function sendPrivateTags(data: SendPrivateData): Promise<boolean> {
 	}
 	const text = onlyText(event);
 	const corpusName: string[] = [];
-	const {user_id} = event.context;
-	const txt = `\t来源：${user_id}：${text}`;
+	const txt = `\t来源：${member.id}：${text}`;
 	for (const element of corpuses) {
 		const exec: RegExpExecArray | null = element.execPrivate(event, text);
 		if (exec == null) {
-			continue;
-		}
-		if (element.isOpen === 0) {
-			Corpus.logger.info(`禁用${element.toString()}：${txt}`);
 			continue;
 		}
 		const msg = await element.run({event, execArray: exec, hrtime: time, member});
 		if (msg.length < 1) {
 			continue;
 		}
-		await CorpusThen(sendPrivate(event, msg), element, event, corpusName);
+		await sendPrivate(event, msg).then(() => {
+			element.laterOpen();
+		}).finally(() => {
+			corpusName.push(element.name);
+		}).catch((e) => {
+			Corpus.logger.error(e);
+			element.isOpen = -1;
+			return sendAdminQQ(event.bot, `私聊消息发送失败：${element.toString()}`);
+		}).catch(global.NOP);
 	}
 	if (corpusName.length > 0) {
 		Corpus.logger.info(hrtime(time, corpusName.join(",") + txt));
 		return true;
 	}
 	return false;
-}
-
-function CorpusThen(prom: Promise<MessageId>, element: Corpus, event: CQMessage, corpus: string[]): Promise<void> {
-	return prom.then(() => {
-		element.laterOpen();
-	}).finally(() => {
-		corpus.push(element.name);
-	}).catch((e) => {
-		Corpus.logger.error(e);
-		element.isOpen = -1;
-	});
 }
 
 function* cast2Tag(result: Any): Generator<CQTag, void, void> {
@@ -206,7 +198,6 @@ export class Corpus extends Logable implements ICorpus, JSONable {
 	public canGroup: boolean;
 	public canPrivate: boolean;
 	public isOpen: number;
-	#func: Any = undefined;
 
 	constructor(plug: Plug, funcName: string, iCorpus: ICorpus) {
 		super();
@@ -277,32 +268,32 @@ export class Corpus extends Logable implements ICorpus, JSONable {
 	}
 
 	public async run(data: CorpusData): Promise<CQTag[]> {
+		if (this.isOpen === 0) {
+			return [];
+		}
 		const {event, execArray} = data;
 		if (execArray == null) {
 			return [];
 		}
-		if (this.#func == null) {
-			const obj: unknown = Reflect.get(this.plug, this.funcName);
-			if (obj == null) {
-				this.isOpen = -1;
-				const text = `插件${this.toString()}没有任何值`;
-				this.logger.error(text);
-				return [CQ.text(text)];
-			}
-			this.#func = typeof obj === "function" ? (<Function>obj).bind(this.plug) : obj;
+		const obj: Any = Reflect.get(this.plug, this.funcName);
+		if (obj == null) {
+			this.isOpen = -1;
+			const text = `插件${this.toString()}没有任何值`;
+			this.logger.error(text);
+			return [CQ.text(text)];
 		}
 		try {
 			if (this.speedLimit > 0) {
 				this.isOpen = 0;
 			}
 			let result: Any;
-			if (typeof this.#func !== "function") {
+			if (typeof obj !== "function") {
 				event.stopPropagation();
-				result = this.#func;
+				result = obj;
 			} else if (this.canPrivate && event.contextType === "message.private") {
-				result = await (<canCallFunc>this.#func)(data);
+				result = await (<canCallFunc>obj).call(this.plug, data);
 			} else if (this.canGroup && event.contextType === "message.group") {
-				result = await (<canCallFunc>this.#func)(data);
+				result = await (<canCallFunc>obj).call(this.plug, data);
 			} else {
 				this.logger.info(`不可调用[${this.toString()}]`);
 				result = `插件${this.toString()}方法不可在${event.contextType}环境下调用`;
@@ -310,8 +301,9 @@ export class Corpus extends Logable implements ICorpus, JSONable {
 			return [...cast2Tag(result)];
 		} catch (e) {
 			this.isOpen = -1;
-			this.logger.error("调用出错:", e);
-			return [CQ.text(`调用出错:` + this.toString())];
+			this.logger.error("调用出错：", e);
+			sendAdminQQ(event.bot, `调用出错：${this.toString()}`).catch(global.NOP);
+			return [];
 		}
 	}
 
