@@ -277,10 +277,8 @@ export class Corpus extends Logable implements ICorpus, JSONable {
 		}
 		const obj: Any = Reflect.get(this.plug, this.funcName);
 		if (obj == null) {
-			this.isOpen = -1;
-			const text = `插件${this.toString()}没有任何值`;
-			this.logger.error(text);
-			return [CQ.text(text)];
+			this.logger.error(`插件${this.toString()}没有任何值`);
+			return [];
 		}
 		try {
 			if (this.speedLimit > 0) {
