@@ -89,12 +89,12 @@ export async function sendGroupTags(data: SendGroupData): Promise<boolean> {
 	const {user_id, group_id} = event.context;
 	const txt = `\t来源：${group_id}.${user_id}：${text}`;
 	for (const element of corpuses) {
-		if (element.isOpen === 0) {
-			Corpus.logger.info(`禁用${element.toString()}：${txt}`);
-			continue;
-		}
 		const exec: RegExpExecArray | null = element.execGroup(event, text);
 		if (exec == null) {
+			continue;
+		}
+		if (element.isOpen === 0) {
+			Corpus.logger.info(`禁用${element.toString()}：${txt}`);
 			continue;
 		}
 		const msg = await element.run({event, execArray: exec, hrtime: time, member, group});
@@ -136,12 +136,12 @@ export async function sendPrivateTags(data: SendPrivateData): Promise<boolean> {
 	const {user_id} = event.context;
 	const txt = `\t来源：${user_id}：${text}`;
 	for (const element of corpuses) {
-		if (element.isOpen === 0) {
-			Corpus.logger.info(`禁用${element.toString()}：${txt}`);
-			continue;
-		}
 		const exec: RegExpExecArray | null = element.execPrivate(event, text);
 		if (exec == null) {
+			continue;
+		}
+		if (element.isOpen === 0) {
+			Corpus.logger.info(`禁用${element.toString()}：${txt}`);
 			continue;
 		}
 		const msg = await element.run({event, execArray: exec, hrtime: time, member});
