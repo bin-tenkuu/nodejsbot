@@ -1,0 +1,21 @@
+{
+	"$schema": "https://json.schemastore.org/pm2-ecosystem.json",
+	"apps": [
+		{
+			"name": "nodejsbot",
+			"script": "test2.js",
+			"cwd": "./",
+			"args": [],
+			"autorestart": false,
+			"max_restarts": 5,
+			"min_uptime": 60000,
+			"restart_delay": 5000,
+			"out_file": "./logs/normal.log",
+			"error_file": "./logs/error.log",
+			"combine_logs": true,
+			"kill_timeout": 10000,
+			"shutdown_with_message": true,
+			"watch": false
+		}
+	]
+}

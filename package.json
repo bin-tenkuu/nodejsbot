@@ -1,20 +1,11 @@
 {
 	"name": "nodejsbot",
-	"version": "1.0.0",
+	"version": "1.0",
 	"description": "demo",
 	"engines": {
 		"node": ">=16"
 	},
 	"main": "index.js",
-	"files": [
-		"config/*.json",
-		"plugs/*.js",
-		"staticPlugs/*.js",
-		"utils/*.js",
-		"index.js",
-		"Plug.js",
-		"tsconfig.json"
-	],
 	"type": "commonjs",
 	"scripts": {
 		"build": "tsc",
@@ -22,11 +13,11 @@
 		"stop": "curl http://127.0.0.1:40000/exit",
 		"start": "node -r tsconfig-paths/register.js index.js",
 		"ipsort": "node ipsort.js",
-		"pm2:start": "pm2 start ./ecosystem.config.js",
-		"pm2:restart": "pm2 restart ./ecosystem.config.js",
-		"pm2:reload": "pm2 reload ./ecosystem.config.js",
-		"pm2:stop": "pm2 stop ./ecosystem.config.js",
-		"pm2:delete": "pm2 delete ./ecosystem.config.js"
+		"pm2:start": "pm2 start ecosystem.config.json",
+		"pm2:restart": "pm2 restart ecosystem.config.json",
+		"pm2:reload": "pm2 reload ecosystem.config.json",
+		"pm2:stop": "pm2 stop ecosystem.config.json",
+		"pm2:delete": "pm2 delete ecosystem.config.json"
 	},
 	"keywords": [
 		"demo"

@@ -186,16 +186,16 @@ function* cast2Tag(result: Any): Generator<CQTag, void, void> {
 	if (result instanceof CQTag) {
 		return yield result;
 	}
-	if (Array.isArray(result)) {
-		if (result.length <= 0) {
-			return;
-		}
-		for (const v of result) {
-			yield* cast2Tag(v);
-		}
+	if (!Array.isArray(result)) {
+		return yield CQ.text(result.toString());
+	}
+	if (result.length <= 0) {
 		return;
 	}
-	return yield CQ.text(result.toString());
+	for (const v of result) {
+		yield* cast2Tag(v);
+	}
+	return;
 }
 
 export class Corpus extends Logable implements ICorpus, JSONable {
@@ -371,6 +371,9 @@ export interface CorpusData {
 	hrtime: [number, number];
 	execArray: RegExpExecArray;
 	member: Member;
+	/**
+	 * 当且仅当 {@link event} 的类型为 {@code CQEvent<"message.group">} 时有值
+	 */
 	group?: Group | undefined;
 }
 
@@ -379,7 +382,7 @@ export interface PrivateCorpusData {
 	hrtime: [number, number];
 	execArray: RegExpExecArray;
 	member: Member;
-	group?: Group | undefined;
+	group?: undefined;
 }
 
 export interface GroupCorpusData {
