@@ -91,7 +91,7 @@ export async function sendGroupTags(data: SendGroupData): Promise<boolean> {
 		if (exec == null) {
 			continue;
 		}
-		const msg = await element.runGroup({event, execArray: exec, hrtime: time, member, group});
+		const msg = await element.runGroup({event, execArray: exec, hrtime: time, member, group, text});
 		if (msg.length < 1) {
 			continue;
 		}
@@ -139,7 +139,7 @@ export async function sendPrivateTags(data: SendPrivateData): Promise<boolean> {
 		if (exec == null) {
 			continue;
 		}
-		const msg = await element.runPrivate({event, execArray: exec, hrtime: time, member});
+		const msg = await element.runPrivate({event, execArray: exec, hrtime: time, member, text});
 		if (msg.length < 1) {
 			continue;
 		}
@@ -352,6 +352,7 @@ interface SendGroupData {
 export interface CorpusData {
 	event: CQMessage;
 	hrtime: [number, number];
+	text: string;
 	execArray: RegExpExecArray;
 	member: Member;
 	/**
@@ -363,6 +364,7 @@ export interface CorpusData {
 export interface PrivateCorpusData {
 	event: CQEvent<"message.private">;
 	hrtime: [number, number];
+	text: string;
 	execArray: RegExpExecArray;
 	member: Member;
 	group?: undefined;
@@ -371,6 +373,7 @@ export interface PrivateCorpusData {
 export interface GroupCorpusData {
 	event: CQEvent<"message.group">;
 	hrtime: [number, number];
+	text: string;
 	execArray: RegExpExecArray;
 	member: Member;
 	group: Group;
