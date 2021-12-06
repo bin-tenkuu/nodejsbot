@@ -91,7 +91,7 @@ export async function sendGroupTags(data: SendGroupData): Promise<boolean> {
 		if (exec == null) {
 			continue;
 		}
-		const msg = await element.run({event, execArray: exec, hrtime: time, member, group});
+		const msg = await element.runGroup({event, execArray: exec, hrtime: time, member, group});
 		if (msg.length < 1) {
 			continue;
 		}
@@ -139,7 +139,7 @@ export async function sendPrivateTags(data: SendPrivateData): Promise<boolean> {
 		if (exec == null) {
 			continue;
 		}
-		const msg = await element.run({event, execArray: exec, hrtime: time, member});
+		const msg = await element.runPrivate({event, execArray: exec, hrtime: time, member});
 		if (msg.length < 1) {
 			continue;
 		}
@@ -267,49 +267,58 @@ export class Corpus extends Logable implements ICorpus, JSONable {
 		return this.regexp.exec(text);
 	}
 
-	public async run(data: CorpusData): Promise<CQTag[]> {
-		if (this.isOpen === 0) {
-			return [];
-		}
-		const {event, execArray} = data;
-		if (execArray == null) {
-			return [];
-		}
-		const obj: Any = Reflect.get(this.plug, this.funcName);
-		if (obj == null) {
-			this.logger.error(`插件${this.toString()}没有任何值`);
-			return [];
-		}
-		try {
-			if (this.speedLimit > 0) {
-				this.isOpen = 0;
-			}
-			let result: Any;
-			if (typeof obj !== "function") {
-				event.stopPropagation();
-				result = obj;
-			} else if (this.canPrivate && event.contextType === "message.private") {
-				result = await (<canCallFunc>obj).call(this.plug, data);
-			} else if (this.canGroup && event.contextType === "message.group") {
-				result = await (<canCallFunc>obj).call(this.plug, data);
-			} else {
-				this.logger.info(`不可调用[${this.toString()}]`);
-				result = `插件${this.toString()}方法不可在${event.contextType}环境下调用`;
-			}
-			return [...cast2Tag(result)];
-		} catch (e) {
-			this.isOpen = -1;
-			this.logger.error("调用出错：", e);
-			sendAdminQQ(event.bot, `调用出错：${this.toString()}`).catch(global.NOP);
-			return [];
-		}
-	}
-
 	public laterOpen(): void {
 		if (this.isOpen >= 0 && this.speedLimit > 0) {
 			setTimeout(() => {
 				this.isOpen = 1;
 			}, this.speedLimit);
+		}
+	}
+
+	public async runPrivate(data: PrivateCorpusData): Promise<CQTag[]> {
+		const {event} = data;
+		if (!this.canPrivate || event.contextType !== "message.private") {
+			return [];
+		}
+		return this.run(data);
+	}
+
+	public async runGroup(data: GroupCorpusData): Promise<CQTag[]> {
+		if (!this.canGroup || data.event.contextType !== "message.group") {
+			return [];
+		}
+		return this.run(data);
+	}
+
+	private async run(data: CorpusData): Promise<CQTag[]> {
+		try {
+			if (this.isOpen === 0) {
+				return [];
+			}
+			if (data.execArray == null) {
+				return [];
+			}
+			const func: Any = Reflect.get(this.plug, this.funcName);
+			if (func == null) {
+				this.logger.error(`插件${this.toString()}没有任何值`);
+				return [];
+			}
+			if (this.speedLimit > 0) {
+				this.isOpen = 0;
+			}
+			let result: Any;
+			if (typeof func !== "function") {
+				data.event.stopPropagation();
+				result = await func;
+			} else {
+				result = await (<canCallFunc>func).call(this.plug, data);
+			}
+			return [...cast2Tag(result)];
+		} catch (e) {
+			this.isOpen = -1;
+			this.logger.error("调用出错：", e);
+			sendAdminQQ(data.event.bot, `调用出错：${this.toString()}`).catch(global.NOP);
+			return [];
 		}
 	}
 
