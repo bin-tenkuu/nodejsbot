@@ -1,6 +1,6 @@
 import {CQ, CQTag} from "go-cqwebsocket";
 import {Plug} from "../Plug.js";
-import {canCall} from "@U/Annotation.js";
+import {canCall} from "@U/Corpus.js";
 import {lolicon, pixivCat} from "@U/Search.js";
 import {sendAdminGroup} from "@U/Util.js";
 import {CorpusData} from "@U/Corpus.js";

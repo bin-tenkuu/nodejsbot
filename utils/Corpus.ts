@@ -2,11 +2,10 @@
 
 import {hrtime, Logable} from "./logger.js";
 import {CQ, CQEvent, CQTag} from "go-cqwebsocket";
-import {CQMessage, deleteMsg, isAdmin, onlyText, sendGroup, sendPrivate} from "./Util.js";
-import type {Plug} from "../Plug.js";
-import type {ErrorAPIResponse, MessageId} from "go-cqwebsocket/out/Interfaces.js";
-import type {canCallFunc} from "./Annotation.js";
-import type {Any, Group, JSONable, Member} from "./Models.js";
+import {CQMessage, deleteMsg, isAdmin, onlyText, sendGroup, sendPrivate} from "@U/Util.js";
+import type {Plug, PlugDecorator} from "../Plug.js";
+import type {MessageId} from "go-cqwebsocket/out/Interfaces.js";
+import type {Any, Group, JSONable, Member} from "@U/Models.js";
 
 export interface ICorpus {
 	/**
@@ -71,10 +70,6 @@ export interface ICorpus {
 	 * @default 0
 	 */
 	speedLimit?: number,
-	/**消息回调*/
-	then?(event: CQMessage, value: MessageId): void | Promise<void>,
-	/**消息错误回调*/
-	catch?(event: CQMessage, value: ErrorAPIResponse): void | Promise<void>,
 }
 
 /**
@@ -94,12 +89,12 @@ export async function sendGroupTags(data: SendGroupData): Promise<boolean> {
 	const {user_id, group_id} = event.context;
 	const txt = `\t来源：${group_id}.${user_id}：${text}`;
 	for (const element of corpuses) {
-		const exec: RegExpExecArray | null = element.execGroup(event, text);
-		if (exec == null) {
-			continue;
-		}
 		if (element.isOpen === 0) {
 			Corpus.logger.info(`禁用${element.toString()}：${txt}`);
+			continue;
+		}
+		const exec: RegExpExecArray | null = element.execGroup(event, text);
+		if (exec == null) {
 			continue;
 		}
 		const msg = await element.run({event, execArray: exec, hrtime: time, member, group});
@@ -141,12 +136,12 @@ export async function sendPrivateTags(data: SendPrivateData): Promise<boolean> {
 	const {user_id} = event.context;
 	const txt = `\t来源：${user_id}：${text}`;
 	for (const element of corpuses) {
-		const exec: RegExpExecArray | null = element.execPrivate(event, text);
-		if (exec == null) {
-			continue;
-		}
 		if (element.isOpen === 0) {
 			Corpus.logger.info(`禁用${element.toString()}：${txt}`);
+			continue;
+		}
+		const exec: RegExpExecArray | null = element.execPrivate(event, text);
+		if (exec == null) {
 			continue;
 		}
 		const msg = await element.run({event, execArray: exec, hrtime: time, member});
@@ -163,11 +158,8 @@ export async function sendPrivateTags(data: SendPrivateData): Promise<boolean> {
 }
 
 function CorpusThen(prom: Promise<MessageId>, element: Corpus, event: CQMessage, corpus: string[]): Promise<void> {
-	return prom.then((value) => {
+	return prom.then(() => {
 		element.laterOpen();
-		return element.then(event, value);
-	}, (reason) => {
-		return element.catch(event, reason);
 	}).finally(() => {
 		corpus.push(element.name);
 	}).catch((e) => {
@@ -234,15 +226,6 @@ export class Corpus extends Logable implements ICorpus, JSONable {
 		this.weight = iCorpus.weight ?? 10;
 		this.deleteMSG = iCorpus.deleteMSG ?? 0;
 		this.speedLimit = iCorpus.speedLimit ?? 0;
-		iCorpus.then != null && (this.then = iCorpus.then);
-		iCorpus.catch != null && (this.catch = iCorpus.catch);
-	}
-
-	public then(event: CQMessage, value: MessageId): void | Promise<void> {
-	}
-
-	public catch(event: CQMessage, value: ErrorAPIResponse): void | Promise<void> {
-		Corpus.logger.error(`${this.toString()}:${JSON.stringify(value)}`);
 	}
 
 	public override toString(): string {
@@ -392,3 +375,43 @@ export interface GroupCorpusData {
 	member: Member;
 	group: Group;
 }
+
+type canCallFunc = (data: CorpusData) => canCallRet;
+type canCallType = CQTag | string | number | bigint | boolean | symbol | canCallType[];
+type canCallRet = canCallType | void | Promise<canCallType | void>;
+
+/**
+ * 可以标注在 `对象属性`，`getter`，{@link canCallFunc} 方法上<br/>
+ * **注：**当目标**不是**方法时，将会自动停止冒泡
+ */
+export function canCall(corpus: ICorpus): PlugDecorator {
+	return (target: { constructor: any; }, propertyKey: string) => {
+		const corpuses: Map<string, ICorpus> = canCall.get(target.constructor);
+		corpuses.set(propertyKey, corpus);
+	};
+}
+canCall.get = function (target: new() => Plug): Map<string, ICorpus> {
+	let metadata: Map<string, ICorpus> | undefined = Reflect.getMetadata(canCall.name, target);
+	if (metadata == null) {
+		metadata = new Map<string, ICorpus>();
+		Reflect.defineMetadata(canCall.name, metadata, target);
+	}
+	return metadata;
+};
+canCall.mergeTo = function (target: Plug, corpuses: Corpus[]): void {
+	for (const [key, corpus] of canCall.get(<any>target.constructor)) {
+		const index: number = corpuses.findIndex(value => value.weight > corpus.weight);
+		if (index === -1) {
+			corpuses.push(new Corpus(target, key, corpus));
+		} else {
+			corpuses.splice(index, 0, new Corpus(target, key, corpus));
+		}
+	}
+};
+canCall.separateTo = function (target: Plug, corpuses: Corpus[]): void {
+	for (let i = corpuses.length - 1; i >= 0; i--) {
+		if (corpuses[i].plug === target) {
+			corpuses.splice(i, 1);
+		}
+	}
+};

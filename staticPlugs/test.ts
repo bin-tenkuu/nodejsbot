@@ -1,5 +1,5 @@
 import {Plug} from "../Plug.js";
-import {DefaultMsg} from "@S/DefaultMsg.js";
+import type {DefaultMsg} from "@S/DefaultMsg.js";
 import {LazyRequire} from "@U/Annotation.js";
 
 export class Test extends Plug {

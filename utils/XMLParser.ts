@@ -1,5 +1,5 @@
 import {Parser} from "node-expat";
-import {Logable} from "@U/logger.js";
+import {Logable} from "./logger.js";
 
 export interface Xml {
 	readonly name: string;

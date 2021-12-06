@@ -1,5 +1,5 @@
 import {Plug} from "../Plug.js";
-import {canCall} from "@U/Annotation.js";
+import {canCall} from "@U/Corpus.js";
 import {CQMessage} from "@U/Util.js";
 
 export class Counter extends Plug {

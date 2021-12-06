@@ -1,10 +1,10 @@
 import {CQWebSocket} from "go-cqwebsocket";
 import {Plug} from "../Plug.js";
-import {LazyRequire, canCall} from "@U/Annotation.js";
+import {LazyRequire} from "@U/Annotation.js";
+import {canCall, CorpusData} from "@U/Corpus.js";
 import {ElementAtOrNull} from "@U/Generators.js";
 import {sendAdminQQ} from "@U/Util.js";
 import type {CQData} from "@S/CQData.js";
-import {CorpusData} from "@U/Corpus.js";
 
 export class CQBotPlugin extends Plug {
 	private static method: Readonly<CQWebSocket> = CQWebSocket.prototype;
@@ -84,17 +84,19 @@ export class CQBotPlugin extends Plug {
 	}
 
 	@canCall({
-		name: ".语料库<nums>",
-		regexp: /^[.．。]语料库(?<nums>\d+)$/,
+		name: ".语料库[<nums>]",
+		regexp: /^[.．。]语料库(?<nums>\d+)?$/,
 		needAdmin: true,
 		help: "查看语料库详情",
 		weight: 4,
 	})
-	protected corpusInfo({event, execArray}: CorpusData): string | void {
+	protected corpusInfo({event, execArray}: CorpusData): string {
 		event.stopPropagation();
 		const {nums} = execArray.groups as { nums?: string } ?? {};
 		if (nums == null) {
-			return;
+			return Plug.corpuses.map(({name, isOpen}, index) => {
+				return `${index} (${isOpen}):${name}`;
+			}).join("\n");
 		}
 		const element = Plug.corpuses[+nums];
 		if (element == null) {
@@ -153,20 +155,5 @@ export class CQBotPlugin extends Plug {
 		}
 		sendAdminQQ(event.bot, String(type)).catch(global.NOP);
 		return;
-	}
-
-	@canCall({
-		name: ".语料库",
-		regexp: /^[.．。]语料库$/,
-		needAdmin: true,
-		forward: true,
-		maxLength: 10,
-		help: "查看全部语料库状态",
-		weight: 4,
-	})
-	protected get corpusList(): string {
-		return Plug.corpuses.map(({name, isOpen}, index) => {
-			return `${index} (${isOpen}):${name}\n`;
-		}).join("\n");
 	}
 }

@@ -2,7 +2,7 @@ import {CQ, CQTag} from "go-cqwebsocket";
 import {CQImage} from "go-cqwebsocket/out/tags";
 import {CQText} from "go-cqwebsocket/out/tags.js";
 import {Plug} from "../Plug.js";
-import {canCall} from "@U/Annotation.js";
+import {canCall} from "@U/Corpus.js";
 import {CacheMap} from "@U/repeat.js";
 import {isAtMe} from "@U/Util.js";
 import {GroupCorpusData} from "@U/Corpus.js";

@@ -1,6 +1,6 @@
 import {CQ, CQTag} from "go-cqwebsocket";
 import {Plug} from "../Plug.js";
-import {canCall} from "@U/Annotation.js";
+import {canCall} from "@U/Corpus.js";
 import {dice, DiceResult, distribution} from "@U/COCUtils.js";
 import {db} from "@U/database.js";
 import {CacheMap} from "@U/repeat.js";

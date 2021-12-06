@@ -1,6 +1,6 @@
 import {CQ, CQTag} from "go-cqwebsocket";
 import {Plug} from "../Plug.js";
-import {canCall} from "@U/Annotation.js";
+import {canCall} from "@U/Corpus.js";
 import {db} from "@U/database.js";
 import {Group, IGroup, IMember, Member} from "@U/Models.js";
 import {CacheMap} from "@U/repeat.js";
@@ -140,6 +140,7 @@ export class CQData extends Plug {
 		weight: 6,
 	})
 	protected getState({event, execArray}: CorpusData): CQTag[] {
+		event.stopPropagation();
 		const qq: number = event.context.user_id;
 		if (event.contextType === "message.group") {
 			if (this.cache.has(qq)) {
@@ -147,7 +148,6 @@ export class CQData extends Plug {
 			}
 			this.cache.set(qq, true);
 		}
-		event.stopPropagation();
 		const exp = this.getMember(+(execArray.groups?.qq ?? qq)).exp;
 		return [CQ.at(qq), CQ.text(`${exp}`)];
 	}

@@ -1,5 +1,5 @@
 import {Plug} from "../Plug.js";
-import {canCall} from "@U/Annotation.js";
+import {canCall} from "@U/Corpus.js";
 import {isAdmin, sendAdminQQ} from "@U/Util.js";
 import {Corpus, CorpusData} from "@U/Corpus.js";
 

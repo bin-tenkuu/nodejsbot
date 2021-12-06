@@ -1,7 +1,7 @@
 import {CQ} from "go-cqwebsocket";
 import {CQImage, CQTag} from "go-cqwebsocket/out/tags";
 import {Plug} from "../Plug.js";
-import {canCall} from "@U/Annotation.js";
+import {canCall} from "@U/Corpus.js";
 import {sauceNAOResult} from "@U/Models.js";
 import {sauceNAO} from "@U/Search.js";
 import {GroupCorpusData} from "@U/Corpus.js";

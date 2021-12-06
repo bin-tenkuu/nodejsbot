@@ -1,7 +1,8 @@
-import {AutoWired, canCall} from "@U/Annotation.js";
 import {Logable} from "@U/logger.js";
 import type {JSONable} from "@U/Models.js";
 import type {Corpus} from "@U/Corpus.js";
+import {canCall} from "@U/Corpus.js";
+import {AutoWired} from "@U/Annotation.js";
 
 const State = {
 	create: 0,
@@ -76,7 +77,7 @@ export abstract class Plug extends Logable implements JSONable {
 				}
 				await this.__proto__.install.call(this);
 				this.#state = State.installed;
-				canCall.merge(this, Plug.corpuses);
+				canCall.mergeTo(this, Plug.corpuses);
 				this.logger.info("已启动\t" + this.toString());
 			} catch (e) {
 				this.error = e;
@@ -92,7 +93,7 @@ export abstract class Plug extends Logable implements JSONable {
 					return;
 				}
 				this.#state = State.uninstalled;
-				canCall.separate(this, Plug.corpuses);
+				canCall.separateTo(this, Plug.corpuses);
 				this.logger.info("已停止\t" + this.toString());
 			} catch (e) {
 				this.error = e;
@@ -119,4 +120,8 @@ export abstract class Plug extends Logable implements JSONable {
 	public get corpus(): Corpus[] {
 		return Plug.corpuses.filter(v => v.plug === this);
 	}
+}
+
+export interface PlugDecorator {
+	(target: Plug, propertyKey: string): void;
 }
