@@ -236,7 +236,7 @@ export class Corpus extends Logable implements ICorpus, JSONable {
 		case -1:
 			return null;
 		case 0:
-			if (this.needAdmin || this.isOpen < 0 || !this.canPrivate) {
+			if (this.needAdmin || !this.canPrivate) {
 				return null;
 			}
 			break;
@@ -254,7 +254,7 @@ export class Corpus extends Logable implements ICorpus, JSONable {
 		case -1:
 			return null;
 		case 0:
-			if (this.needAdmin || this.isOpen < 0 || !this.canGroup) {
+			if (this.needAdmin || !this.canGroup) {
 				return null;
 			}
 			break;
@@ -276,8 +276,8 @@ export class Corpus extends Logable implements ICorpus, JSONable {
 	}
 
 	public async runPrivate(data: PrivateCorpusData): Promise<CQTag[]> {
-		const {event} = data;
-		if (!this.canPrivate || event.contextType !== "message.private") {
+		if (!this.canPrivate || data.event.contextType !== "message.private") {
+			this.logger.warn(`${this}不可在 private 环境下调用`);
 			return [];
 		}
 		return this.run(data);
@@ -285,6 +285,7 @@ export class Corpus extends Logable implements ICorpus, JSONable {
 
 	public async runGroup(data: GroupCorpusData): Promise<CQTag[]> {
 		if (!this.canGroup || data.event.contextType !== "message.group") {
+			this.logger.warn(`${this}不可在 group 环境下调用`);
 			return [];
 		}
 		return this.run(data);
