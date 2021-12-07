@@ -2,7 +2,7 @@
 
 import {hrtime, Logable} from "./logger.js";
 import {CQ, CQEvent, CQTag} from "go-cqwebsocket";
-import {CQMessage, deleteMsg, isAdmin, onlyText, sendAdminQQ, sendGroup, sendPrivate} from "@U/Util.js";
+import {deleteMsg, isAdmin, onlyText, sendAdminQQ, sendGroup, sendPrivate} from "@U/Util.js";
 import type {Plug, PlugDecorator} from "../Plug.js";
 import type {Any, Group, JSONable, Member} from "@U/Models.js";
 
@@ -72,11 +72,10 @@ export interface ICorpus {
 }
 
 /**
- * @param {SendGroupData} data 数据
  * @return {Promise<boolean>} 是否发送
  */
-export async function sendGroupTags(data: SendGroupData): Promise<boolean> {
-	const {event, hrtime: time, member, group, corpuses} = data;
+export async function sendGroupTags(corpuses: Corpus[], data: SendGroupData): Promise<boolean> {
+	const {event, hrtime: time, member, group} = data;
 	if (group.baned) {
 		return false;
 	}
@@ -87,11 +86,7 @@ export async function sendGroupTags(data: SendGroupData): Promise<boolean> {
 	const corpusName: string[] = [];
 	const txt = `\t来源：${group.id}.${member.id}：${text}`;
 	for (const element of corpuses) {
-		const exec: RegExpExecArray | null = element.execGroup(event, text);
-		if (exec == null) {
-			continue;
-		}
-		const msg = await element.runGroup({event, execArray: exec, hrtime: time, member, group, text});
+		const msg = await element.runGroup({event, hrtime: time, member, group, text});
 		if (msg.length < 1) {
 			continue;
 		}
@@ -114,6 +109,9 @@ export async function sendGroupTags(data: SendGroupData): Promise<boolean> {
 			element.canGroup = false;
 			return sendAdminQQ(event.bot, `群聊消息发送失败：${element.toString()}`);
 		}).catch(global.NOP);
+		if (event.isCanceled) {
+			break;
+		}
 	}
 	if (corpusName.length > 0) {
 		Corpus.logger.info(hrtime(time, corpusName.join(",") + txt));
@@ -123,11 +121,10 @@ export async function sendGroupTags(data: SendGroupData): Promise<boolean> {
 }
 
 /**
- * @param {SendPrivateData} data 数据
  * @return {Promise<boolean>} 是否发送
  */
-export async function sendPrivateTags(data: SendPrivateData): Promise<boolean> {
-	const {event, hrtime: time, member, corpuses} = data;
+export async function sendPrivateTags(corpuses: Corpus[], data: SendPrivateData): Promise<boolean> {
+	const {event, hrtime: time, member} = data;
 	if (member.baned) {
 		return false;
 	}
@@ -135,11 +132,7 @@ export async function sendPrivateTags(data: SendPrivateData): Promise<boolean> {
 	const corpusName: string[] = [];
 	const txt = `\t来源：${member.id}：${text}`;
 	for (const element of corpuses) {
-		const exec: RegExpExecArray | null = element.execPrivate(event, text);
-		if (exec == null) {
-			continue;
-		}
-		const msg = await element.runPrivate({event, execArray: exec, hrtime: time, member, text});
+		const msg = await element.runPrivate({event, hrtime: time, member, text});
 		if (msg.length < 1) {
 			continue;
 		}
@@ -152,6 +145,9 @@ export async function sendPrivateTags(data: SendPrivateData): Promise<boolean> {
 			element.isOpen = -1;
 			return sendAdminQQ(event.bot, `私聊消息发送失败：${element.toString()}`);
 		}).catch(global.NOP);
+		if (event.isCanceled) {
+			break;
+		}
 	}
 	if (corpusName.length > 0) {
 		Corpus.logger.info(hrtime(time, corpusName.join(",") + txt));
@@ -231,42 +227,6 @@ export class Corpus extends Logable implements ICorpus, JSONable {
 		};
 	}
 
-	public execPrivate(event: CQEvent<"message.private">, text: string): RegExpExecArray | null {
-		switch (this.test(event, text.length)) {
-		case -1:
-			return null;
-		case 0:
-			if (this.needAdmin || !this.canPrivate) {
-				return null;
-			}
-			break;
-		case 1:
-			if (!this.canPrivate) {
-				return null;
-			}
-			break;
-		}
-		return this.regexp.exec(text);
-	}
-
-	public execGroup(event: CQEvent<"message.group">, text: string): RegExpExecArray | null {
-		switch (this.test(event, text.length)) {
-		case -1:
-			return null;
-		case 0:
-			if (this.needAdmin || !this.canGroup) {
-				return null;
-			}
-			break;
-		case 1:
-			if (!this.canGroup) {
-				return null;
-			}
-			break;
-		}
-		return this.regexp.exec(text);
-	}
-
 	public laterOpen(): void {
 		if (this.isOpen >= 0 && this.speedLimit > 0) {
 			setTimeout(() => {
@@ -275,28 +235,61 @@ export class Corpus extends Logable implements ICorpus, JSONable {
 		}
 	}
 
-	public async runPrivate(data: PrivateCorpusData): Promise<CQTag[]> {
-		if (!this.canPrivate || data.event.contextType !== "message.private") {
+	public async runPrivate(data: RunPrivateData): Promise<CQTag[]> {
+		const {event, text} = data;
+		const exec: RegExpExecArray | null = this.execPrivate(event, text);
+		if (exec == null) {
+			return [];
+		}
+		if (!this.canPrivate || event.contextType !== "message.private") {
 			this.logger.warn(`${this}不可在 private 环境下调用`);
 			return [];
 		}
-		return this.run(data);
+		return this.run({...data, execArray: exec, corpus: this});
 	}
 
-	public async runGroup(data: GroupCorpusData): Promise<CQTag[]> {
+	public async runGroup(data: RunGroupData): Promise<CQTag[]> {
+		const {event, text} = data;
+		const exec: RegExpExecArray | null = this.execGroup(event, text);
+		if (exec == null) {
+			return [];
+		}
 		if (!this.canGroup || data.event.contextType !== "message.group") {
 			this.logger.warn(`${this}不可在 group 环境下调用`);
 			return [];
 		}
-		return this.run(data);
+		return this.run({...data, execArray: exec, corpus: this});
+	}
+
+	private execPrivate(event: CQEvent<"message.private">, text: string): RegExpExecArray | null {
+		if (event.isCanceled || text.length < this.minLength || text.length > this.maxLength || this.isOpen < 0) {
+			return null;
+		}
+		if (!this.canPrivate) {
+			return null;
+		}
+		if (this.needAdmin && !isAdmin(event)) {
+			return null;
+		}
+		return this.regexp.exec(text);
+	}
+
+	private execGroup(event: CQEvent<"message.group">, text: string): RegExpExecArray | null {
+		if (event.isCanceled || text.length < this.minLength || text.length > this.maxLength || this.isOpen < 0) {
+			return null;
+		}
+		if (!this.canGroup) {
+			return null;
+		}
+		if (this.needAdmin && !isAdmin(event)) {
+			return null;
+		}
+		return this.regexp.exec(text);
 	}
 
 	private async run(data: CorpusData): Promise<CQTag[]> {
 		try {
 			if (this.isOpen === 0) {
-				return [];
-			}
-			if (data.execArray == null) {
 				return [];
 			}
 			const func: Any = Reflect.get(this.plug, this.funcName);
@@ -323,22 +316,13 @@ export class Corpus extends Logable implements ICorpus, JSONable {
 		}
 	}
 
-	private test(event: CQMessage, length: number): -1 | 0 | 1 {
-		if (event.isCanceled || length < this.minLength || length > this.maxLength || this.isOpen < 0) {
-			return -1;
-		}
-		if (isAdmin(event)) {
-			return 1;
-		}
-		return 0;
-	}
 }
 
 interface SendPrivateData {
 	event: CQEvent<"message.private">;
 	hrtime: [number, number];
 	member: Member;
-	corpuses: Corpus[];
+	group?: undefined;
 }
 
 interface SendGroupData {
@@ -346,38 +330,30 @@ interface SendGroupData {
 	hrtime: [number, number];
 	member: Member;
 	group: Group;
-	corpuses: Corpus[];
 }
 
-export interface CorpusData {
-	event: CQMessage;
-	hrtime: [number, number];
+interface OriginText {
 	text: string;
-	execArray: RegExpExecArray;
-	member: Member;
-	/**
-	 * 当且仅当 {@link event} 的类型为 {@code CQEvent<"message.group">} 时有值
-	 */
-	group?: Group | undefined;
 }
 
-export interface PrivateCorpusData {
-	event: CQEvent<"message.private">;
-	hrtime: [number, number];
-	text: string;
-	execArray: RegExpExecArray;
-	member: Member;
-	group?: undefined;
+interface RunPrivateData extends SendPrivateData, OriginText {
 }
 
-export interface GroupCorpusData {
-	event: CQEvent<"message.group">;
-	hrtime: [number, number];
-	text: string;
-	execArray: RegExpExecArray;
-	member: Member;
-	group: Group;
+interface RunGroupData extends SendGroupData, OriginText {
 }
+
+interface execRegExp {
+	execArray: RegExpExecArray;
+	corpus: Corpus;
+}
+
+export interface PrivateCorpusData extends RunPrivateData, execRegExp {
+}
+
+export interface GroupCorpusData extends RunGroupData, execRegExp {
+}
+
+export type CorpusData = PrivateCorpusData | GroupCorpusData;
 
 type canCallFunc = (data: CorpusData) => canCallRet;
 type canCallType = CQTag | string | number | bigint | boolean | symbol | canCallType[];

@@ -1,11 +1,10 @@
 import {CQ, CQTag, CQWebSocket} from "go-cqwebsocket";
 import {Status} from "go-cqwebsocket/out/Interfaces";
 import {Plug} from "../Plug.js";
-import {canCall} from "@U/Corpus.js";
+import {canCall, sendGroupTags, sendPrivateTags} from "@U/Corpus.js";
 import {sendAdminGroup} from "@U/Util.js";
 import {Counter} from "@S/Counter.js";
 import {CQData} from "@S/CQData.js";
-import {sendGroupTags, sendPrivateTags} from "@U/Corpus.js";
 
 const {CQWS} = require("../config/config.json");
 
@@ -100,10 +99,8 @@ export class CQBot extends Plug {
 				const data: CQData = CQData.getInst();
 				const member = data.getMember(user_id);
 				const group = data.getGroup(group_id);
-				sendGroupTags({
-					event: event, hrtime: time,
-					member: member, group: group,
-					corpuses: Plug.corpuses,
+				sendGroupTags(Plug.corpuses, {
+					event, hrtime: time, member, group,
 				}).then(b => {
 					b && Counter.getInst().record(event);
 				}, global.NOP);
@@ -112,10 +109,8 @@ export class CQBot extends Plug {
 				const time = process.hrtime();
 				const {user_id} = event.context;
 				const member = CQData.getInst().getMember(user_id);
-				sendPrivateTags({
-					event: event, hrtime: time,
-					member: member,
-					corpuses: Plug.corpuses,
+				sendPrivateTags(Plug.corpuses, {
+					event, hrtime: time, member,
 				}).then(b => {
 					b && Counter.getInst().record(event);
 				}, global.NOP);
