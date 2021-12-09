@@ -239,7 +239,6 @@ export class Corpus extends Logable implements ICorpus, JSONable {
 	public async runPrivate(data: RunPrivateData): Promise<CQTag[]> {
 		const {event, text, member} = data;
 		const exec: RegExpExecArray | null = this.execPrivate(event, text);
-		console.log(text,this.toJSON());
 		if (exec == null) {
 			return [];
 		}
@@ -251,9 +250,9 @@ export class Corpus extends Logable implements ICorpus, JSONable {
 			return [];
 		}
 		if (member.addExp(this.expPrivate)) {
-			return [];
+			return this.run({...data, execArray: exec, corpus: this});
 		}
-		return this.run({...data, execArray: exec, corpus: this});
+		return [];
 	}
 
 	public async runGroup(data: RunGroupData): Promise<CQTag[]> {
@@ -270,9 +269,9 @@ export class Corpus extends Logable implements ICorpus, JSONable {
 			return [];
 		}
 		if (group.addExp(this.expGroup) || member.addExp(this.expGroup)) {
-			return [];
+			return this.run({...data, execArray: exec, corpus: this});
 		}
-		return this.run({...data, execArray: exec, corpus: this});
+		return [];
 	}
 
 	private execPrivate(event: CQEvent<"message.private">, text: string): RegExpExecArray | null {
