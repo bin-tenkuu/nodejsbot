@@ -94,7 +94,6 @@ export async function sendGroupTags(corpuses: Corpus[], data: SendGroupData): Pr
 	}
 	const text = onlyText(event);
 	const corpusName: string[] = [];
-	const txt = `\t来源：${group.id}.${member.id}：${text}`;
 	for (const element of corpuses) {
 		const msg = await element.runGroup({event, hrtime: time, member, group, text});
 		if (msg.length < 1) {
@@ -124,7 +123,7 @@ export async function sendGroupTags(corpuses: Corpus[], data: SendGroupData): Pr
 		}
 	}
 	if (corpusName.length > 0) {
-		Corpus.logger.info(hrtime(time, corpusName.join(",") + txt));
+		Corpus.logger.info(hrtime(time, `${corpusName.join(",")}\t来源：${group.id}.${member.id}：${text}`));
 		return true;
 	}
 	return false;
@@ -140,7 +139,6 @@ export async function sendPrivateTags(corpuses: Corpus[], data: SendPrivateData)
 	}
 	const text = onlyText(event);
 	const corpusName: string[] = [];
-	const txt = `\t来源：${member.id}：${text}`;
 	for (const element of corpuses) {
 		const msg = await element.runPrivate({event, hrtime: time, member, text});
 		if (msg.length < 1) {
@@ -160,7 +158,7 @@ export async function sendPrivateTags(corpuses: Corpus[], data: SendPrivateData)
 		}
 	}
 	if (corpusName.length > 0) {
-		Corpus.logger.info(hrtime(time, corpusName.join(",") + txt));
+		Corpus.logger.info(hrtime(time, `${corpusName.join(",")}\t来源：${member.id}：${text}`));
 		return true;
 	}
 	return false;
