@@ -97,7 +97,6 @@ export async function sendGroupTags(corpuses: Corpus[], data: SendGroupData): Pr
 	const txt = `\t来源：${group.id}.${member.id}：${text}`;
 	for (const element of corpuses) {
 		const msg = await element.runGroup({event, hrtime: time, member, group, text});
-		console.log(element.toJSON());
 		if (msg.length < 1) {
 			continue;
 		}
@@ -240,6 +239,7 @@ export class Corpus extends Logable implements ICorpus, JSONable {
 	public async runPrivate(data: RunPrivateData): Promise<CQTag[]> {
 		const {event, text, member} = data;
 		const exec: RegExpExecArray | null = this.execPrivate(event, text);
+		console.log(text,this.toJSON());
 		if (exec == null) {
 			return [];
 		}
