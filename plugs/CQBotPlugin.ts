@@ -1,15 +1,13 @@
-import {CQWebSocket} from "go-cqwebsocket";
 import {Plug} from "../Plug.js";
-import {LazyRequire} from "@U/Annotation.js";
 import {canCall, CorpusData} from "@U/Corpus.js";
 import {ElementAtOrNull} from "@U/Generators.js";
 import {sendAdminQQ} from "@U/Util.js";
 import type {CQData} from "@S/CQData.js";
+import {AutoWired} from "@U/Annotation.js";
 
 export class CQBotPlugin extends Plug {
-	private static method: Readonly<CQWebSocket> = CQWebSocket.prototype;
-	// @AutoWired()
-	@LazyRequire("@S/CQData.js", "CQData")
+	@AutoWired()
+	// @LazyRequire("@S/CQData.js", "CQData")
 	private declare CQData: typeof CQData;
 
 	constructor() {
@@ -133,8 +131,8 @@ export class CQBotPlugin extends Plug {
 	}
 
 	@canCall({
-		name: ".模式",
-		regexp: /^[.．。]模式(?<type>风控|正常)$/,
+		name: ".禁止[群私]聊",
+		regexp: /^[.．。]禁止(?<type>[群私])聊$/,
 		needAdmin: true,
 		canGroup: false,
 		canPrivate: true,
@@ -144,11 +142,11 @@ export class CQBotPlugin extends Plug {
 		event.stopPropagation();
 		const {type} = execArray.groups as { type?: string } ?? {};
 		switch (type) {
-		case "风控":
-			event.bot.send_group_msg = () => Promise.resolve({message_id: 0});
+		case "群":
+			Plug.corpuses.forEach(v => v.canGroup = false);
 			break;
-		case "正常":
-			event.bot.send_group_msg = CQBotPlugin.method.send_group_msg;
+		case "私":
+			Plug.corpuses.forEach(v => v.canPrivate = false);
 			break;
 		default:
 			return;

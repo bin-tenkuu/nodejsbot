@@ -69,6 +69,16 @@ export interface ICorpus {
 	 * @default 0
 	 */
 	speedLimit?: number,
+	/**
+	 * 私聊经验
+	 * @default 0
+	 */
+	expPrivate?: number,
+	/**
+	 * 群聊经验
+	 * @default 0
+	 */
+	expGroup?: number,
 }
 
 /**
@@ -181,38 +191,29 @@ function* cast2Tag(result: Any): Generator<CQTag, void, void> {
 export class Corpus extends Logable implements ICorpus, JSONable {
 	public readonly plug: Plug;
 	public readonly funcName: string;
-	public readonly regexp: RegExp;
+	// noinspection RegExpUnexpectedAnchor
+	public readonly regexp: RegExp = /$^/;
 	public readonly name: string;
-	public readonly forward: boolean;
-	public readonly needAdmin: boolean;
-	public readonly help: string | undefined;
-	public readonly minLength: number;
-	public readonly maxLength: number;
-	public readonly weight: number;
-	public readonly deleteMSG: number;
-	public readonly speedLimit: number;
-	public canGroup: boolean;
-	public canPrivate: boolean;
-	public isOpen: number;
+	public readonly forward: boolean = false;
+	public readonly needAdmin: boolean = false;
+	public readonly help: string | undefined = undefined;
+	public readonly minLength: number = 0;
+	public readonly maxLength: number = 100;
+	public readonly weight: number = 10;
+	public readonly deleteMSG: number = 0;
+	public readonly speedLimit: number = 0;
+	public canGroup: boolean = true;
+	public canPrivate: boolean = true;
+	public isOpen: number = 1;
+	public expPrivate: number = 0;
+	public expGroup: number = 0;
 
 	constructor(plug: Plug, funcName: string, iCorpus: ICorpus) {
 		super();
 		this.plug = plug;
 		this.funcName = funcName;
-		this.name = iCorpus.name ?? this.toString();
-		// noinspection RegExpUnexpectedAnchor
-		this.regexp = iCorpus.regexp ?? /$^/;
-		this.canGroup = iCorpus.canGroup ?? true;
-		this.canPrivate = iCorpus.canPrivate ?? true;
-		this.forward = iCorpus.forward ?? false;
-		this.isOpen = iCorpus.isOpen ?? 1;
-		this.maxLength = iCorpus.maxLength ?? 100;
-		this.minLength = iCorpus.minLength ?? 0;
-		this.help = iCorpus.help;
-		this.needAdmin = iCorpus.needAdmin ?? false;
-		this.weight = iCorpus.weight ?? 10;
-		this.deleteMSG = iCorpus.deleteMSG ?? 0;
-		this.speedLimit = iCorpus.speedLimit ?? 0;
+		Object.assign(this, Object.fromEntries(Object.entries(iCorpus).filter(([_, v]) => v != null)));
+		this.name ??= this.toString();
 	}
 
 	public override toString(): string {
@@ -236,7 +237,7 @@ export class Corpus extends Logable implements ICorpus, JSONable {
 	}
 
 	public async runPrivate(data: RunPrivateData): Promise<CQTag[]> {
-		const {event, text} = data;
+		const {event, text, member} = data;
 		const exec: RegExpExecArray | null = this.execPrivate(event, text);
 		if (exec == null) {
 			return [];
@@ -245,17 +246,29 @@ export class Corpus extends Logable implements ICorpus, JSONable {
 			this.logger.warn(`${this}不可在 private 环境下调用`);
 			return [];
 		}
+		if (this.isOpen === 0) {
+			return [];
+		}
+		if (member.addExp(this.expPrivate)) {
+			return [];
+		}
 		return this.run({...data, execArray: exec, corpus: this});
 	}
 
 	public async runGroup(data: RunGroupData): Promise<CQTag[]> {
-		const {event, text} = data;
+		const {event, text, group, member} = data;
 		const exec: RegExpExecArray | null = this.execGroup(event, text);
 		if (exec == null) {
 			return [];
 		}
 		if (!this.canGroup || data.event.contextType !== "message.group") {
 			this.logger.warn(`${this}不可在 group 环境下调用`);
+			return [];
+		}
+		if (this.isOpen === 0) {
+			return [];
+		}
+		if (group.addExp(this.expGroup) || member.addExp(this.expGroup)) {
 			return [];
 		}
 		return this.run({...data, execArray: exec, corpus: this});
@@ -289,9 +302,6 @@ export class Corpus extends Logable implements ICorpus, JSONable {
 
 	private async run(data: CorpusData): Promise<CQTag[]> {
 		try {
-			if (this.isOpen === 0) {
-				return [];
-			}
 			const func: Any = Reflect.get(this.plug, this.funcName);
 			if (func == null) {
 				this.logger.error(`插件${this.toString()}没有任何值`);

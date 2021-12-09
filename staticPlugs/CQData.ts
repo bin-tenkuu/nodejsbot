@@ -1,10 +1,9 @@
 import {CQ, CQTag} from "go-cqwebsocket";
 import {Plug} from "../Plug.js";
-import {canCall} from "@U/Corpus.js";
+import {canCall, CorpusData} from "@U/Corpus.js";
 import {db} from "@U/database.js";
 import {Group, IGroup, IMember, Member} from "@U/Models.js";
 import {CacheMap} from "@U/repeat.js";
-import {CorpusData, GroupCorpusData} from "@U/Corpus.js";
 
 export class CQData extends Plug {
 	private static loadMember(id: number): Member {
@@ -18,7 +17,7 @@ export class CQData extends Plug {
 			member.modified();
 			db.prepare<IMember>(`INSERT INTO Members(id, name, exp, gmt_modified, is_baned, gmt_create)
             VALUES ($id, $name, $exp, $gmt_modified, $is_baned, $gmt_modified)`)
-			.run(member.toJSON());
+					.run(member.toJSON());
 			return member;
 		});
 	}
@@ -160,9 +159,10 @@ export class CQData extends Plug {
 		minLength: 0,
 		weight: Infinity,
 	})
-	protected addEXP({event, member}: GroupCorpusData): void {
+	protected addEXP({event, member, group}: CorpusData): void {
 		event.stopPropagation();
-		member.addExp(1);
+		member.addExp(.5);
+		group?.addExp(1);
 	}
 
 	@canCall({

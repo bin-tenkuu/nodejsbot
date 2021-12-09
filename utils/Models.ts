@@ -52,6 +52,15 @@ export class Group extends Modified implements IGroup, JSONable {
 		return {id: this._id, exp: this._exp, ...super.toJSON(), is_baned: this._is_baned};
 	}
 
+	public addExp(exp: number): boolean {
+		exp += this._exp;
+		if (exp < 0) {
+			return false;
+		}
+		this.exp = exp;
+		return true;
+	}
+
 	public get id() {
 		return this._id;
 	}
@@ -89,11 +98,6 @@ export class Member extends Group implements IMember, JSONable {
 		if (typeof obj !== "number") {
 			this._name = obj.name;
 		}
-	}
-
-	public addExp(exp: number): boolean {
-		this.exp += exp;
-		return this.exp >= 0;
 	}
 
 	public override toJSON(): IMember {

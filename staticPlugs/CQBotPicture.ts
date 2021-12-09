@@ -1,9 +1,8 @@
 import {CQ, CQTag} from "go-cqwebsocket";
 import {Plug} from "../Plug.js";
-import {canCall} from "@U/Corpus.js";
+import {canCall, CorpusData} from "@U/Corpus.js";
 import {lolicon, pixivCat} from "@U/Search.js";
 import {sendAdminGroup} from "@U/Util.js";
-import {CorpusData} from "@U/Corpus.js";
 import {db} from "@U/database.js";
 
 export class CQBotPicture extends Plug {
@@ -17,7 +16,7 @@ export class CQBotPicture extends Plug {
 
 	private static getRandomPic(r18: 0 | 1): PixivPic {
 		return db.sync(db => {
-			return <PixivPic>db.prepare<[number]>(`SELECT pid, p, uid, r18, url
+			return <PixivPic>db.prepare<[number]>(`SELECT pid, p, uid, r18, url, author
             FROM PixivPic
             WHERE r18 = ?
             ORDER BY RANDOM()
@@ -47,16 +46,15 @@ export class CQBotPicture extends Plug {
 		weight: 5 + 0.1,
 		deleteMSG: 20,
 		speedLimit: 500,
+		expGroup: -3,
+		expPrivate: -5,
 	})
-	protected getRandomSeTu({event, execArray, member}: CorpusData): CQTag[] {
+	protected getRandomSeTu({event, execArray}: CorpusData): CQTag[] {
 		event.stopPropagation();
 		const {r18} = execArray.groups as { r18?: string } ?? {};
-		if (!member.addExp(-3)) {
-			// return [CQ.text("不够活跃")];
-		}
 		const pic: PixivPic = CQBotPicture.getRandomPic(r18 == null ? 0 : 1);
-		const {author, p, pid, url} = pic;
-		const dataMSG: string = `作者：${author}\n原图p${p}：${pid}`;
+		const {uid, p, pid, url} = pic;
+		const dataMSG: string = `作者：${uid}\n原图p${p}：${pid}`;
 
 		return [CQ.image(url), CQ.text(dataMSG)];
 	}
@@ -71,17 +69,16 @@ export class CQBotPicture extends Plug {
 		weight: 5,
 		deleteMSG: 20,
 		speedLimit: 2000,
+		expGroup: -5,
+		expPrivate: -10,
 	})
-	protected async getSeTu({event, execArray, member}: CorpusData): Promise<CQTag[]> {
+	protected async getSeTu({event, execArray}: CorpusData): Promise<CQTag[]> {
 		event.stopPropagation();
 		try {
 			const groups = {
 				keyword: execArray.groups?.keyword ?? "",
 				r18: execArray.groups?.r18 != null,
 			};
-			if (!member.addExp(-5)) {
-				// return [CQ.text("不够活跃")];
-			}
 			if (this.setuSet.has(groups.keyword)) {
 				return [CQ.text("没有，爬")];
 			}
@@ -97,7 +94,7 @@ export class CQBotPicture extends Plug {
 				return [CQ.text("找不到符合关键字的色图")];
 			}
 			const {author, p, pid, r18, urls: {regular: url}, uid} = first;
-			const dataMSG: string = `作者：${author}\n原图p${p}：${pid}`;
+			const dataMSG: string = `作者：${uid}\n原图p${p}：${pid}`;
 			CQBotPicture.savePic({
 				pid, r18: <0 | 1>+r18, uid, p, url, author,
 			});
@@ -128,19 +125,17 @@ export class CQBotPicture extends Plug {
 		minLength: 5,
 		weight: 5,
 		deleteMSG: 90,
-		isOpen: 0,
 		speedLimit: 2000,
+		expGroup: -5,
+		expPrivate: -10,
 	})
-	protected async getPixiv({event, execArray, member}: CorpusData): Promise<CQTag[]> {
+	protected async getPixiv({event, execArray}: CorpusData): Promise<CQTag[]> {
 		event.stopPropagation();
 		try {
 			const {pid, p} = (execArray.groups as { pid?: string, p?: string }) ?? {};
 			this.logger.debug(`p站图片请求：pid:${pid},p:${p}`);
 			if (pid == null) {
 				return [CQ.text("pid获取失败")];
-			}
-			if (!member.addExp(-5)) {
-				// return [CQ.text("不够活跃")];
 			}
 			const data = await pixivCat(pid);
 			if (!data.success) {
@@ -150,18 +145,9 @@ export class CQBotPicture extends Plug {
 			this.logger.info(`多张图片:${data.multiple}`);
 			if (data.multiple) {
 				const urlsProxy = data.original_urls_proxy;
-				const length = urlsProxy.length;
-				let ps: number = p == null ? 1 : +p;
-				ps = ps >= length ? length - 1 : ps < 1 ? 1 : ps;
-				return [
-					CQ.text(`总共${length}张图片,这是第${ps},${ps + 1}张`),
-					// @ts-ignore
-					CQ.image((urlsProxy[ps - 1])),
-					// @ts-ignore
-					CQ.image((urlsProxy[ps])),
-				];
+				return urlsProxy.map(s => CQ.image(s));
 			} else {
-				return [CQ.image((data.original_url_proxy))];
+				return [CQ.image(data.original_url_proxy)];
 			}
 		} catch (e) {
 			sendAdminGroup(event.bot, "p站图片加载出错").catch(global.NOP);

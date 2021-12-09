@@ -66,7 +66,6 @@ export class CQBotSearch extends Plug {
 		help: "同时发送图片可以搜图",
 		canPrivate: false,
 		weight: 5,
-		isOpen: 0,
 		deleteMSG: 60,
 	})
 	protected async getSauceNAO({event}: GroupCorpusData): Promise<CQTag[]> {
