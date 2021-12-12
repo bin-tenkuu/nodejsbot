@@ -2,13 +2,10 @@ import {Plug} from "../Plug.js";
 import {canCall, CorpusData} from "@U/Corpus.js";
 import {ElementAtOrNull} from "@U/Generators.js";
 import {sendAdminQQ} from "@U/Util.js";
-import type {CQData} from "@S/CQData.js";
-import {AutoWired} from "@U/Annotation.js";
+import {CQData} from "@S/CQData.js";
 
 export class CQBotPlugin extends Plug {
-	@AutoWired()
-	// @LazyRequire("@S/CQData.js", "CQData")
-	private declare CQData: typeof CQData;
+	private CQData = CQData.getInst();
 
 	constructor() {
 		super(module);
@@ -39,7 +36,7 @@ export class CQBotPlugin extends Plug {
 				return list.map(friend => `(${friend.user_id})${friend.nickname}:(${friend.remark})`).join("\n");
 			});
 		case "ban":
-			const data = this.CQData.getInst();
+			const data = this.CQData;
 			const groupBan: number[] = [...data.getGroups()].filter(v => v.baned).map(v => v.id);
 			const banList: number[] = [...data.getMembers()].filter(v => v.baned).map(v => v.id);
 			return `群：\n${groupBan.join("\n")}\n人：\n${banList.join("\n")}`;

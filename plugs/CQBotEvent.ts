@@ -1,16 +1,13 @@
 import {CQ} from "go-cqwebsocket";
 import {PartialSocketHandle} from "go-cqwebsocket/out/Interfaces";
 import {Plug} from "../Plug.js";
-import {AutoWired} from "@U/Annotation.js";
 import {sendAdminGroup, sendGroup, sendPrivate} from "@U/Util.js";
-import type {CQBot} from "@P/CQBot.js";
+import {CQBot} from "@P/CQBot.js";
 import {CQData} from "@S/CQData.js";
 
 export class CQBotEvent extends Plug {
-	@AutoWired()
-	private declare CQBot: CQBot;
-	@AutoWired()
-	private declare CQData: CQData;
+	private CQBot = CQBot.getInst();
+	private CQData = CQData.getInst();
 	private header: PartialSocketHandle = {};
 
 	constructor() {
