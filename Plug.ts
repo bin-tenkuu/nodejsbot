@@ -2,7 +2,6 @@ import {Logable} from "@U/logger.js";
 import type {JSONable} from "@U/Models.js";
 import type {Corpus} from "@U/Corpus.js";
 import {canCall} from "@U/Corpus.js";
-import {AutoWired} from "@U/Annotation.js";
 
 const State = {
 	create: 0,
@@ -21,7 +20,6 @@ export abstract class Plug extends Logable implements JSONable {
 		if (!(instance instanceof this)) {
 			instance = new this();
 			Plug.plugs.set(this, instance);
-			AutoWired.set(this.name, instance);
 		}
 		return <T>instance;
 	}

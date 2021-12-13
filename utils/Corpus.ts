@@ -93,7 +93,7 @@ export async function sendGroupTags(corpuses: Corpus[], data: SendGroupData): Pr
 		return false;
 	}
 	const text = onlyText(event);
-	const corpusName: string[] = [];
+	const hasCorpus: [boolean] = [false];
 	for (const element of corpuses) {
 		const msg = await element.runGroup({event, hrtime: time, member, group, text});
 		if (msg.length < 1) {
@@ -112,21 +112,18 @@ export async function sendGroupTags(corpuses: Corpus[], data: SendGroupData): Pr
 			}
 			element.laterOpen();
 		}).finally(() => {
-			corpusName.push(element.name);
+			hasCorpus[0] = true;
 		}).catch((e) => {
-			Corpus.logger.error(e);
+			element.logger.error(e);
 			element.canGroup = false;
 			return sendAdminQQ(event.bot, `群聊消息发送失败：${element.toString()}`);
 		}).catch(global.NOP);
+		element.logger.info(hrtime(time, `${element.name}\t来源：${group.id}.${member.id}：${text}`));
 		if (event.isCanceled) {
 			break;
 		}
 	}
-	if (corpusName.length > 0) {
-		Corpus.logger.info(hrtime(time, `${corpusName.join(",")}\t来源：${group.id}.${member.id}：${text}`));
-		return true;
-	}
-	return false;
+	return hasCorpus[0];
 }
 
 /**
@@ -138,7 +135,7 @@ export async function sendPrivateTags(corpuses: Corpus[], data: SendPrivateData)
 		return false;
 	}
 	const text = onlyText(event);
-	const corpusName: string[] = [];
+	const corpusName: [boolean] = [false];
 	for (const element of corpuses) {
 		const msg = await element.runPrivate({event, hrtime: time, member, text});
 		if (msg.length < 1) {
@@ -147,21 +144,21 @@ export async function sendPrivateTags(corpuses: Corpus[], data: SendPrivateData)
 		await sendPrivate(event, msg).then(() => {
 			element.laterOpen();
 		}).finally(() => {
-			corpusName.push(element.name);
+			corpusName[0] = true;
 		}).catch((e) => {
-			Corpus.logger.error(e);
-			element.isOpen = -1;
+			element.logger.error(e);
+			element.canPrivate = false;
+			setTimeout(() => {
+				element.canPrivate = true;
+			}, 1000 * 60 * 60);
 			return sendAdminQQ(event.bot, `私聊消息发送失败：${element.toString()}`);
 		}).catch(global.NOP);
+		element.logger.info(hrtime(time, `${element.name}\t来源：${member.id}：${text}`));
 		if (event.isCanceled) {
 			break;
 		}
 	}
-	if (corpusName.length > 0) {
-		Corpus.logger.info(hrtime(time, `${corpusName.join(",")}\t来源：${member.id}：${text}`));
-		return true;
-	}
-	return false;
+	return corpusName[0];
 }
 
 function* cast2Tag(result: Any): Generator<CQTag, void, void> {
@@ -227,7 +224,7 @@ export class Corpus extends Logable implements ICorpus, JSONable {
 	}
 
 	public laterOpen(): void {
-		if (this.isOpen >= 0 && this.speedLimit > 0) {
+		if (this.isOpen === 0 && this.speedLimit > 0) {
 			setTimeout(() => {
 				this.isOpen = 1;
 			}, this.speedLimit);
@@ -324,6 +321,9 @@ export class Corpus extends Logable implements ICorpus, JSONable {
 		}
 	}
 
+	public override get logger() {
+		return this.plug.logger ?? super.logger;
+	}
 }
 
 interface SendPrivateData {
