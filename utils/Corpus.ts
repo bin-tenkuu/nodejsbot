@@ -1,8 +1,8 @@
 // noinspection JSUnusedGlobalSymbols
 
 import {hrtime, Logable} from "./logger.js";
-import {CQ, CQEvent, CQTag} from "go-cqwebsocket";
-import {deleteMsg, isAdmin, onlyText, sendAdminQQ, sendGroup, sendPrivate} from "@U/Util.js";
+import type {CQEvent, CQTag} from "go-cqwebsocket";
+import {cast2Tag, deleteMsg, isAdmin, onlyText, sendAdminQQ, sendGroup, sendPrivate} from "@U/Util.js";
 import type {Plug, PlugDecorator} from "../Plug.js";
 import type {Any, Group, JSONable, Member} from "@U/Models.js";
 
@@ -155,28 +155,6 @@ export async function sendPrivateTags(corpuses: Corpus[], data: SendPrivateData)
 		}
 	}
 	return corpusName[0];
-}
-
-function* cast2Tag(result: Any): Generator<CQTag, void, void> {
-	if (result == null) {
-		return;
-	}
-	if (typeof result !== "object") {
-		return yield CQ.text(result.toString());
-	}
-	if (result instanceof CQTag) {
-		return yield result;
-	}
-	if (!Array.isArray(result)) {
-		return yield CQ.text(result.toString());
-	}
-	if (result.length <= 0) {
-		return;
-	}
-	for (const v of result) {
-		yield* cast2Tag(v);
-	}
-	return;
 }
 
 export class Corpus extends Logable implements ICorpus, JSONable {

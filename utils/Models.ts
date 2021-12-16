@@ -28,12 +28,13 @@ class Modified implements JSONable {
 	}
 }
 
-export type IGroup = { readonly id: number, exp: number, gmt_modified: number, is_baned: 0 | 1 }
+export type IGroup = { readonly id: number, exp: number, gmt_modified: number, is_baned: 0 | 1, invited: number }
 
 export class Group extends Modified implements IGroup, JSONable {
 	protected readonly _id: number;
 	protected _exp: number = 0;
 	protected _is_baned: 0 | 1 = 0;
+	protected _invited: number = 0;
 
 	constructor(obj: IGroup | number) {
 		super();
@@ -45,11 +46,12 @@ export class Group extends Modified implements IGroup, JSONable {
 			this._exp = obj.exp;
 			this._is_baned = obj.is_baned;
 			this._gmt_modified = obj.gmt_modified;
+			this._invited = obj.invited;
 		}
 	}
 
 	public override toJSON(): IGroup {
-		return {id: this._id, exp: this._exp, ...super.toJSON(), is_baned: this._is_baned};
+		return {id: this._id, exp: this._exp, ...super.toJSON(), is_baned: this._is_baned, invited: this._invited};
 	}
 
 	public addExp(exp: number): boolean {
@@ -81,6 +83,14 @@ export class Group extends Modified implements IGroup, JSONable {
 	public set is_baned(value: 0 | 1) {
 		this._is_baned = value;
 		this.modified();
+	}
+
+	public get invited(): number {
+		return this._invited;
+	}
+
+	public set invited(value: number) {
+		this._invited = value;
 	}
 
 	public get baned(): boolean {

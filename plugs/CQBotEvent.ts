@@ -20,12 +20,16 @@ export class CQBotEvent extends Plug {
 		this.header = this.CQBot.bot.bind("on", {
 			"notice.group_increase": (event) => {
 				event.stopPropagation();
-				const {operator_id, user_id, sub_type} = event.context;
+				const {operator_id, user_id, sub_type, group_id} = event.context;
 				let str;
 				if (operator_id === 0) {
 					str = `@${user_id} ${sub_type === "approve" ? "欢迎" : "被邀请"}入群`;
 				} else {
 					str = `@${user_id} 被管理员{@${operator_id}} ${sub_type === "approve" ? "同意" : "邀请"}入群`;
+				}
+				if (this.CQData.getGroup(group_id).baned) {
+					CQBotEvent.logger.info(str);
+					return;
 				}
 				sendGroup(event, [CQ.text(str)]).catch(global.NOP);
 			},
@@ -36,17 +40,16 @@ export class CQBotEvent extends Plug {
 					sendAdminGroup(event.bot, `群 ${group_id} 被踢出`);
 					return;
 				}
-				let str: string;
-				if (sub_type === "kick") {
-					str = ` 被 管理员{@${operator_id}} 踢出本群`;
-				} else {
-					str = ` 主动离开本群`;
-				}
+				const tmp: string = sub_type === "kick" ? ` 被 管理员{@${operator_id}} 踢出本群` : ` 主动离开本群`;
 				event.bot.get_stranger_info(user_id, false).then(info => {
-					str = `@${info.nickname}(${info.user_id})${str}`;
+					const str = `@${info.nickname}(${info.user_id})${tmp}`;
+					if (this.CQData.getGroup(group_id).baned) {
+						CQBotEvent.logger.info(str);
+						return;
+					}
 					return sendGroup(event, [CQ.text(str)]);
 				}).catch(() => {
-					return sendAdminGroup(event.bot, [CQ.text(`来自群：${group_id}\n${str}`)]);
+					return sendAdminGroup(event.bot, [CQ.text(`来自群：${group_id}\n${tmp}`)]);
 				});
 			},
 			"request.friend": (event) => {
@@ -57,7 +60,8 @@ export class CQBotEvent extends Plug {
 			},
 			"request.group": (event) => {
 				event.stopPropagation();
-				const {flag, sub_type, group_id} = event.context;
+				const {flag, sub_type, group_id, user_id} = event.context;
+				this.CQData.getGroup(group_id).invited = user_id;
 				sendAdminGroup(event.bot, `${group_id}请求入群`);
 				event.bot.set_group_add_request(flag, sub_type, true).catch(global.NOP);
 			},

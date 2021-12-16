@@ -4,6 +4,7 @@ import {CQ, CQEvent, CQTag, CQWebSocket} from "go-cqwebsocket";
 import type {MessageId, PromiseRes} from "go-cqwebsocket/out/Interfaces";
 import {CQAt, CQText} from "go-cqwebsocket/out/tags";
 import {getLogger} from "./logger.js";
+import {Any} from "./Models.js";
 
 const {adminGroup, adminId} = require("../config/config.json");
 
@@ -46,20 +47,14 @@ export function isAdminGroup({context}: CQEvent<any>): boolean {
 	return context["group_id"] === adminGroup;
 }
 
-export function sendAdminQQ(bot: CQWebSocket, message: CQTag[] | string): Promise<void> {
-	if (typeof message === "string") {
-		message = [CQ.text(message)];
-	}
-	return bot.send_private_msg(adminId, <any>message).then(undefined, () => {
+export function sendAdminQQ(bot: CQWebSocket, message: Any): Promise<void> {
+	return bot.send_private_msg(adminId, <any>[...cast2Tag(message)]).then(undefined, () => {
 		logger.warn("管理员消息发送失败");
 	});
 }
 
-export function sendAdminGroup(bot: CQWebSocket, message: CQTag[] | string): Promise<void> {
-	if (typeof message === "string") {
-		message = [CQ.text(message)];
-	}
-	return bot.send_group_msg(adminGroup, <any>message).then(undefined, () => {
+export function sendAdminGroup(bot: CQWebSocket, message: Any): Promise<void> {
+	return bot.send_group_msg(adminGroup, <any>[...cast2Tag(message)]).then(undefined, () => {
 		logger.warn("管理群消息发送失败");
 	});
 }
@@ -73,8 +68,8 @@ export function sendAuto(event: CQMessage, message: CQTag[] | string): void {
 }
 
 export function sendPrivate<T>({bot, context: {user_id = adminId}}: hasUser<T>,
-		message: CQTag[] | string): PromiseRes<MessageId> {
-	const msg = typeof message === "string" ? [CQ.text(message)] : message;
+		message: Any): PromiseRes<MessageId> {
+	const msg = [...cast2Tag(message)];
 	return bot.send_private_msg(user_id, <any>msg).catch(() => {
 		return bot.send_private_msg(user_id, cast2Text(msg));
 	}).catch(() => {
@@ -128,6 +123,28 @@ export function deleteMsg(bot: CQWebSocket, id: number, delay: number = 0): Node
 
 function cast2Text(message: CQTag[]): CQText[] {
 	return message.map<CQText>(tag => tag instanceof CQText ? tag : CQ.text(tag.toString()));
+}
+
+export function* cast2Tag(result: Any): Generator<CQTag, void, void> {
+	if (result == null) {
+		return;
+	}
+	if (typeof result !== "object") {
+		return yield CQ.text(result.toString());
+	}
+	if (result instanceof CQTag) {
+		return yield result;
+	}
+	if (!Array.isArray(result)) {
+		return yield CQ.text(result.toString());
+	}
+	if (result.length <= 0) {
+		return;
+	}
+	for (const v of result) {
+		yield* cast2Tag(v);
+	}
+	return;
 }
 
 type hasUser<T> = T extends { bot: CQWebSocket, context: { user_id: number } } ? T : never;
