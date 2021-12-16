@@ -115,7 +115,6 @@ export async function sendGroupTags(corpuses: Corpus[], data: SendGroupData): Pr
 			hasCorpus[0] = true;
 		}).catch((e) => {
 			element.logger.error(e);
-			element.canGroup = false;
 			return sendAdminQQ(event.bot, `群聊消息发送失败：${element.toString()}`);
 		}).catch(global.NOP);
 		element.logger.info(hrtime(time, `${element.name}\t来源：${group.id}.${member.id}：${text}`));
@@ -147,7 +146,6 @@ export async function sendPrivateTags(corpuses: Corpus[], data: SendPrivateData)
 			corpusName[0] = true;
 		}).catch((e) => {
 			element.logger.error(e);
-			element.canPrivate = false;
 			setTimeout(() => {
 				element.canPrivate = true;
 			}, 1000 * 60 * 60);
