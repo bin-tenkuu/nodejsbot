@@ -106,13 +106,12 @@ export async function sendGroupTags(corpuses: Corpus[], data: SendGroupData): Pr
 		// } else {
 		// 	return sendForwardQuick(event, tags);
 		// }
+		hasCorpus[0] = true;
 		await sendGroup(event, msg).then((msg) => {
 			if (element.deleteMSG > 0) {
 				deleteMsg(event.bot, msg.message_id, element.deleteMSG);
 			}
 			element.laterOpen();
-		}).finally(() => {
-			hasCorpus[0] = true;
 		}).catch((e) => {
 			element.logger.error(e);
 			return sendAdminQQ(event.bot, `群聊消息发送失败：${element.toString()}`);
@@ -140,10 +139,9 @@ export async function sendPrivateTags(corpuses: Corpus[], data: SendPrivateData)
 		if (msg.length < 1) {
 			continue;
 		}
+		corpusName[0] = true;
 		await sendPrivate(event, msg).then(() => {
 			element.laterOpen();
-		}).finally(() => {
-			corpusName[0] = true;
 		}).catch((e) => {
 			element.logger.error(e);
 			setTimeout(() => {

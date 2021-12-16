@@ -60,6 +60,7 @@ export class CQBot extends Plug {
 				},
 			});
 			this.bot.disconnect();
+			setTimeout(resolve,1000)
 		});
 	}
 
