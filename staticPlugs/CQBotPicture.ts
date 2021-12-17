@@ -70,7 +70,7 @@ export class CQBotPicture extends Plug {
 		deleteMSG: 20,
 		speedLimit: 2000,
 		expGroup: -5,
-		expPrivate: -10,
+		expPrivate: -8,
 	})
 	protected async getSeTu({event, execArray}: CorpusData): Promise<CQTag[]> {
 		event.stopPropagation();
