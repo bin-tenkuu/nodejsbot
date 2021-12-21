@@ -161,9 +161,9 @@ export class CQData extends Plug {
 	})
 	protected addEXP({event, member, group}: CorpusData): void {
 		event.stopPropagation();
-		if (group==null){
+		if (group == null) {
 			member.addExp(.5);
-		}else   {
+		} else {
 			member.addExp(1);
 			group.addExp(1);
 		}
