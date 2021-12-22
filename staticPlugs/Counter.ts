@@ -9,8 +9,8 @@ export class Counter extends Plug {
 		}
 	}
 
-	private group = new Map<number, number>();
-	private member = new Map<number, number>();
+	private readonly group = new Map<number, number>();
+	private readonly member = new Map<number, number>();
 
 	constructor() {
 		super(module);

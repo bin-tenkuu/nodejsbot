@@ -24,7 +24,7 @@ export class CQBotPicture extends Plug {
 		});
 	}
 
-	public setuSet = new Set<string>();
+	public readonly setuSet = new Set<string>();
 
 	constructor() {
 		super(module);

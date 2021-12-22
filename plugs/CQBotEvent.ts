@@ -6,8 +6,8 @@ import {CQBot} from "@P/CQBot.js";
 import {CQData} from "@S/CQData.js";
 
 export class CQBotEvent extends Plug {
-	private CQBot = CQBot.getInst();
-	private CQData = CQData.getInst();
+	private readonly CQBot = CQBot.getInst();
+	private readonly CQData = CQData.getInst();
 	private header: PartialSocketHandle = {};
 
 	constructor() {

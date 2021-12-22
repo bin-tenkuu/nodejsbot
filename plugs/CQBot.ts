@@ -9,7 +9,7 @@ import {CQData} from "@S/CQData.js";
 const {CQWS} = require("../config/config.json");
 
 export class CQBot extends Plug {
-	public bot: CQWebSocket = new CQWebSocket(CQWS);
+	public readonly bot: CQWebSocket = new CQWebSocket(CQWS);
 	private needOpen: number = 0;
 	private stateCache: Status["stat"] = <Status["stat"]>{
 		packet_lost: 0, message_sent: 0, message_received: 0,

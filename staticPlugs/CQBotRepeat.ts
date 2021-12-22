@@ -16,7 +16,7 @@ export class CQBotRepeat extends Plug {
 		return arr;
 	}
 
-	private repeatCache = new CacheMap<number, RepeatCache>(undefined,
+	private readonly repeatCache = new CacheMap<number, RepeatCache>(undefined,
 			(l, r) => l.msg === r.msg,
 	);
 

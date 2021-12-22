@@ -20,26 +20,23 @@ function create(): Map<string, ServerHandle> {
 }
 
 export class HttpOption extends Plug {
-	public server: Map<string, ServerHandle> = create();
-	private header?: http.Server;
+	public readonly server: Map<string, ServerHandle> = create();
+	private readonly header: http.Server;
 
 	constructor() {
 		super(module);
 		this.name = "网页指令";
 		this.description = "通过网页链接达到控制效果";
-		// const jpgUrls = Array.from<undefined, string>({length: 3}, (_, k) => `/${k}.jpg`);
-		// this.generator = endlessGen(jpgUrls);
+		this.header = http.createServer(this.handle.bind(this));
 	}
 
 	override async install() {
-		this.header = http.createServer(
-				this.handle.bind(this),
-		).listen(40000, "127.0.0.1");
+		this.header.listen(40000, "127.0.0.1");
 		this.logger.info("快速结束已启动,点击 http://127.0.0.1:40000");
 	}
 
 	override async uninstall() {
-		this.header?.close();
+		this.header.close();
 	}
 
 	private handle(req: IncomingMessage, res: ServerResponse) {

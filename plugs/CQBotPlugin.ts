@@ -5,7 +5,7 @@ import {sendAdminQQ} from "@U/Util.js";
 import {CQData} from "@S/CQData.js";
 
 export class CQBotPlugin extends Plug {
-	private CQData = CQData.getInst();
+	private readonly CQData = CQData.getInst();
 
 	constructor() {
 		super(module);

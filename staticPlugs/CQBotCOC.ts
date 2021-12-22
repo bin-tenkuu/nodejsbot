@@ -69,7 +69,7 @@ export class CQBotCOC extends Plug {
 	private readonly cache = new CacheMap<number, DiceCache>(undefined,
 			(l, r) => l.max === r.max,
 	);
-	private shortKey = new Map<string, string>();
+	private readonly shortKey = new Map<string, string>();
 	private cheater: boolean = false;
 	private specialEffects: string = "bug";
 
