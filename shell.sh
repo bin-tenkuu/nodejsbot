@@ -5,4 +5,4 @@ git pull
 chmod u+x ./shell.sh
 npm i
 tsc
-screen -x bot
+screen -x bot -p 0 -X stuff $"npm start \n"
