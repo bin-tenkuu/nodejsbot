@@ -1,5 +1,7 @@
 # NodeJsBot
 
+2022/2/10: 作者转到 `mirai` 去用 koltin 写 bot 了，所以这个 bot 就暂时不更新了（kotlin 真香）
+
 ## 1. 背景
 
 使用 `nodejs` 作为开发/运行环境, 一个完全手动 qq 机器人实现.
